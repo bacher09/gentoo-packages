@@ -5,6 +5,8 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
 from gentoolkit.package import Package as PackageInfo
+import hashlib
+import os
 
 BINDB = portage.db[portage.root]["bintree"].dbapi
 PORTDB = portage.db[portage.root]["porttree"].dbapi
@@ -13,6 +15,21 @@ VARDB = portage.db[portage.root]["vartree"].dbapi
 _license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
                                      x.endswith('?') or x.startswith(')') \
                                   else True
+
+def _file_path(file_name):
+    return lambda self: os.path.join(self.package_path, file_name)
+
+
+def _file_hash(attr):
+    return lambda self: file_sha1(getattr(self, attr))
+
+def file_sha1(file_path):
+    sha1 = 'NULL'
+    if os.path.exists(file_path):
+        f = open(file_path, 'r')
+        sha1 = hashlib.sha1(f.read()).hexdigest()
+        f.close()
+    return sha1
 
 
 class Use(object):
@@ -75,6 +92,10 @@ class PortTree(object):
     def __repr__(self):
         return '<PortTree %s>' % self.porttree
 
+    @property
+    def porttree_path(self):
+        return self.porttree
+
 
 class Category(object):
     
@@ -97,6 +118,11 @@ class Category(object):
     def __repr__(self):
         return '<Category %s>' % self.category
 
+    @property
+    def category_path(self):
+        return os.path.join(self.porttree.porttree_path, self.category)
+
+
 class Package(object):
     def __init__(self, category, package):
         self.category = category
@@ -109,6 +135,15 @@ class Package(object):
 
     def __repr__(self):
         return '<Package %s>' % self.package
+
+    @property
+    def package_path(self):
+        return os.path.join(self.category.porttree.porttree_path, self.package)
+
+    manifest_path = property(_file_path('Manifest'))
+    changelog_path = property(_file_path('ChangeLog'))
+    manifest_sha1 = property(_file_hash('manifest_path'))
+    changelog_sha1 = property(_file_hash('changelog_path'))
 
 
 class Ebuild(object):
@@ -170,6 +205,14 @@ class Ebuild(object):
     @property
     def description(self):
         return self.package_object.environment('DESCRIPTION') # Bad code, it repeats many times
+
+    @property
+    def ebuild_path(self):
+        return self.package_object.ebuild_path()
+
+    @property
+    def sha1(self):
+        return file_sha1(self.ebuild_path)
     
     def __repr__(self):
         return '<Ebuild %s>' % self.ebuild
