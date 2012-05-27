@@ -23,6 +23,9 @@ def _file_path(file_name):
 def _file_hash(attr):
     return lambda self: file_sha1(getattr(self, attr))
 
+def _ebuild_environment(name):
+    return lambda self: self.package_object.environment(name)
+
 def file_sha1(file_path):
     sha1 = 'NULL'
     if os.path.exists(file_path):
@@ -190,21 +193,13 @@ class Ebuild(object):
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
-    @property
-    def homepage(self):
-        return self.package_object.environment('HOMEPAGE')
-    
-    @property
-    def license(self):
-        return self.package_object.environment('LICENSE')
+    homepage = property(_ebuild_environment('HOMEPAGE'))
+    license = property(_ebuild_environment('LICENSE'))
+    description = property(_ebuild_environment('DESCRIPTION'))
 
     @property
     def licenses(self):
         return filter(_license_filter, self.license)
-    
-    @property
-    def description(self):
-        return self.package_object.environment('DESCRIPTION') # Bad code, it repeats many times
 
     @property
     def ebuild_path(self):
