@@ -15,6 +15,18 @@ _license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
                                   else True
 
 
+class Use(object):
+    def __init__(self, name):
+        if name.startswith('+') or name.startswith('-'):
+            name = name[1:]
+        self.name = name
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Use %s>' % self.__str__()
+
 class Keyword(object):
     def __init__(self, name, is_stable = False):
         if name[0] == '~':
@@ -114,6 +126,17 @@ class Ebuild(object):
         l = []
         for keyword in self.iter_keyworkds():
             l.append(keyword)
+        return l
+
+    def iter_uses(self):
+        uses = self.package_object.environment("IUSE").split()
+        for use in uses:
+            yield Use(use)
+
+    def get_uses(self):
+        l = [] # Bad code, it repeats
+        for use in self.iter_uses():
+            l.append(use)
         return l
 
     @property
