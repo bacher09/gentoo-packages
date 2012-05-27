@@ -54,6 +54,9 @@ class PortTree(object):
         for package in self.iter_packages():
             for ebuild in package.iter_ebuilds():
                 yield ebuild
+    
+    def __repr__(self):
+        return '<PortTree %s>' % self.porttree
 
 
 class Category(object):
@@ -73,6 +76,9 @@ class Category(object):
             if atom != atom.cp:
                 continue
             yield Package(self, atom)
+    
+    def __repr__(self):
+        return '<Category %s>' % self.category
 
 class Package(object):
     def __init__(self, category, package):
@@ -83,6 +89,9 @@ class Package(object):
         ebuilds = PORTDB.cp_list(self.package, mytree=self.category.porttree.porttree)
         for ebuild in ebuilds:
             yield Ebuild(self ,ebuild)
+
+    def __repr__(self):
+        return '<Package %s>' % self.package
 
 
 class Ebuild(object):
@@ -117,3 +126,14 @@ class Ebuild(object):
     @property
     def ebuild_path(self):
         return self.package_object.ebuild_path()
+
+    @property
+    def homepage(self):
+        return self.package_object.environment('HOMEPAGE')
+    
+    @property
+    def description(self):
+        return self.package_object.environment('DESCRIPTION') # Bad code, it repeats many times
+    
+    def __repr__(self):
+        return '<Ebuild %s>' % self.ebuild
