@@ -10,6 +10,11 @@ BINDB = portage.db[portage.root]["bintree"].dbapi
 PORTDB = portage.db[portage.root]["porttree"].dbapi
 VARDB = portage.db[portage.root]["vartree"].dbapi
 
+_license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
+                                     x.endswith('?') or x.startswith(')') \
+                                  else True
+
+
 class Keyword(object):
     def __init__(self, name, is_stable = False):
         if name[0] == '~':
@@ -130,6 +135,14 @@ class Ebuild(object):
     @property
     def homepage(self):
         return self.package_object.environment('HOMEPAGE')
+    
+    @property
+    def license(self):
+        return self.package_object.environment('LICENSE')
+
+    @property
+    def licenses(self):
+        return filter(_license_filter, self.license)
     
     @property
     def description(self):
