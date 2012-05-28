@@ -18,6 +18,8 @@ class CategoryModel(models.Model):
             category_object = args[0]
         if 'category_object' in kwargs:
             category_object = kwargs['category_object']
+        elif 'category' in kwargs:
+            category_object = kwargs['category']
         
         if isinstance(category_object, Category):
             return super(CategoryModel, self).__init__(category = category_object.category)

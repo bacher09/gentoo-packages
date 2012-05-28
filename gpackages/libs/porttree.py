@@ -35,19 +35,24 @@ def file_sha1(file_path):
     return sha1
 
 
-class Use(object):
+class ToStrMixin(object):
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __repr__(self):
+        return '<%s %s>' % (type(self).__name__, self.__str__())
+
+class Use(ToStrMixin):
     def __init__(self, name):
         if name.startswith('+') or name.startswith('-'):
             name = name[1:]
         self.name = name
 
-    def __str__(self):
+    def __unicode__(self):
         return self.name
 
-    def __repr__(self):
-        return '<Use %s>' % self.__str__()
 
-class Keyword(object):
+class Keyword(ToStrMixin):
     def __init__(self, name, is_stable = False):
         if name[0] == '~':
             name = name[1:]
@@ -55,11 +60,9 @@ class Keyword(object):
         self.name = name
         self.is_stable = is_stable
 
-    def __str__(self):
+    def __unicode__(self):
         return ('' if self.is_stable else '~' ) + self.name
 
-    def __repr__(self):
-        return '<Keyword %s>' % self.__str__()
 
 class Portage(object):
     
@@ -73,7 +76,7 @@ class Portage(object):
                 yield ebuild
     
 
-class PortTree(object):
+class PortTree(ToStrMixin):
     
     def __init__(self, porttree = '/usr/portage'):
         self.porttree = porttree # TODO: it should be read-only
@@ -91,16 +94,16 @@ class PortTree(object):
         for package in self.iter_packages():
             for ebuild in package.iter_ebuilds():
                 yield ebuild
-    
-    def __repr__(self):
-        return '<PortTree %s>' % self.porttree
 
+    def __unicode__(self):
+        return self.porttree
+    
     @property
     def porttree_path(self):
         return self.porttree
 
 
-class Category(object):
+class Category(ToStrMixin):
     
     def __init__(self, porttree, category):
         self.porttree = porttree
@@ -117,16 +120,16 @@ class Category(object):
             if atom != atom.cp:
                 continue
             yield Package(self, atom)
-    
-    def __repr__(self):
-        return '<Category %s>' % self.category
 
+    def __unicode__(self):
+        return self.category
+    
     @property
     def category_path(self):
         return os.path.join(self.porttree.porttree_path, self.category)
 
 
-class Package(object):
+class Package(ToStrMixin):
     def __init__(self, category, package):
         self.category = category
         self.package = package
@@ -136,8 +139,8 @@ class Package(object):
         for ebuild in ebuilds:
             yield Ebuild(self ,ebuild)
 
-    def __repr__(self):
-        return '<Package %s>' % self.package
+    def __unicode__(self):
+        return '%s' % self.package
 
     @property
     def package_path(self):
@@ -149,7 +152,7 @@ class Package(object):
     changelog_sha1 = property(_file_hash('changelog_path'))
 
 
-class Ebuild(object):
+class Ebuild(ToStrMixin):
     def __init__(self, package, ebuild):
         self.package = package
         self.ebuild = ebuild
@@ -212,6 +215,7 @@ class Ebuild(object):
     @property
     def sha1(self):
         return file_sha1(self.ebuild_path)
+
+    def __unicode__(self):
+        return self.ebuild
     
-    def __repr__(self):
-        return '<Ebuild %s>' % self.ebuild
