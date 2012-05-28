@@ -1,6 +1,6 @@
 from django.db import models
 
-from porttree import Category
+from porttree import Category, Package
 
 class ArchesModel(models.Model):
     name = models.CharField(max_length = 12)
@@ -34,7 +34,23 @@ class CategoryModel(models.Model):
 
 
 class PackageModel(models.Model):
-    name = models.CharField(unique = True, max_length = 254)
+    def __init__(self, *args, **kwargs):
+        # TODO: Bad code, maybe use some library to overload method
+        if len(args)>=1:
+            package_object = args[0] 
+        
+        if 'package' in kwargs:
+            package_object = kwargs['package']
+
+        if isinstance(package_object, Package):
+            super(PackageModel, self).__init__()
+            self.init_by_package(package_object)
+        else:
+            super(PackageModel, self).__init__(*args, **kwargs)
+            
+        
+
+    name = models.CharField(max_length = 254)
     category = models.ForeignKey(CategoryModel)
     changelog = models.TextField(blank = True)
     changelog_hash = models.CharField(max_length = 128)
@@ -43,10 +59,17 @@ class PackageModel(models.Model):
     def __unicode__(self):
         return '%s/%s' % (self.category, self.name)
     
-    #@classmethod
-    #def create_by_pakcage(cls, package):
-        #category_object = CategoryModel.create_by_category(package.category)
-        #package_model = c
+    def init_by_package(self, package):
+        self.name = package.name
+        self.update_info(package)
+        self.category, created = CategoryModel.objects.get_or_create(category = package.category)
+
+    def update_info(self, package):
+        self.changelog_hash = package.changelog_sha1
+        self.manifest_hash = package.manifest_sha1
+
+    class Meta:
+        unique_together = ('name', 'category')
 
 class UseFlagModel(models.Model):
     name = models.CharField(unique = True, max_length = 28)
@@ -92,3 +115,5 @@ class Keyword(models.Model):
     ebuild = models.ForeignKey(EbuildModel)
     arch = models.ForeignKey(ArchesModel)
     is_stable = models.BooleanField() 
+    class Meta:
+        unique_together = ('ebuild', 'arch')
