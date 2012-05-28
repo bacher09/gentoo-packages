@@ -1,6 +1,7 @@
 from django.db import models
 
 from porttree import Category, Package
+import managers
 
 class ArchesModel(models.Model):
     name = models.CharField(max_length = 12)
@@ -36,6 +37,7 @@ class CategoryModel(models.Model):
 class PackageModel(models.Model):
     def __init__(self, *args, **kwargs):
         # TODO: Bad code, maybe use some library to overload method
+        package_object = None
         if len(args)>=1:
             package_object = args[0] 
         
@@ -56,6 +58,9 @@ class PackageModel(models.Model):
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
     # Different versions can have different licenses, or homepages.
+    
+    objects = managers.PackageManager()
+
     def __unicode__(self):
         return '%s/%s' % (self.category, self.name)
     
