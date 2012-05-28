@@ -1,5 +1,7 @@
 from django.db import models
 
+from porttree import Category
+
 class ArchesModel(models.Model):
     name = models.CharField(max_length = 12)
 
@@ -9,15 +11,25 @@ class RepositoryModel(models.Model):
     # And other fields
 
 class CategoryModel(models.Model):
+    def __init__(self, *args, **kwargs):
+        category_object = None
+        
+        if len(args)>=1:
+            category_object = args[0]
+        if 'category_object' in kwargs:
+            category_object = kwargs['category_object']
+        
+        if isinstance(category_object, Category):
+            return super(CategoryModel, self).__init__(category = category_object.category)
+        else:
+            return super(CategoryModel, self).__init__(*args, **kwargs)
+
+
     category = models.CharField(unique = True, max_length = 70)
     
     def __unicode__(self):
         return self.category
 
-    @classmethod
-    def create_by_category(cls, category):
-        category_model = cls.objects.get_or_create(category = category.category)
-        return category_model
 
 class PackageModel(models.Model):
     name = models.CharField(unique = True, max_length = 254)
