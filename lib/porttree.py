@@ -190,6 +190,10 @@ class Ebuild(object):
         return self.package_object.revision
 
     @property
+    def fullversion(self):
+        return self.package_object.fullversion
+
+    @property
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
