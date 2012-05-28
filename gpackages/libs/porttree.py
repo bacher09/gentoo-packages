@@ -146,6 +146,10 @@ class Package(ToStrMixin):
     def package_path(self):
         return os.path.join(self.category.porttree.porttree_path, self.package)
 
+    @property
+    def name(self):
+        return self.package.split('/')[1]
+
     manifest_path = property(_file_path('Manifest'))
     changelog_path = property(_file_path('ChangeLog'))
     manifest_sha1 = property(_file_hash('manifest_path'))
