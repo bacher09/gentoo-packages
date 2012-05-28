@@ -53,7 +53,7 @@ class Use(ToStrMixin):
 
 
 class Keyword(ToStrMixin):
-    def __init__(self, name, is_stable = False):
+    def __init__(self, name, is_stable = True):
         if name[0] == '~':
             name = name[1:]
             is_stable = False
@@ -162,7 +162,7 @@ class Ebuild(ToStrMixin):
         self.ebuild = ebuild
         self.package_object = PackageInfo(ebuild)
     
-    def iter_keyworkds(self):
+    def iter_keywords(self):
         keywords = self.package_object.environment("KEYWORDS").split()
         for keyword in keywords:
             yield Keyword(keyword)

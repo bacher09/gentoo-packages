@@ -1,10 +1,13 @@
 from django.db import models
 
-from porttree import Category, Package
+from porttree import Category, Package, Ebuild
 import managers
 
 class ArchesModel(models.Model):
-    name = models.CharField(max_length = 12)
+    name = models.CharField(unique = True, max_length = 12)
+    
+    def __unicode__(self):
+        return self.name
 
 class RepositoryModel(models.Model):
     name = models.CharField(max_length = 60)
@@ -133,7 +136,17 @@ class EbuildModel(models.Model):
                 k.save()
             l.append(k)
         self.use_flags.add(*l)
-    
+
+    def init_with_keywords(self, ebuild):
+        self.init_by_ebuild(ebuild)
+        l = []
+        for keyword in ebuild.iter_keywords():
+            ko, created = Keyword.objects.get_or_create(keyword = keyword, ebuild = self)
+            if created:
+                ko.save()
+            l.append(ko)
+        self.keyword_set.add(*l)
+
     class Meta:
         unique_together = ('package', 'version', 'revision')
         
@@ -143,5 +156,20 @@ class Keyword(models.Model):
     ebuild = models.ForeignKey(EbuildModel)
     arch = models.ForeignKey(ArchesModel)
     is_stable = models.BooleanField() 
+
+    objects = managers.KeywordManager()
+
+    def __unicode__(self):
+        return ('' if self.is_stable else '~' ) + self.arch
+        
+
+    def init_by_keyword(self, keyword, ebuild):
+        if isinstance(ebuild, EbuildModel):
+            self.ebuild = ebuild
+        elif isinstance(ebuild, Ebuild):
+            self.ebuild, created = EbuildModel.objects.get_or_create(ebuild = ebuild)
+        self.arch, created = ArchesModel.objects.get_or_create(name = keyword.name)
+        self.is_stable = keyword.is_stable
+
     class Meta:
         unique_together = ('ebuild', 'arch')
