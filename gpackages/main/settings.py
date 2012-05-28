@@ -5,6 +5,7 @@ import sys
 MAIN_ROOT = os.path.normpath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.dirname(MAIN_ROOT)
 
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'libs'))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'apps'))
 
 DEBUG = True
