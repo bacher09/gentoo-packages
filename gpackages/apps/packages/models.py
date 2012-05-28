@@ -81,23 +81,18 @@ class UseFlagModel(models.Model):
     description = models.TextField(blank = True)
 
 class LicensModel(models.Model):
-    name = models.CharField(max_length = 40)
+    name = models.CharField(unique = True, max_length = 40)
     #description = TextField()
     
     def __unicode__(self):
         return self.name
 
-class MetaDataModel(models.Model):
-    homepage = models.URLField()
-    description = models.TextField(blank = True, null = True)
-    # Some other info
 
 class EbuildModel(models.Model):
     package = models.ForeignKey(PackageModel)
-    repository = models.ForeignKey(RepositoryModel)
+    #repository = models.ForeignKey(RepositoryModel)
     version = models.CharField(max_length = 16)
     revision = models.CharField(max_length = 6)
-    metadata = models.ForeignKey(MetaDataModel)
     use_flags = models.ManyToManyField(UseFlagModel)
     licenses = models.ManyToManyField(LicensModel)
     license = models.CharField(max_length = 254, blank = True )
@@ -105,16 +100,44 @@ class EbuildModel(models.Model):
     ebuld_datetime = models.DateTimeField(auto_now = True)
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
+
+    homepage = models.URLField()
+    description = models.TextField(blank = True, null = True)
     
     def __unicode__(self):
         return '%s-%s' % (self.package, self.version)
 
-    #@classmethod
-    #def create_by_ebuild(cls, ebuild):
-        #ebuild_model = cls()
-        #ebuild_model.is_masked = ebuild.is_masked
-        #ebuild_model.version = ebuild.version
-        #ebuild_model.revision = ebuild.revision
+    def init_by_ebuild(self, ebuild):
+        self.is_masked = ebuild.is_masked
+        self.version = ebuild.version
+        self.revision = ebuild.revision
+        self.license = ebuild.license
+        self.ebuild_hash = ebuild.sha1
+        self.homepage = ebuild.homepage
+        self.description = ebuild.description
+        self.package = PackageModel.objects.get_or_create(package = ebuild.package)[0]
+        self.save()
+        l = []
+        for license in ebuild.licenses:
+            k, created = LicensModel.objects.get_or_create(name = license)
+            if created:
+                k.save()
+            l.append(k)
+        
+        self.licenses.add(*l)
+        l = []
+        # TODO: Bad code
+        for use in ebuild.iter_uses():
+            k, created = UseFlagModel.objects.get_or_create(name = use)
+            if created:
+                k.save()
+            l.append(k)
+        self.use_flags.add(*l)
+    
+    class Meta:
+        unique_together = ('package', 'version', 'revision')
+        
+            
 
 class Keyword(models.Model):
     ebuild = models.ForeignKey(EbuildModel)
