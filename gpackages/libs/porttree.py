@@ -210,7 +210,7 @@ class Ebuild(ToStrMixin):
 
     @property
     def licenses(self):
-        return filter(_license_filter, self.license)
+        return filter(_license_filter, self.license.split())
 
     @property
     def ebuild_path(self):
