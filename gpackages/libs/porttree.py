@@ -12,6 +12,8 @@ BINDB = portage.db[portage.root]["bintree"].dbapi
 PORTDB = portage.db[portage.root]["porttree"].dbapi
 VARDB = portage.db[portage.root]["vartree"].dbapi
 
+ARCHES = PORTDB.settings["PORTAGE_ARCHLIST"].split()
+
 _license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
                                      x.endswith('?') or x.startswith(')') \
                                   else True
@@ -174,7 +176,7 @@ class Ebuild(ToStrMixin):
         
     def get_keywords(self):
         l = []
-        for keyword in self.iter_keyworkds():
+        for keyword in self.iter_keywords():
             l.append(keyword)
         return l
 
