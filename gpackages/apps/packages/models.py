@@ -100,7 +100,7 @@ class EbuildModel(models.Model):
     licenses = models.ManyToManyField(LicensModel)
     license = models.CharField(max_length = 254, blank = True )
     ebuild_hash = models.CharField(max_length = 128)
-    ebuld_datetime = models.DateTimeField(auto_now = True)
+    ebuild_datetime = models.DateTimeField(auto_now = True)
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
@@ -160,7 +160,7 @@ class Keyword(models.Model):
     objects = managers.KeywordManager()
 
     def __unicode__(self):
-        return ('' if self.is_stable else '~' ) + self.arch
+        return ('' if self.is_stable else '~' ) + str(self.arch)
         
 
     def init_by_keyword(self, keyword, ebuild):
