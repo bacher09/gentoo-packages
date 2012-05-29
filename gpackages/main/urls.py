@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from main.settings import DEBUG
 
 admin.autodiscover()
 
@@ -13,3 +14,11 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
 )
+
+if DEBUG:
+    from packages.models import EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel
+    from django.contrib import databrowse
+    databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel)
+    urlpatterns += (
+        url(r'^data/(.*)',databrowse.site.root),
+        )

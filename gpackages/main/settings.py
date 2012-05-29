@@ -117,6 +117,16 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
+if DEBUG:
+    INSTALLED_APPS += ('django.contrib.databrowse','debug_toolbar') 
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(PROJECT_ROOT,'mail.mbox')
+else:
+    TEMPLATE_LOADERS = (
+        ('django.template.loaders.cached.Loader', TEMPLATE_LOADERS),)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'localhost'
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
