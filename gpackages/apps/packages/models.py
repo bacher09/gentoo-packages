@@ -4,7 +4,7 @@ from porttree import Category, Package, Ebuild
 import managers
 
 class ArchesModel(models.Model):
-    name = models.CharField(unique = True, max_length = 12)
+    name = models.CharField(unique = True, max_length = 22)
     
     def __unicode__(self):
         return self.name
@@ -80,8 +80,11 @@ class PackageModel(models.Model):
         unique_together = ('name', 'category')
 
 class UseFlagModel(models.Model):
-    name = models.CharField(unique = True, max_length = 28)
+    name = models.CharField(unique = True, max_length = 32)
     description = models.TextField(blank = True)
+    
+    def __unicode__(self):
+        return self.name
 
 class LicensModel(models.Model):
     name = models.CharField(unique = True, max_length = 40)
@@ -104,7 +107,7 @@ class EbuildModel(models.Model):
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
-    homepage = models.URLField()
+    homepage = models.URLField(blank = True, null = True)
     description = models.TextField(blank = True, null = True)
 
     objects = managers.EbuildManager()
