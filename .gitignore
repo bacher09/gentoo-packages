@@ -3,3 +3,4 @@
 *.swo
 *.swp
 *.db
+gpackages/main/local_settings.py

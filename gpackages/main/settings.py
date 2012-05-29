@@ -145,3 +145,8 @@ LOGGING = {
         },
     }
 }
+
+try:
+    from local_settings import *
+except ImportError:
+    print("Pleasy provide local_settings")
