@@ -106,6 +106,18 @@ class EbuildModel(models.Model):
 
     homepage = models.URLField()
     description = models.TextField(blank = True, null = True)
+
+    objects = managers.EbuildManager()
+
+    def __init__(self, *args, **kwargs ):
+        # TODO: Bug fix
+        ebuild = None
+        if 'ebuild' in kwargs:
+            ebuild = kwargs['ebuild']
+            del kwargs['ebuild']
+        super(EbuildModel, self).__init__(*args, **kwargs)
+        if ebuild is not None and isinstance(ebuild, Ebuild):
+            self.init_with_keywords(ebuild)
     
     def __unicode__(self):
         return '%s-%s' % (self.package, self.version)
