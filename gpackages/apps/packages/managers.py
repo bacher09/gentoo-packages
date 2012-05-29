@@ -35,7 +35,7 @@ class KeywordMixin(object):
         if keyword is not None:
             if isinstance(keyword, Keyword):
                 arch, created = packages.models.ArchesModel.objects.get_or_create(name = keyword.name)
-                kwargs.update({'arch': arch, 'is_stable': keyword.is_stable })
+                kwargs.update({'arch': arch, 'status': keyword.status})
             else:
                 raise ValueError("Bad keyword object")
 

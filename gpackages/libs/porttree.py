@@ -53,15 +53,20 @@ class Use(ToStrMixin):
 
 
 class Keyword(ToStrMixin):
-    def __init__(self, name, is_stable = True):
-        if name[0] == '~':
+    status_repr = ['','~','-']
+    
+    def __init__(self, name, status = 0):
+        if name.startswith('~'):
             name = name[1:]
-            is_stable = False
+            status = 1
+        elif name.startswith('-'):
+            name = name[1:]
+            status = 2
         self.name = name
-        self.is_stable = is_stable
+        self.status = status
 
     def __unicode__(self):
-        return ('' if self.is_stable else '~' ) + self.name
+        return self.status_repr[self.status] + self.name
 
 
 class Portage(object):

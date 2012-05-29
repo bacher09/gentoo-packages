@@ -97,8 +97,8 @@ class LicensModel(models.Model):
 class EbuildModel(models.Model):
     package = models.ForeignKey(PackageModel)
     #repository = models.ForeignKey(RepositoryModel)
-    version = models.CharField(max_length = 16)
-    revision = models.CharField(max_length = 6)
+    version = models.CharField(max_length = 26)
+    revision = models.CharField(max_length = 12)
     use_flags = models.ManyToManyField(UseFlagModel)
     licenses = models.ManyToManyField(LicensModel)
     license = models.CharField(max_length = 254, blank = True )
@@ -168,14 +168,21 @@ class EbuildModel(models.Model):
             
 
 class Keyword(models.Model):
+    STATUS_CHOICES = (
+        (0, 'STABLE'),
+        (1, 'NEED TESTING'),
+        (2, 'NOT WORK')
+    )
+    status_repr = ['','~','-']
+
     ebuild = models.ForeignKey(EbuildModel)
     arch = models.ForeignKey(ArchesModel)
-    is_stable = models.BooleanField() 
+    status = models.PositiveSmallIntegerField(choices = STATUS_CHOICES)
 
     objects = managers.KeywordManager()
 
     def __unicode__(self):
-        return ('' if self.is_stable else '~' ) + str(self.arch)
+        return self.status_repr[self.status] + str(self.arch)
         
 
     def init_by_keyword(self, keyword, ebuild):
@@ -184,7 +191,7 @@ class Keyword(models.Model):
         elif isinstance(ebuild, Ebuild):
             self.ebuild, created = EbuildModel.objects.get_or_create(ebuild = ebuild)
         self.arch, created = ArchesModel.objects.get_or_create(name = keyword.name)
-        self.is_stable = keyword.is_stable
+        self.status = keyword.status
 
     class Meta:
         unique_together = ('ebuild', 'arch')
