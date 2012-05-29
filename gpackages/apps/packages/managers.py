@@ -3,6 +3,13 @@ from porttree import Category, Package, Ebuild, Keyword
 import packages.models
 
 
+def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
+    QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})
+    ManagerClass = type(ManagerClassName, (MixinClass, models.Manager),{
+        'get_query_set': lambda self: QueryClass(self.model, using=self._db)
+        })
+    return QueryClass, ManagerClass
+
 class PackageMixin(object):
     def get(self, package = None, *args, **kwargs):
         if package is not None and isinstance(package, Package):
@@ -19,13 +26,9 @@ class PackageMixin(object):
                 kwargs.update({'name': name, 'category': category})
         return super(PackageMixin, self).get(*args, **kwargs)
 
-class PackageQuerySet(PackageMixin, models.query.QuerySet):
-    pass
-
-class PackageManager(PackageMixin, models.Manager):
-    def get_query_set(self):
-        return PackageQuerySet(self.model, using=self._db)
-
+PackageQuerySet, PackageManager = _gen_query_and_manager(PackageMixin, 
+                                                        'PackageQuerySet',
+                                                        'PackageManager')
 
 class KeywordMixin(object):
     def get_or_create(self, keyword=None,  **kwargs):
@@ -38,13 +41,9 @@ class KeywordMixin(object):
 
         return super(KeywordMixin, self).get_or_create(**kwargs)
 
-class KeywordQuerySet(KeywordMixin, models.query.QuerySet):
-    pass
-
-class KeywordManager(KeywordMixin, models.Manager):
-    def get_query_set(self):
-        return KeywordQuerySet(self.model, using=self._db)
-
+KeywordQuerySet, KeywordManager = _gen_query_and_manager(KeywordMixin, 
+                                                        'KeywordQuerySet',
+                                                        'KeywordManager')
 
 class EbuildMixin(object):
     def get(self, ebuild=None, *args, **kwargs):
@@ -61,9 +60,7 @@ class EbuildMixin(object):
         return super(EbuildMixin, self).get(*args, **kwargs)
             
 
-class EbuildQuerySet(EbuildMixin, models.query.QuerySet):
-    pass
 
-class EbuildManager(EbuildMixin, models.Manager):
-    def get_query_set(self):
-        return EbuildQuerySet(self.model, using=self._db)
+EbuildQuerySet, EbuildManager =   _gen_query_and_manager(EbuildMixin,
+                                                        'EbuildQuerySet',
+                                                        'EbuildManager')
