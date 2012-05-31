@@ -178,9 +178,13 @@ class Ebuild(ToStrMixin):
         self.package = package
         self.ebuild = ebuild
         self.package_object = PackageInfo(ebuild)
+
+    @property
+    def keywords(self):
+        return self.package_object.environment("KEYWORDS", prefer_vdb = False)
     
     def iter_keywords(self):
-        keywords = self.package_object.environment("KEYWORDS").split()
+        keywords = self.keywords.split()
         for keyword in keywords:
             yield Keyword(keyword)
         
