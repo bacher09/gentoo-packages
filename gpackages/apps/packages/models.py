@@ -60,6 +60,9 @@ class PackageModel(models.Model):
     changelog = models.TextField(blank = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
+    changelog_mtime = models.DateTimeField(blank = True, null = True)
+    manifest_mtime = models.DateTimeField(blank = True, null = True)
+    mtime = models.DateTimeField(blank = True, null = True)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -76,7 +79,10 @@ class PackageModel(models.Model):
             self.category = category
 
     def update_info(self, package):
+        self.mtime = package.mtime
+        self.changelog_mtime = package.changelog_mtime
         self.changelog_hash = package.changelog_sha1
+        self.manifest_mtime = package.manifest_mtime
         self.manifest_hash = package.manifest_sha1
 
     class Meta:
@@ -106,6 +112,7 @@ class EbuildModel(models.Model):
     licenses = models.ManyToManyField(LicensModel)
     license = models.CharField(max_length = 254, blank = True )
     ebuild_hash = models.CharField(max_length = 128)
+    ebuild_mtime = models.DateTimeField(blank = True, null = True)
     ebuild_datetime = models.DateTimeField(auto_now = True)
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
@@ -132,6 +139,7 @@ class EbuildModel(models.Model):
         self.version = ebuild.version
         self.revision = ebuild.revision
         self.license = ebuild.license
+        self.ebuild_mtime = ebuild.mtime
         self.ebuild_hash = ebuild.sha1
         self.homepage = ebuild.homepage
         self.description = ebuild.description

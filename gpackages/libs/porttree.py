@@ -5,6 +5,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
 from gentoolkit.package import Package as PackageInfo
+from datetime import datetime
 import hashlib
 import os
 
@@ -25,6 +26,9 @@ def _file_path(file_name):
 def _file_hash(attr):
     return lambda self: file_sha1(getattr(self, attr))
 
+def _file_mtime(attr):
+    return lambda self: file_mtime(getattr(self, attr))
+
 def _ebuild_environment(name):
     return lambda self: self.package_object.environment(name)
 
@@ -36,6 +40,11 @@ def file_sha1(file_path):
         f.close()
     return sha1
 
+def file_mtime(file_path):
+    if os.path.exists(file_path):
+        return datetime.fromtimestamp(os.path.getmtime(file_path))
+    else:
+        return None
 
 class ToStrMixin(object):
     def __str__(self):
@@ -167,14 +176,20 @@ class Package(ToStrMixin):
     def package_path(self):
         return os.path.join(self.category.porttree.porttree_path, self.package)
 
+    mtime = property(_file_mtime("package_path"))
+
     @property
     def name(self):
         return self.package.split('/')[1]
 
     manifest_path = property(_file_path('Manifest'))
     changelog_path = property(_file_path('ChangeLog'))
+    #Hashes
     manifest_sha1 = property(_file_hash('manifest_path'))
     changelog_sha1 = property(_file_hash('changelog_path'))
+    # Modify times
+    manifest_mtime = property(_file_mtime("manifest_path"))
+    changelog_mtime = property(_file_mtime("changelog_path"))
 
 
 class Ebuild(ToStrMixin):
@@ -257,9 +272,8 @@ class Ebuild(ToStrMixin):
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
-    @property
-    def sha1(self):
-        return file_sha1(self.ebuild_path)
+    sha1 = property(_file_hash("ebuild_path"))
+    mtime = property(_file_mtime("ebuild_path"))
 
     def __unicode__(self):
         return self.ebuild
