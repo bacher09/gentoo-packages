@@ -16,9 +16,9 @@ urlpatterns = patterns('',
 )
 
 if DEBUG:
-    from packages.models import EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel
+    from packages.models import EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel, HomepageModel
     from django.contrib import databrowse
-    databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel)
+    databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, LicensModel, CategoryModel, Keyword, ArchesModel, HomepageModel)
     urlpatterns += (
         url(r'^data/(.*)',databrowse.site.root),
         )

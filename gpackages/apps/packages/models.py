@@ -117,7 +117,7 @@ class EbuildModel(models.Model):
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
-    homepage = models.URLField(blank = True, null = True, max_length=255)
+    #homepage = models.URLField(blank = True, null = True, max_length=255)
     description = models.TextField(blank = True, null = True)
 
     objects = managers.EbuildManager()
@@ -211,3 +211,12 @@ class Keyword(models.Model):
 
     class Meta:
         unique_together = ('ebuild', 'arch')
+
+
+class HomepageModel(models.Model):
+    url = models.URLField(max_length=255)
+    ebuild = models.ForeignKey(EbuildModel)
+
+    def __unicode__(self):
+        return self.url
+

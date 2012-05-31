@@ -130,6 +130,12 @@ class Command(BaseCommand):
                     ebuild_object.licenses.add(*get_licenses_objects(ebuild))
                     ebuild_object.use_flags.add(*get_uses_objects(ebuild))
                     get_keywords_objects(ebuild, ebuild_object)
+                    homepages_list = []
+                    for homepage in ebuild.homepages:
+                        homepage_object = models.HomepageModel(url = homepage,
+                                                               ebuild = ebuild_object)
+                        homepages_list.append(homepage_object)
+                    models.HomepageModel.objects.bulk_create(homepages_list)
 
 
         print (datetime.datetime.now() - st).total_seconds()
