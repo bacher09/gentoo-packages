@@ -49,7 +49,7 @@ class PackageModel(models.Model):
 
         if isinstance(package_object, Package):
             super(PackageModel, self).__init__()
-            self.init_by_package(package_object)
+            self.init_by_package(package_object, category = kwargs.get('category'))
         else:
             super(PackageModel, self).__init__(*args, **kwargs)
             
@@ -67,10 +67,13 @@ class PackageModel(models.Model):
     def __unicode__(self):
         return '%s/%s' % (self.category, self.name)
     
-    def init_by_package(self, package):
+    def init_by_package(self, package, category = None):
         self.name = package.name
         self.update_info(package)
-        self.category, created = CategoryModel.objects.get_or_create(category = package.category)
+        if category is None:
+            self.category, created = CategoryModel.objects.get_or_create(category = package.category)
+        elif isinstance(category, CategoryModel):
+            self.category = category
 
     def update_info(self, package):
         self.changelog_hash = package.changelog_sha1
@@ -80,14 +83,14 @@ class PackageModel(models.Model):
         unique_together = ('name', 'category')
 
 class UseFlagModel(models.Model):
-    name = models.CharField(unique = True, max_length = 32)
+    name = models.CharField(unique = True, max_length = 60)
     description = models.TextField(blank = True)
     
     def __unicode__(self):
         return self.name
 
 class LicensModel(models.Model):
-    name = models.CharField(unique = True, max_length = 40)
+    name = models.CharField(unique = True, max_length = 60)
     #description = TextField()
     
     def __unicode__(self):
@@ -107,13 +110,12 @@ class EbuildModel(models.Model):
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
-    homepage = models.URLField(blank = True, null = True)
+    homepage = models.URLField(blank = True, null = True, max_length=255)
     description = models.TextField(blank = True, null = True)
 
     objects = managers.EbuildManager()
 
     def __init__(self, *args, **kwargs ):
-        # TODO: Bug fix
         ebuild = None
         if 'ebuild' in kwargs:
             ebuild = kwargs['ebuild']
@@ -123,8 +125,8 @@ class EbuildModel(models.Model):
             self.init_with_keywords(ebuild)
     
     def __unicode__(self):
-        return '%s-%s' % (self.package, self.version)
-
+        return '%s-%s%s' % (self.package, self.version, ('-'+ self.revision if self.revision else '')) 
+    
     def init_by_ebuild(self, ebuild):
         self.is_masked = ebuild.is_masked
         self.version = ebuild.version
@@ -133,7 +135,13 @@ class EbuildModel(models.Model):
         self.ebuild_hash = ebuild.sha1
         self.homepage = ebuild.homepage
         self.description = ebuild.description
-        self.package = PackageModel.objects.get_or_create(package = ebuild.package)[0]
+
+    def init_related(self, ebuild, package = None):
+        self.init_by_ebuild(ebuild)
+        if package is None:
+            self.package = PackageModel.objects.get_or_create(package = ebuild.package)[0]
+        elif isinstance(package, PackageModel):
+            self.package = package
         self.save()
         l = []
         for license in ebuild.licenses:

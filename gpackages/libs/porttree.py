@@ -53,6 +53,16 @@ class Use(ToStrMixin):
     def __unicode__(self):
         return self.name
 
+    def __eq__(self, other):
+        self.name == other.name
+
+    def __ne__(self, other):
+        self.name != other.name
+
+    def __hash__(self):
+        return hash(self.name)
+        
+
 
 class Keyword(ToStrMixin):
     status_repr = ['','~','-']
@@ -180,9 +190,12 @@ class Ebuild(ToStrMixin):
             l.append(keyword)
         return l
 
+    def get_uses_names(self):
+        return self.package_object.environment("IUSE").split()
+    
+
     def iter_uses(self):
-        uses = self.package_object.environment("IUSE").split()
-        for use in uses:
+        for use in self.get_uses_names():
             yield Use(use)
 
     def get_uses(self):
@@ -211,9 +224,18 @@ class Ebuild(ToStrMixin):
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
-    homepage = property(_ebuild_environment('HOMEPAGE'))
+    homepage_val = property(_ebuild_environment('HOMEPAGE'))
     license = property(_ebuild_environment('LICENSE'))
     description = property(_ebuild_environment('DESCRIPTION'))
+
+    @property
+    def homepages(self):
+        return self.homepage_val.split()
+
+    @property
+    def homepage(self):
+        return self.homepages[0] if len(self.homepages)>=1 else ''
+
 
     @property
     def licenses(self):
