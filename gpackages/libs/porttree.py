@@ -80,6 +80,10 @@ class Keyword(ToStrMixin):
     def __unicode__(self):
         return self.status_repr[self.status] + self.name
 
+    @property
+    def arch(self):
+        return self.name
+
 
 class Portage(object):
     
@@ -180,11 +184,15 @@ class Ebuild(ToStrMixin):
         self.package_object = PackageInfo(ebuild)
 
     @property
-    def keywords(self):
+    def keywords_env(self):
         return self.package_object.environment("KEYWORDS", prefer_vdb = False)
+
+    @property
+    def keywords(self):
+        return list(frozenset(self.keywords_env.split()))
     
     def iter_keywords(self):
-        keywords = self.keywords.split()
+        keywords = self.keywords
         for keyword in keywords:
             yield Keyword(keyword)
         
