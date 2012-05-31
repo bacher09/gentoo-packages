@@ -93,6 +93,25 @@ class Command(BaseCommand):
                 geted_uses.add(use.name)
             return uses_objects
 
+        arches_cache = {}
+        def get_keywords_objects(ebuild, ebuild_object):
+            keywords_list = []
+            for keyword in ebuild.get_keywords():
+                keyword_object = models.Keyword(status = keyword.status,
+                                                ebuild = ebuild_object)
+
+                if keyword.arch in arches_cache:
+                    arch = arches_cache[keyword.arch]
+                else:
+                    arch, created = models.ArchesModel.objects.get_or_create(name = keyword.arch)
+                    arches_cache[keyword.arch] = arch
+                
+                keyword_object.arch = arch
+                keywords_list.append(keyword_object)
+
+            models.Keyword.objects.bulk_create(keywords_list)
+
+
 
             
         st = datetime.datetime.now()
@@ -110,6 +129,7 @@ class Command(BaseCommand):
                     # Add licenses
                     ebuild_object.licenses.add(*get_licenses_objects(ebuild))
                     ebuild_object.use_flags.add(*get_uses_objects(ebuild))
+                    get_keywords_objects(ebuild, ebuild_object)
 
 
         print (datetime.datetime.now() - st).total_seconds()
