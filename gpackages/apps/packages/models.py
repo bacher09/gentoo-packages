@@ -3,6 +3,12 @@ from django.db import models
 from porttree import Category, Package, Ebuild
 import managers
 
+class HomepageModel(models.Model):
+    url = models.URLField(max_length=255, unique = True)
+
+    def __unicode__(self):
+        return self.url
+
 class ArchesModel(models.Model):
     name = models.CharField(unique = True, max_length = 22)
     
@@ -118,6 +124,7 @@ class EbuildModel(models.Model):
     is_masked = models.BooleanField(default = False)
 
     #homepage = models.URLField(blank = True, null = True, max_length=255)
+    homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
 
     objects = managers.EbuildManager()
@@ -213,10 +220,14 @@ class Keyword(models.Model):
         unique_together = ('ebuild', 'arch')
 
 
-class HomepageModel(models.Model):
-    url = models.URLField(max_length=255)
-    ebuild = models.ForeignKey(EbuildModel)
+class MaintainerModel(models.Model):
+    name = models.CharField( unique = True, max_length = 255)
+    email = models.EmailField()
+    role = models.TextField(blank = True, null = True)
 
-    def __unicode__(self):
-        return self.url
+class HerdsModel(models.Model):
+    name = models.CharField(unique = True, max_length = 150)
+    email = models.EmailField()
+    description = models.TextField(blank = True, null = True)
+    maintainers = models.ManyToManyField(MaintainerModel, blank = True)
 

@@ -113,7 +113,10 @@ class Command(BaseCommand):
 
 
         homepages_cache = {}    
-            
+        def get_homepages_objects(ebuild):
+            homepages = ebuild.homepages
+            return _get_items(homepages, models.HomepageModel, 'url', homepages_cache)
+        
         st = datetime.datetime.now()
         # Load homepages to cache
         for homepage in models.HomepageModel.objects.all():
@@ -133,13 +136,14 @@ class Command(BaseCommand):
                     # Add licenses
                     ebuild_object.licenses.add(*get_licenses_objects(ebuild))
                     ebuild_object.use_flags.add(*get_uses_objects(ebuild))
+                    ebuild_object.homepages.add(*get_homepages_objects(ebuild))
                     get_keywords_objects(ebuild, ebuild_object)
-                    homepages_list = []
-                    for homepage in ebuild.homepages:
-                        homepage_object = models.HomepageModel(url = homepage,
-                                                               ebuild = ebuild_object)
-                        homepages_list.append(homepage_object)
-                    models.HomepageModel.objects.bulk_create(homepages_list)
+                    #homepages_list = []
+                    #for homepage in ebuild.homepages:
+                        #homepage_object = models.HomepageModel(url = homepage,
+                                                               #ebuild = ebuild_object)
+                        #homepages_list.append(homepage_object)
+                    #models.HomepageModel.objects.bulk_create(homepages_list)
 
 
         print (datetime.datetime.now() - st).total_seconds()
