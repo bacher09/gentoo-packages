@@ -5,6 +5,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
 from gentoolkit.package import Package as PackageInfo
+from gentoolkit.metadata import MetaData
 from datetime import datetime
 import hashlib
 import os
@@ -163,6 +164,7 @@ class Package(ToStrMixin):
     def __init__(self, category, package):
         self.category = category
         self.package = package
+        self._metadata = None
 
     def iter_ebuilds(self):
         ebuilds = PORTDB.cp_list(self.package, mytree=self.category.porttree.porttree)
@@ -176,6 +178,12 @@ class Package(ToStrMixin):
     def package_path(self):
         return os.path.join(self.category.porttree.porttree_path, self.package)
 
+    @property
+    def metadata(self):
+        if self._metadata is None:
+            self._metadata = MetaData( self.metadata_path)
+        return self._metadata
+
     mtime = property(_file_mtime("package_path"))
 
     @property
@@ -184,12 +192,16 @@ class Package(ToStrMixin):
 
     manifest_path = property(_file_path('Manifest'))
     changelog_path = property(_file_path('ChangeLog'))
+    metadata_path = property(_file_path('metadata.xml'))
+
     #Hashes
     manifest_sha1 = property(_file_hash('manifest_path'))
     changelog_sha1 = property(_file_hash('changelog_path'))
+    metadata_sha1 = property(_file_hash('metadata_path'))
     # Modify times
     manifest_mtime = property(_file_mtime("manifest_path"))
     changelog_mtime = property(_file_mtime("changelog_path"))
+    metadata_mtime = property(_file_mtime("metadata_path"))
 
 
 class Ebuild(ToStrMixin):
