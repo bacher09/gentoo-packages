@@ -8,6 +8,75 @@ import logging
 #l.setLevel(logging.DEBUG)
 #l.addHandler(logging.FileHandler('database.log'))
 
+def _get_from_cache(cache, what):
+    save_to = []
+    cached_items = frozenset(cache.keys())
+    geted_items = set()
+    for item in ( cached_items & what):
+        geted_items.add(item)
+        save_to.append(cache[item])
+    return save_to, geted_items
+
+def _get_from_database(Model, field_name, request_items):
+    request_items = list(request_items)
+    if not request_items:
+        return None
+    return Model.objects.filter(**{field_name + '__in': request_items})
+
+def _update_cache_by_queryset(cache, queryset, field_name):
+    geted_items = set()
+    for item in queryset:
+        cache[getattr(item, field_name)] = item
+        geted_items.add(getattr(item, field_name))
+    return geted_items
+
+def _get_from_database_and_update_cache(Model, field_name, request_items, cache):
+    queryset = _get_from_database(Model, field_name, request_items)
+    if queryset is None:
+        return None, set()
+    geted =  _update_cache_by_queryset(cache, queryset, field_name)
+    return queryset, geted
+
+def _create_objects(Model, field_name, need_create):
+    if not need_create:
+        return None
+    creating_list = []
+    for item in need_create:
+        creating_list.append(Model(**{field_name: item}))
+
+    Model.objects.bulk_create(creating_list)
+    created = Model.objects.filter(**{field_name + '__in': need_create})
+    return created
+
+def _create_objects_and_update_cache(Model, field_name, need_create, cache):
+    created = _create_objects(Model, field_name, need_create)
+    if created is None:
+        return None, None
+    geted = _update_cache_by_queryset(cache, created, field_name)
+    return created, geted
+
+def _get_items(items_list, Model, field_name, cache_var):
+    items_set = frozenset(items_list)
+    # Getting from cache
+    items_objects, geted_items = _get_from_cache(cache_var, items_set)
+    # Getting from database
+    queryset, geted = _get_from_database_and_update_cache(Model, field_name, items_set - geted_items, cache_var)
+    if queryset is None:
+        return items_objects
+    geted_items = geted_items | geted
+
+    # Add to list with items 
+    items_objects.extend(queryset)
+    # Create not existend items fast using bulk_create, works only in django 1.4 or gt
+    need_create = list(items_set - geted_items)
+    created, geted = _create_objects_and_update_cache(Model, field_name, need_create, cache_var)
+    if created is None:
+        return items_objects
+    items_objects.extend(created)
+    geted_items = geted_items | geted
+    return items_objects
+    
+
 class Command(BaseCommand):
     args = ''
     help = 'Will scan package tree and update info about it in database'
@@ -16,82 +85,12 @@ class Command(BaseCommand):
         licenses_cache = {}
         def get_licenses_objects(ebuild):
             licenses = ebuild.licenses
-            license_objects = []
-            licenses_set = frozenset(licenses)
-            cached_licenses = set(licenses_cache.keys())
-            # Getting from cache
-            geted_licenses = set()
-            for license in (cached_licenses & licenses_set):
-                geted_licenses.add(license)
-                license_objects.append(licenses_cache[license])
-            # Getting from database
-            request_licenses = list(licenses_set - geted_licenses)
-            if not request_licenses:
-                return license_objects
-            request = models.LicensModel.objects.filter(name__in = request_licenses)
-            # Add to list with licenses
-            license_objects.extend(request)
-            # Update cache
-            for license in request:
-                licenses_cache[license.name] = license
-                geted_licenses.add(license.name)
-            # Create not existend licenses fast using bulk_create, works only in django 1.4 or gt
-            need_create = list(licenses_set - geted_licenses)
-            if not need_create:
-                return license_objects
-            creating_list = []
-            for license in need_create:
-                creating_list.append(models.LicensModel(name = license))
-            
-            models.LicensModel.objects.bulk_create(creating_list)
-            # Retriwing created licenses from database
-            request_created = models.LicensModel.objects.filter(name__in = need_create)
-            license_objects.extend(request_created)
-            # Update cache
-            for license in request_created:
-                licenses_cache[license.name] = license
-                geted_licenses.add(license.name)
-            return license_objects
+            return _get_items(licenses, models.LicensModel, 'name', licenses_cache)
 
         uses_cache = {}
         def get_uses_objects(ebuild):
             uses = [ use.name for use in ebuild.iter_uses() ]
-            uses_objects = []
-            uses_set = frozenset(uses)
-            cached_uses = set(uses_cache.keys())
-            # Getting from cache
-            geted_uses = set()
-            for use in (cached_uses & uses_set):
-                geted_uses.add(use)
-                uses_objects.append(uses_cache[use])
-            # Getting from database
-            request_use = list(uses_set - geted_uses)
-            if not request_use:
-                return uses_objects
-            request = models.UseFlagModel.objects.filter(name__in = request_use)
-            # Add to list with licenses
-            uses_objects.extend(request)
-            # Update cache
-            for use in request:
-                uses_cache[use.name] = use
-                geted_uses.add(use.name)
-            # Create not existend licenses fast using bulk_create, works only in django 1.4 or gt
-            need_create = list(uses_set - geted_uses)
-            if not need_create:
-                return license_objects
-            creating_list = []
-            for use in need_create:
-                creating_list.append(models.UseFlagModel(name = use))
-            
-            models.UseFlagModel.objects.bulk_create(creating_list)
-            # Retriwing created licenses from database
-            request_created = models.UseFlagModel.objects.filter(name__in = need_create)
-            uses_objects.extend(request_created)
-            # Update cache 
-            for use in request_created:
-                uses_cache[use.name] = use
-                geted_uses.add(use.name)
-            return uses_objects
+            return _get_items(uses, models.UseFlagModel, 'name', uses_cache)
 
         arches_cache = {}
         def get_keywords_objects(ebuild, ebuild_object):
@@ -113,8 +112,13 @@ class Command(BaseCommand):
 
 
 
+        homepages_cache = {}    
             
         st = datetime.datetime.now()
+        # Load homepages to cache
+        for homepage in models.HomepageModel.objects.all():
+            homepages_cache[homepage.url] = homepage
+
         for category in self.porttree.iter_categories():
             category_object, categor_created = models.CategoryModel.objects.get_or_create(category = category)
             for package in category.iter_packages():
