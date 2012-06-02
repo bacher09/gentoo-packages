@@ -10,11 +10,11 @@ import logging
 
 def _get_from_cache(cache, what):
     save_to = []
-    cached_items = frozenset(cache.keys())
     geted_items = set()
-    for item in ( cached_items & what):
-        geted_items.add(item)
-        save_to.append(cache[item])
+    for item in what:
+        if item in cache:
+            geted_items.add(item)
+            save_to.append(cache[item])
     return save_to, geted_items
 
 def _get_from_database(Model, field_name, request_items):

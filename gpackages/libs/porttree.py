@@ -216,7 +216,7 @@ class Ebuild(ToStrMixin):
 
     @property
     def keywords(self):
-        return list(frozenset(self.keywords_env.split()))
+        return list(set(self.keywords_env.split()))
     
     def iter_keywords(self):
         keywords = self.keywords
@@ -243,6 +243,7 @@ class Ebuild(ToStrMixin):
             l.append(use)
         return l
 
+    #Could be faster
     @property
     def is_masked(self):
         return self.package_object.is_masked()

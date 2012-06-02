@@ -148,7 +148,7 @@ class EbuildModel(models.Model):
         self.license = ebuild.license
         self.ebuild_mtime = ebuild.mtime
         self.ebuild_hash = ebuild.sha1
-        self.homepage = ebuild.homepage
+        #self.homepage = ebuild.homepage
         self.description = ebuild.description
 
     def init_related(self, ebuild, package = None):
