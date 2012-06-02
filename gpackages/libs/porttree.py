@@ -55,6 +55,8 @@ class ToStrMixin(object):
         return '<%s %s>' % (type(self).__name__, self.__str__())
 
 class Use(ToStrMixin):
+    __slots__ = ('name',)
+
     def __init__(self, name):
         if name.startswith('+') or name.startswith('-'):
             name = name[1:]
@@ -75,6 +77,7 @@ class Use(ToStrMixin):
 
 
 class Keyword(ToStrMixin):
+    __slots__ = ('name', 'status')
     status_repr = ['','~','-']
     
     def __init__(self, name, status = 0):
@@ -135,6 +138,8 @@ class PortTree(ToStrMixin):
 
 
 class Category(ToStrMixin):
+
+    __slots__ = ('porttree', 'category')
     
     def __init__(self, porttree, category):
         self.porttree = porttree
@@ -161,6 +166,9 @@ class Category(ToStrMixin):
 
 
 class Package(ToStrMixin):
+
+    __slots__ = ('category', 'package', '_metadata')
+
     def __init__(self, category, package):
         self.category = category
         self.package = package
@@ -205,6 +213,9 @@ class Package(ToStrMixin):
 
 
 class Ebuild(ToStrMixin):
+
+    __slots__ = ('package', 'ebuild', 'package_object')
+
     def __init__(self, package, ebuild):
         self.package = package
         self.ebuild = ebuild
