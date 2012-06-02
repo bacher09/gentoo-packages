@@ -6,6 +6,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
+from generic import ToStrMixin
 from datetime import datetime
 import hashlib
 import os
@@ -46,13 +47,6 @@ def file_mtime(file_path):
         return datetime.fromtimestamp(os.path.getmtime(file_path))
     else:
         return None
-
-class ToStrMixin(object):
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __repr__(self):
-        return '<%s %s>' % (type(self).__name__, self.__str__())
 
 class Use(ToStrMixin):
     __slots__ = ('name',)

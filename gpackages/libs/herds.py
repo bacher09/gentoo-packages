@@ -3,6 +3,8 @@ try:
 except (ImportError, SystemError):
     import xml.etree.ElementTree as etree
 
+from collections import defaultdict
+from generic import ToStrMixin
 
 def _gen_func(name):
     return lambda self: getattr(self, name)
@@ -24,10 +26,22 @@ class AbstarctXmlObject(object):
             if obj_xml is not None:
                 setattr(self, '_' + val, obj_xml.text)
 
-class Maintainer(AbstarctXmlObject):
+class Maintainer(AbstarctXmlObject, ToStrMixin):
     attrs = ('name', 'email', 'role')
 
-class Herd(AbstarctXmlObject):
+    def __eq__(self, other):
+        return self.email == other.email
+
+    def __ne__(self, other):
+        return self.email != other.email
+
+    def __hash__(self):
+        return hash(self.email)
+
+    def __unicode__(self):
+        return self.email
+
+class Herd(AbstarctXmlObject, ToStrMixin):
     # create name, email and description property
     attrs = ('name', 'email', 'description')
 
@@ -39,13 +53,33 @@ class Herd(AbstarctXmlObject):
         for maintainer_tree in self._iter_maintainer:
             yield Maintainer(maintainer_tree)
 
+    def __unicode__(self):
+        return self.name
+
 
 class Herds(object):
     def __init__(self, herd_path='/usr/portage/metadata/herds.xml'):
         self._herd_path = herd_path
         self._herd_parse = etree.parse(herd_path)
-        self._iter_herd = self._herd_parse.iterfind('herd')
+        self._herds_dict = None
 
     def iter_herd(self):
-        for herd_tree in self._iter_herd:
+        for herd_tree in self._herd_parse.iterfind('herd'):
             yield Herd(herd_tree)
+
+    def get_herds_indict(self):
+        if self._herds_dict is not None:
+            return self._herds_dict
+        res = {}
+        for herd in self.iter_herd():
+            res[herd.name] = herd
+        self._herds_dict = res
+        return res
+
+    def get_maintainers_with_hers(self):
+        herd_dict = self.get_herds_indict()
+        maintainer_dict = defaultdict(list)
+        for herd in herd_dict.itervalues():
+            for maintainer in herd.iter_mainteiner():
+                maintainer_dict[maintainer].append(herd.name)
+        return maintainer_dict
