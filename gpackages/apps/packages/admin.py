@@ -1,6 +1,6 @@
 from django.contrib import admin
 from models import EbuildModel, PackageModel, LicensModel, CategoryModel, \
-                   UseFlagModel,  RepositoryModel, HomepageModel
+                   UseFlagModel,  RepositoryModel, HomepageModel, HerdsModel, MaintainerModel
 
 admin.site.register(EbuildModel)
 admin.site.register(PackageModel)
