@@ -29,6 +29,11 @@ class AbstarctXmlObject(object):
 class Maintainer(AbstarctXmlObject, ToStrMixin):
     attrs = ('name', 'email', 'role')
 
+    def __init__(self, *args, **kwargs):
+        super(Maintainer, self).__init__(*args, **kwargs)
+        if self._email is not None:
+            self._email = self._email.lower()
+
     def __eq__(self, other):
         return self.email == other.email
 
@@ -47,21 +52,31 @@ class Herd(AbstarctXmlObject, ToStrMixin):
 
     def __init__(self, xml_object):
         super(Herd, self).__init__(xml_object) 
-        self._iter_maintainer = xml_object.iterfind('maintainer')
+        self._xml_object = xml_object
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __ne__(self, other):
+        return self.name != other.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     def iter_mainteiner(self):
-        for maintainer_tree in self._iter_maintainer:
+        for maintainer_tree in self._xml_object.iterfind('maintainer'):
             yield Maintainer(maintainer_tree)
 
     def __unicode__(self):
         return self.name
 
 
-class Herds(object):
+class Herds(ToStrMixin):
     def __init__(self, herd_path='/usr/portage/metadata/herds.xml'):
         self._herd_path = herd_path
         self._herd_parse = etree.parse(herd_path)
         self._herds_dict = None
+        self._maintainers_dict = None
 
     def iter_herd(self):
         for herd_tree in self._herd_parse.iterfind('herd'):
@@ -77,9 +92,15 @@ class Herds(object):
         return res
 
     def get_maintainers_with_hers(self):
+        if self._maintainers_dict is not None:
+            return self._maintainers_dict
         herd_dict = self.get_herds_indict()
         maintainer_dict = defaultdict(list)
         for herd in herd_dict.itervalues():
             for maintainer in herd.iter_mainteiner():
                 maintainer_dict[maintainer].append(herd.name)
+        self._maintainers_dict = maintainer_dict
         return maintainer_dict
+
+    def __unicode__(self):
+        return self._herd_path
