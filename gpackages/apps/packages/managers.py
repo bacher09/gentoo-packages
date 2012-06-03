@@ -10,7 +10,19 @@ def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
         })
     return QueryClass, ManagerClass
 
-class PackageMixin(object):
+def _gen_all_query_and_manager(mixin_name, name_for_query, name_for_manager, *args):
+    for arg in args:
+        basename = arg.__name__
+        if basename.endswith(mixin_name):
+            end_index = len(basename) - len(mixin_name)
+            basename = basename[ : end_index]
+        q_name = basename + name_for_query
+        m_name = basename + name_for_manager
+        q, m = _gen_query_and_manager(arg, q_name, m_name)
+        globals()[q_name], globals()[m_name] = q, m
+        
+
+class PackageMixin(object):#{{{
     def get(self, package = None, *args, **kwargs):
         if package is not None and isinstance(package, Package):
             if 'category' not in kwargs:
@@ -22,13 +34,10 @@ class PackageMixin(object):
                 args[1] = category
             else:
                 kwargs.update({'name': name})
-        return super(PackageMixin, self).get(*args, **kwargs)
+        return super(PackageMixin, self).get(*args, **kwargs)#}}}
 
-PackageQuerySet, PackageManager = _gen_query_and_manager(PackageMixin, 
-                                                        'PackageQuerySet',
-                                                        'PackageManager')
 
-class KeywordMixin(object):
+class KeywordMixin(object):#{{{
     def get_or_create(self, keyword=None,  **kwargs):
         if keyword is not None:
             if isinstance(keyword, Keyword):
@@ -37,13 +46,10 @@ class KeywordMixin(object):
             else:
                 raise ValueError("Bad keyword object")
 
-        return super(KeywordMixin, self).get_or_create(**kwargs)
+        return super(KeywordMixin, self).get_or_create(**kwargs)#}}}
 
-KeywordQuerySet, KeywordManager = _gen_query_and_manager(KeywordMixin, 
-                                                        'KeywordQuerySet',
-                                                        'KeywordManager')
 
-class EbuildMixin(object):
+class EbuildMixin(object):#{{{
     def create(self, **kwargs):
         if 'ebuild' in kwargs:
             obj = self.model(**kwargs)
@@ -94,34 +100,27 @@ class EbuildMixin(object):
             revision = ebuild.revision
             kwargs.update({ 'version': version,
                             'revision': revision })
-        return super(EbuildMixin, self).get(*args, **kwargs)
-            
+        return super(EbuildMixin, self).get(*args, **kwargs)#}}}
 
 
-EbuildQuerySet, EbuildManager =   _gen_query_and_manager(EbuildMixin,
-                                                        'EbuildQuerySet',
-                                                        'EbuildManager')
-
-class HerdsMixin(object):
+class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):
         if 'herd__in' in kwargs:
             herds = kwargs['herd__in']
             del kwargs['herd__in']
             kwargs['name__in'] = herds
-        return super(HerdsMixin, self).filter(*args, **kwargs)
+        return super(HerdsMixin, self).filter(*args, **kwargs)#}}}
 
-HerdsQuerySet, HerdsManager = _gen_query_and_manager(HerdsMixin,
-                                                     'HerdsQuerySet',
-                                                     'HerdsManager')
 
-class MaintainerMixin(object):
+class MaintainerMixin(object):#{{{
     def filter(self, *args, **kwargs):
         if 'maintainer__in'  in kwargs:
             maintars = kwargs['maintainer__in']
             del kwargs['maintainer__in']
             kwargs['email__in'] = maintars
-        return super(MaintainerMixin, self).filter(*args, **kwargs)
+        return super(MaintainerMixin, self).filter(*args, **kwargs)#}}}
 
-MaintainerQuerySet, MaintainerManager = _gen_query_and_manager(MaintainerMixin,
-                                                     'MaintainerQuerySet',
-                                                     'MaintainerManager')
+
+_gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
+                           PackageMixin, KeywordMixin, EbuildMixin, HerdsMixin,
+                           MaintainerMixin)
