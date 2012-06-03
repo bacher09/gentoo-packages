@@ -110,7 +110,7 @@ class PortTree(ToStrMixin):
         self.porttree = porttree # TODO: it should be read-only
 
     def iter_categories(self):
-        for category in PORTDB.settings.categories:
+        for category in sorted(PORTDB.settings.categories):
             yield Category(self, category)
 
     def iter_packages(self):
