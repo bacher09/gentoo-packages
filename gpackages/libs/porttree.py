@@ -161,12 +161,13 @@ class Category(ToStrMixin):
 
 class Package(ToStrMixin):
 
-    __slots__ = ('category', 'package', '_metadata')
+    __slots__ = ('category', 'package', '_metadata', '_changelog')
 
     def __init__(self, category, package):
         self.category = category
         self.package = package
         self._metadata = None
+        self._changelog = None
 
     def iter_ebuilds(self):
         ebuilds = PORTDB.cp_list(self.package, mytree=self.category.porttree.porttree)
@@ -204,6 +205,13 @@ class Package(ToStrMixin):
     manifest_mtime = property(_file_mtime("manifest_path"))
     changelog_mtime = property(_file_mtime("changelog_path"))
     metadata_mtime = property(_file_mtime("metadata_path"))
+
+    @property
+    def changelog(self):
+        if self._changelog is not None:
+            return self._changelog
+        self._changelog = open(self.changelog_path,'r').read()
+        return self._changelog
 
 
 class Ebuild(ToStrMixin):
@@ -272,6 +280,8 @@ class Ebuild(ToStrMixin):
     homepage_val = property(_ebuild_environment('HOMEPAGE'))
     license = property(_ebuild_environment('LICENSE'))
     description = property(_ebuild_environment('DESCRIPTION'))
+    eapi = property(_ebuild_environment('EAPI'))
+    slot = property(_ebuild_environment('SLOT'))
 
     @property
     def homepages(self):

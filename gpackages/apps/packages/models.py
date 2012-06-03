@@ -141,6 +141,7 @@ class PackageModel(models.Model):
     def update_info(self, package):
         self.mtime = package.mtime
         self.changelog_mtime = package.changelog_mtime
+        self.changelog = package.changelog
         self.changelog_hash = package.changelog_sha1
         self.manifest_mtime = package.manifest_mtime
         self.manifest_hash = package.manifest_sha1
@@ -181,8 +182,8 @@ class EbuildModel(models.Model):
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
 
-    eapi = models.PositiveSmallIntegerField(default = 0)
-    slot = models.PositiveSmallIntegerField(default = 0)
+    #eapi = models.PositiveSmallIntegerField(default = 0)
+    #slot = models.PositiveSmallIntegerField(default = 0)
 
     
 
