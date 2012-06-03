@@ -101,3 +101,27 @@ class EbuildMixin(object):
 EbuildQuerySet, EbuildManager =   _gen_query_and_manager(EbuildMixin,
                                                         'EbuildQuerySet',
                                                         'EbuildManager')
+
+class HerdsMixin(object):
+    def filter(self, *args, **kwargs):
+        if 'herd__in' in kwargs:
+            herds = kwargs['herd__in']
+            del kwargs['herd__in']
+            kwargs['name__in'] = herds
+        return super(HerdsMixin, self).filter(*args, **kwargs)
+
+HerdsQuerySet, HerdsManager = _gen_query_and_manager(HerdsMixin,
+                                                     'HerdsQuerySet',
+                                                     'HerdsManager')
+
+class MaintainerMixin(object):
+    def filter(self, *args, **kwargs):
+        if 'maintainer__in'  in kwargs:
+            maintars = kwargs['maintainer__in']
+            del kwargs['maintainer__in']
+            kwargs['email__in'] = maintars
+        return super(MaintainerMixin, self).filter(*args, **kwargs)
+
+MaintainerQuerySet, MaintainerManager = _gen_query_and_manager(MaintainerMixin,
+                                                     'MaintainerQuerySet',
+                                                     'MaintainerManager')
