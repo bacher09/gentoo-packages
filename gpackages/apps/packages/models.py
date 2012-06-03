@@ -42,6 +42,57 @@ class CategoryModel(models.Model):
     def __unicode__(self):
         return self.category
 
+class MaintainerModel(models.Model):
+
+    def __init__(self, *args, **kwargs):
+        #TODO: Bad code, maybe use some libraries for overload methods
+        maintainer = None
+        if 'maintainer' in kwargs:
+            maintainer = kwargs['maintainer']
+            del kwargs['maintainer']
+        super(MaintainerModel, self).__init__(*args, **kwargs)
+        if maintainer is not None:
+            self.init_by_maintainer(maintainer)
+        
+    name = models.CharField(max_length = 255, blank = True, null = True)
+    email = models.EmailField(unique = True)
+    role = models.TextField(blank = True, null = True)
+
+    objects = managers.MaintainerManager()
+
+    def init_by_maintainer(self, maintainer):
+        self.name = maintainer.name
+        self.email = maintainer.email
+        self.role = maintainer.role
+    
+    def __unicode__(self):
+        return ':'.join((unicode(self.name), self.email))
+
+class HerdsModel(models.Model):
+
+    def __init__(self, *args, **kwargs):
+        herd = None
+        if 'herd' in kwargs:
+            herd = kwargs['herd']
+            del kwargs['herd']
+        super(HerdsModel, self).__init__(*args, **kwargs)
+        if herd is not None:
+            self.init_by_herd(herd)
+
+    name = models.CharField(unique = True, max_length = 150)
+    email = models.EmailField()
+    description = models.TextField(blank = True, null = True)
+    maintainers = models.ManyToManyField(MaintainerModel, blank = True)
+
+    objects = managers.HerdsManager()
+
+    def init_by_herd(self, herd):
+        self.name = herd.name
+        self.email = herd.email
+        self.description = herd.description
+
+    def __unicode__(self):
+        return self.name
 
 class PackageModel(models.Model):
     def __init__(self, *args, **kwargs):
@@ -69,6 +120,8 @@ class PackageModel(models.Model):
     changelog_mtime = models.DateTimeField(blank = True, null = True)
     manifest_mtime = models.DateTimeField(blank = True, null = True)
     mtime = models.DateTimeField(blank = True, null = True)
+
+    herds = models.ManyToManyField(HerdsModel, blank = True)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -220,54 +273,3 @@ class Keyword(models.Model):
         unique_together = ('ebuild', 'arch')
 
 
-class MaintainerModel(models.Model):
-
-    def __init__(self, *args, **kwargs):
-        #TODO: Bad code, maybe use some libraries for overload methods
-        maintainer = None
-        if 'maintainer' in kwargs:
-            maintainer = kwargs['maintainer']
-            del kwargs['maintainer']
-        super(MaintainerModel, self).__init__(*args, **kwargs)
-        if maintainer is not None:
-            self.init_by_maintainer(maintainer)
-        
-    name = models.CharField(max_length = 255, blank = True, null = True)
-    email = models.EmailField(unique = True)
-    role = models.TextField(blank = True, null = True)
-
-    objects = managers.MaintainerManager()
-
-    def init_by_maintainer(self, maintainer):
-        self.name = maintainer.name
-        self.email = maintainer.email
-        self.role = maintainer.role
-    
-    def __unicode__(self):
-        return ':'.join((unicode(self.name), self.email))
-
-class HerdsModel(models.Model):
-
-    def __init__(self, *args, **kwargs):
-        herd = None
-        if 'herd' in kwargs:
-            herd = kwargs['herd']
-            del kwargs['herd']
-        super(HerdsModel, self).__init__(*args, **kwargs)
-        if herd is not None:
-            self.init_by_herd(herd)
-
-    name = models.CharField(unique = True, max_length = 150)
-    email = models.EmailField()
-    description = models.TextField(blank = True, null = True)
-    maintainers = models.ManyToManyField(MaintainerModel, blank = True)
-
-    objects = managers.HerdsManager()
-
-    def init_by_herd(self, herd):
-        self.name = herd.name
-        self.email = herd.email
-        self.description = herd.description
-
-    def __unicode__(self):
-        return self.name
