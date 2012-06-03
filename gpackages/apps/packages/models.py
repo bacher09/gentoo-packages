@@ -122,6 +122,7 @@ class PackageModel(models.Model):
     mtime = models.DateTimeField(blank = True, null = True)
 
     herds = models.ManyToManyField(HerdsModel, blank = True)
+    maintainers = models.ManyToManyField(MaintainerModel, blank = True)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -179,6 +180,11 @@ class EbuildModel(models.Model):
     #homepage = models.URLField(blank = True, null = True, max_length=255)
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
+
+    eapi = models.PositiveSmallIntegerField(default = 0)
+    slot = models.PositiveSmallIntegerField(default = 0)
+
+    
 
     objects = managers.EbuildManager()
 

@@ -174,7 +174,6 @@ class Command(BaseCommand):
             models.Keyword.objects.bulk_create(keywords_list)
 
 
-
         homepages_cache = {}    
         def get_homepages_objects(ebuild):
             homepages = ebuild.homepages
@@ -183,6 +182,22 @@ class Command(BaseCommand):
         
         st = datetime.datetime.now()
         herds_cache, maintainers_cache = scan_herds()
+        def get_maintainers_objects(package):
+            maintainers = package.metadata.maintainers()
+            objects = []
+            for maintainer in maintainers:
+                if maintainer.email in maintainers_cache:
+                    objects.append(maintainers_cache[maintainer.email])
+                else:
+                    maintainer_object, created = models.MaintainerModel \
+                            .objects.get_or_create(email = maintainer.email)
+                    if created:
+                        maintainer_object.name = maintainer.name
+                        maintainer_object.save()
+                    objects.append(maintainer_object)
+            return objects
+                    
+
         def get_herds_objects(package):
             herds = package.metadata.herds()
             herds_objects = []
@@ -201,6 +216,7 @@ class Command(BaseCommand):
                 print package
                 package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object)
                 package_object.herds.add(*get_herds_objects(package))
+                package_object.maintainers.add(*get_maintainers_objects(package))
                 for ebuild in package.iter_ebuilds():
                     ebuild_object = models.EbuildModel()
                     ebuild_object.init_by_ebuild(ebuild)
