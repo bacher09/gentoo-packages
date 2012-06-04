@@ -15,7 +15,7 @@ class AbstractXmlObject(object):
     def __new__(cls, *args, **kwargs):
         for val in cls.attrs:
             setattr(cls, val, property(_gen_func('_'+val)))
-        ins = super(AbstarctXmlObject, cls).__new__(cls, *args, **kwargs) 
+        ins = super(AbstractXmlObject, cls).__new__(cls, *args, **kwargs) 
         #attrs = getattr(ins, 'attrs')
         return ins
     
@@ -26,7 +26,7 @@ class AbstractXmlObject(object):
             if obj_xml is not None:
                 setattr(self, '_' + val, obj_xml.text)
 
-class Maintainer(AbstarctXmlObject, ToStrMixin):
+class Maintainer(AbstractXmlObject, ToStrMixin):
     attrs = ('name', 'email', 'role')
 
     def __init__(self, *args, **kwargs):
@@ -46,7 +46,7 @@ class Maintainer(AbstarctXmlObject, ToStrMixin):
     def __unicode__(self):
         return self.email
 
-class Herd(AbstarctXmlObject, ToStrMixin):
+class Herd(AbstractXmlObject, ToStrMixin):
     # create name, email and description property
     attrs = ('name', 'email', 'description')
 
@@ -91,7 +91,7 @@ class Herds(ToStrMixin):
         self._herds_dict = res
         return res
 
-    def get_maintainers_with_hers(self):
+    def get_maintainers_with_herds(self):
         if self._maintainers_dict is not None:
             return self._maintainers_dict
         herd_dict = self.get_herds_indict()

@@ -105,7 +105,7 @@ def scan_herds():
     existent_herds = models.HerdsModel.objects.all()
     herds_object = herds.Herds()
     herds_dict = herds_object.get_herds_indict()
-    maintainers_dict = herds_object.get_maintainers_with_hers()
+    maintainers_dict = herds_object.get_maintainers_with_herds()
     ho_dict = {}
     to_del = []
     for herd_object in existent_herds:
