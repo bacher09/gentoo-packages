@@ -34,6 +34,9 @@ class PackageMixin(object):#{{{
                 args[1] = category
             else:
                 kwargs.update({'name': name})
+        elif package is not None:
+            category, name = package.split('/')
+            kwargs.update({'name': name, 'category__category': category})
         return super(PackageMixin, self).get(*args, **kwargs)#}}}
 
 

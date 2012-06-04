@@ -3,6 +3,7 @@ from packages import models
 from collections import defaultdict
 import porttree
 import herds
+import use_info
 
 import datetime
 import logging
@@ -148,6 +149,54 @@ def scan_herds():
 
     return ho_dict, mo_dict
 
+def update_globals_uses_descriptions():
+    # Need changes 
+    uses_g = use_info.get_uses_info()
+    existend_use_objects = models.UseFlagModel.objects.filter(name__in = uses_g.keys())
+    for use_object in existend_use_objects:
+        use_object.description = uses_g[use_object.name]
+        use_object.save(force_update = True)
+    
+
+def scan_uses_description():
+    uses_local = use_info.get_local_uses_info()
+    existend_use_objects = models.UseFlagModel.objects.filter(name__in = uses_local.keys())
+    existend_use_local_descr = models.UseFlagDescriptionModel.objects.all()
+    cache_uses = {}
+    _update_cache_by_queryset(cache_uses, existend_use_objects, 'name')
+    use_local_cache = defaultdict(dict)
+    for use_obj in existend_use_local_descr:
+        use_local_cache[use_obj.use_flag.name][use_obj.package.cp] = use_obj
+
+    package_cache = dict()
+    for use_flag, packages_dict in uses_local.iteritems():
+        if use_flag not in cache_uses:
+            continue
+        use_flag_object = cache_uses[use_flag]
+        to_create = []
+        for package, description in packages_dict.iteritems():
+            if package in package_cache:
+                package_object = package_cache[package]
+            else:
+                try:
+                    package_object = models.PackageModel.objects.get(package = package)
+                except models.PackageModel.DoesNotExist:
+                    continue
+                else:
+                    package_cache[package] = package_object
+            if package not in use_local_cache[use_flag]:
+                to_create.append(
+                models.UseFlagDescriptionModel(package = package_object,
+                                               use_flag = use_flag_object,
+                                               description = description))
+            else:
+                use_desc_obj = use_local_cache[use_flag][package]
+                if use_desc_obj.check_or_need_update(description):
+                    use_desc_obj.description = description
+                    use_desc_obj.save(force_update = True)
+        models.UseFlagDescriptionModel.objects.bulk_create(to_create)
+            
+
         
 
 class Command(BaseCommand):
@@ -221,10 +270,14 @@ class Command(BaseCommand):
             #homepages_cache[homepage.url] = homepage
 
         for category in self.porttree.iter_categories():
-            category_object, categor_created = models.CategoryModel.objects.get_or_create(category = category)
+            category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
             for package in category.iter_packages():
                 print package
                 package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object)
+                if not package_created:
+                    if package_object.check_or_need_update(package):
+                        # need update
+                        pass
                 package_object.herds.add(*get_herds_objects(package))
                 package_object.maintainers.add(*get_maintainers_objects(package))
                 for ebuild in package.iter_ebuilds():
