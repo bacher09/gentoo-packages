@@ -143,6 +143,10 @@ class PackageModel(models.Model):
     objects = managers.PackageManager()
 
     def __unicode__(self):
+        return self.cp
+
+    @property
+    def cp(self):
         return '%s/%s' % (self.category, self.name)
     
     def init_by_package(self, package, category = None):
@@ -152,6 +156,11 @@ class PackageModel(models.Model):
             self.category, created = CategoryModel.objects.get_or_create(category = package.category)
         elif isinstance(category, CategoryModel):
             self.category = category
+
+    def check_or_need_update(self, package):
+        # Need add metadata check to
+        return not( self.changelog_hash == package.changelog_sha1 and \
+                    self.manifest_hash == package.manifest_sha1)
 
     def update_info(self, package):
         self.mtime = package.mtime
@@ -170,6 +179,20 @@ class UseFlagModel(models.Model):
     
     def __unicode__(self):
         return self.name
+
+class UseFlagDescriptionModel(models.Model):
+    use_flag = models.ForeignKey(UseFlagModel)
+    package = models.ForeignKey(PackageModel)
+    description = models.TextField()
+
+    def check_or_need_update(self, description):
+        return self.description != description 
+
+    def __unicode__(self):
+        return unicode(self.use_flag)
+
+    class Meta:
+        unique_together = ('use_flag', 'package')
 
 class LicensModel(models.Model):
     name = models.CharField(unique = True, max_length = 60)
@@ -214,7 +237,7 @@ class EbuildModel(models.Model):
             self.init_with_keywords(ebuild)
     
     def __unicode__(self):
-        return '%s-%s%s' % (self.package, self.version, ('-'+ self.revision if self.revision else '')) 
+        return self.cpv
     
     def init_by_ebuild(self, ebuild):
         self.is_masked = ebuild.is_masked
@@ -225,6 +248,9 @@ class EbuildModel(models.Model):
         self.ebuild_hash = ebuild.sha1
         #self.homepage = ebuild.homepage
         self.description = ebuild.description
+
+    def check_or_need_update(self, ebuild):
+        return not(self.ebuild_hash == ebuild.sha1)
 
     def init_related(self, ebuild, package = None):
         self.init_by_ebuild(ebuild)
@@ -259,6 +285,18 @@ class EbuildModel(models.Model):
                 ko.save()
             l.append(ko)
         self.keyword_set.add(*l)
+
+    @property
+    def cp(self):
+        return self.package.cp
+
+    @property
+    def cpv(self):
+        return '%s-%s' % (self.package, self.fullversion) 
+
+    @property
+    def fullversion(self):
+        return '%s%s' %  (self.version, ('-'+ self.revision if self.revision else ''))
 
     class Meta:
         unique_together = ('package', 'version', 'revision')
