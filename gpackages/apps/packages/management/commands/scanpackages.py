@@ -85,7 +85,12 @@ def scan_maintainers(maintainers_dict):
     to_del = []
     for maintainer_object in existend_maintainers:
         if maintainer_object in maintainers_dict:
-            # to update ?
+            maintainer_cmp = maintainers_dict[maintainer_object]
+            # need update ?
+            if maintainer_object.check_or_need_update(maintainer_cmp):
+                # updating
+                maintainer_object.update_by_maintainer(maintainer_cmp)
+                maintainer_object.save(force_update = True)
             mo_dict[maintainer_object.email] = maintainer_object
         else:
             to_del.append(maintainer_object.pk)

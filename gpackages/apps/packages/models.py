@@ -64,6 +64,13 @@ class MaintainerModel(models.Model):
         self.name = maintainer.name
         self.email = maintainer.email
         self.role = maintainer.role
+
+    def update_by_maintainer(self, maintainer):
+        self.name = maintainer.name
+
+    def check_or_need_update(self, maintainer):
+        return not (self.name == maintainer.name and \
+                    self.email == maintainer.email)
     
     def __unicode__(self):
         return ':'.join((unicode(self.name), self.email))
