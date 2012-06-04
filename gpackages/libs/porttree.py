@@ -111,7 +111,8 @@ class PortTree(ToStrMixin):
 
     def iter_categories(self):
         for category in sorted(PORTDB.settings.categories):
-            yield Category(self, category)
+            if os.path.isdir(os.path.join(self.porttree_path, category)):
+                    yield Category(self, category)
 
     def iter_packages(self):
         for category in self.iter_categories():
