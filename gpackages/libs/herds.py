@@ -9,7 +9,7 @@ from generic import ToStrMixin
 def _gen_func(name):
     return lambda self: getattr(self, name)
 
-class AbstarctXmlObject(object):
+class AbstractXmlObject(object):
     attrs = ()
     
     def __new__(cls, *args, **kwargs):
