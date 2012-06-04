@@ -20,12 +20,31 @@ def _get_info(filename, re_string, modify_function, res_var = {}):
     return res_dict
 
 def get_uses_info(filename = '/usr/portage/profiles/use.desc'):
+    """Args:
+        filename -- full path to use.desc file
+    Returns:
+        dict with use flag as key, and description as value
+    Example:
+        {'doc': 'Doc description', ...}
+    Notice:
+        In portage public api `get_use_flag_dict`
+    """
     def action(res_dict, match):
         res_dict[match['use']] = match['description']
 
     return _get_info(filename, use_re, action)
 
 def get_local_uses_info(filename = '/usr/portage/profiles/use.local.desc'):
+    """Args:
+        filename -- full path to use.local.desc file
+    Returns:
+        defaultdict(dict) with use flag as first key, package name as second
+        key, and description as value
+    Example:
+        {'api': {'app-emulation/xen-tools': 'Use descr', ...} , ...}
+    Notice:
+        In portage public api `get_use_flag_dict`
+    """
     def action(res_dict, match):
         res_dict[match['use']][match['package']] = match['description']
 

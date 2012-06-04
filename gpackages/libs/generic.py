@@ -1,5 +1,8 @@
 
 class ToStrMixin(object):
+    """Abstract class for inheritence, allow add simple `__str__` and `__repr__`
+    methods
+    """
     def __str__(self):
         return unicode(self).encode('utf-8')
 

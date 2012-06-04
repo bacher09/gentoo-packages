@@ -49,9 +49,13 @@ def file_mtime(file_path):
         return None
 
 class Use(ToStrMixin):
+    "Represend Use flag as object"
     __slots__ = ('name',)
 
     def __init__(self, name):
+        """Args:
+            name -- name of use flag, may start with + or -
+        """
         if name.startswith('+') or name.startswith('-'):
             name = name[1:]
         self.name = name
@@ -69,12 +73,19 @@ class Use(ToStrMixin):
         return hash(self.name)
         
 
-
 class Keyword(ToStrMixin):
     __slots__ = ('name', 'status')
     status_repr = ['','~','-']
     
     def __init__(self, name, status = 0):
+        """Args:
+            name -- name of keyword, it may start with ~ or -, if so than 
+                    status will be auto seting.
+            status -- status of keyword: 0 - stable, 
+                                         1 - utested '~',
+                                         2 - unstable '-'
+                    Also may get by name parameter.
+        """
         if name.startswith('~'):
             name = name[1:]
             status = 1
@@ -89,6 +100,7 @@ class Keyword(ToStrMixin):
 
     @property
     def arch(self):
+        "Return arch name"
         return self.name
 
 

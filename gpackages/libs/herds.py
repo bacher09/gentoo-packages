@@ -10,6 +10,10 @@ def _gen_func(name):
     return lambda self: getattr(self, name)
 
 class AbstractXmlObject(object):
+    """Abstract class for iheritance, 
+    dynamicly generate properties by `attrs` param
+    each generated param return value of `_` + property name variable.
+    """
     attrs = ()
     
     def __new__(cls, *args, **kwargs):
@@ -20,6 +24,7 @@ class AbstractXmlObject(object):
         return ins
     
     def __init__(self, xml_object):
+        "Set internal value for each value in attrs parameter"
         for val in self.attrs:
             obj_xml = xml_object.find(val) 
             setattr(self, '_' + val, None)
@@ -27,6 +32,12 @@ class AbstractXmlObject(object):
                 setattr(self, '_' + val, obj_xml.text)
 
 class Maintainer(AbstractXmlObject, ToStrMixin):
+    """Have 3 atributes:
+
+        - name -- maintainer name
+        - email -- maintainer email
+        - role -- maintainer role
+    """
     attrs = ('name', 'email', 'role')
 
     def __init__(self, *args, **kwargs):
@@ -47,6 +58,11 @@ class Maintainer(AbstractXmlObject, ToStrMixin):
         return self.email
 
 class Herd(AbstractXmlObject, ToStrMixin):
+    """Have 3 atributes:
+        - name -- herd name
+        - email -- herd email
+        - description -- herd description
+    """
     # create name, email and description property
     attrs = ('name', 'email', 'description')
 
@@ -72,7 +88,8 @@ class Herd(AbstractXmlObject, ToStrMixin):
 
 
 class Herds(ToStrMixin):
-    def __init__(self, herd_path='/usr/portage/metadata/herds.xml'):
+    "Object that represent herds.xml file "
+    def __init__(self, herd_path = '/usr/portage/metadata/herds.xml'):
         self._herd_path = herd_path
         self._herd_parse = etree.parse(herd_path)
         self._herds_dict = None
@@ -83,6 +100,9 @@ class Herds(ToStrMixin):
             yield Herd(herd_tree)
 
     def get_herds_indict(self):
+        """Returns:
+            dict with herd name as key and herd object as value
+        """
         if self._herds_dict is not None:
             return self._herds_dict
         res = {}
@@ -92,6 +112,12 @@ class Herds(ToStrMixin):
         return res
 
     def get_maintainers_with_herds(self):
+        """Returns:
+            defaultdict(list) with maintainer object as key, and list of herds
+            as value.
+        Example:
+            {'<Maintainers example@gentoo.org>': ['mozilla','base'], ...}
+        """
         if self._maintainers_dict is not None:
             return self._maintainers_dict
         herd_dict = self.get_herds_indict()
