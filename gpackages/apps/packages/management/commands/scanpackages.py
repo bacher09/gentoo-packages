@@ -112,7 +112,12 @@ def scan_herds():
         if herd_object.name not in herds_dict:
             to_del.append(herd_object.pk)
         else:
-            # to update ?
+            herd_cmp = herds_dict[herd_object.name]
+            # need update ?
+            if herd_object.check_or_need_update(herd_cmp):
+                # updating 
+                herd_object.update_by_herd(herd_cmp)
+                herd_object.save(force_update = True)
             ho_dict[herd_object.name] = herd_object
 
     models.HerdsModel.objects.filter(pk__in = to_del).delete()

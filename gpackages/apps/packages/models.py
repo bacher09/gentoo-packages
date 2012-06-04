@@ -88,8 +88,16 @@ class HerdsModel(models.Model):
 
     def init_by_herd(self, herd):
         self.name = herd.name
+        self.update_by_herd(herd)
+
+    def update_by_herd(self, herd):
         self.email = herd.email
         self.description = herd.description
+
+    def check_or_need_update(self, herd):
+        return not (self.name == herd.name and \
+                    self.email == herd.email and \
+                    self.description == herd.description)
 
     def __unicode__(self):
         return self.name
