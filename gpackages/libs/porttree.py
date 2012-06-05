@@ -180,7 +180,8 @@ class Package(ToStrMixin):
         self._cache = {}
 
     def iter_ebuilds(self):
-        ebuilds = PORTDB.cp_list(self.package, mytree=self.category.porttree.porttree)
+        ebuilds = PORTDB.cp_list(self.package,
+                                 mytree = self.category.porttree.porttree)
         for ebuild in ebuilds:
             yield Ebuild(self ,ebuild)
 
@@ -210,9 +211,12 @@ class Package(ToStrMixin):
     metadata_path = property(_file_path('metadata.xml'))
 
     #Hashes
-    manifest_sha1 = cached_property(_file_hash('manifest_path'), name = 'manifest_sha1')
-    changelog_sha1 = cached_property(_file_hash('changelog_path'), name = 'changelog_sha1')
-    metadata_sha1 = cached_property(_file_hash('metadata_path'), name = 'metadata_sha1')
+    manifest_sha1 = cached_property(_file_hash('manifest_path'),
+                                    name = 'manifest_sha1')
+    changelog_sha1 = cached_property(_file_hash('changelog_path'),
+                                     name = 'changelog_sha1')
+    metadata_sha1 = cached_property(_file_hash('metadata_path'),
+                                    name = 'metadata_sha1')
     # Modify times
     manifest_mtime = property(_file_mtime("manifest_path"))
     changelog_mtime = property(_file_mtime("changelog_path"))
@@ -290,11 +294,16 @@ class Ebuild(ToStrMixin):
         "Full path to ebuild"
         return self.package_object.ebuild_path()
 
-    homepage_val = cached_property(_ebuild_environment('HOMEPAGE'), name = 'homepage_val')
-    license = cached_property(_ebuild_environment('LICENSE'), name = 'license')
-    description = cached_property(_ebuild_environment('DESCRIPTION'), name = 'description')
-    eapi = cached_property(_ebuild_environment('EAPI'), name = 'eapi')
-    slot = cached_property(_ebuild_environment('SLOT'), name = 'slot')
+    homepage_val = cached_property(_ebuild_environment('HOMEPAGE'),
+                                   name = 'homepage_val')
+    license = cached_property(_ebuild_environment('LICENSE'),
+                              name = 'license')
+    description = cached_property(_ebuild_environment('DESCRIPTION'),
+                                  name = 'description')
+    eapi = cached_property(_ebuild_environment('EAPI'),
+                           name = 'eapi')
+    slot = cached_property(_ebuild_environment('SLOT'),
+                           name = 'slot')
 
     @cached_property
     def homepages(self):
