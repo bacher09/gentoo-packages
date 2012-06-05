@@ -6,9 +6,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
-from generic import ToStrMixin
-from datetime import datetime
-import hashlib
+from generic import ToStrMixin, file_sha1, file_mtime, cached_property
 import os
 
 BINDB = portage.db[portage.root]["bintree"].dbapi
@@ -34,37 +32,6 @@ def _file_mtime(attr):
 def _ebuild_environment(name):
     return lambda self: self.package_object.environment(name)
 
-def file_sha1(file_path):
-    sha1 = 'NULL'
-    if os.path.exists(file_path):
-        f = open(file_path, 'r')
-        sha1 = hashlib.sha1(f.read()).hexdigest()
-        f.close()
-    return sha1
-
-def file_mtime(file_path):
-    if os.path.exists(file_path):
-        return datetime.fromtimestamp(os.path.getmtime(file_path))
-    else:
-        return None
-
-class cached_property(object):
-    def __init__(self, func, name = None):
-        self.func = func
-        if name is None:
-            name = func.__name__
-        self.__name__ = name
-        self.__module__ = func.__module__
-
-    def __get__(self, inst, owner):
-        try:
-            value = inst._cache[self.__name__]
-        except (KeyError, AttributeError):
-            value = self.func(inst)
-            if not hasattr(inst, '_cache'):
-                inst._cache = {}
-            inst._cache[self.__name__] = value
-        return value
 
 class Use(ToStrMixin):
     "Represend Use flag as object"
@@ -92,6 +59,7 @@ class Use(ToStrMixin):
         
 
 class Keyword(ToStrMixin):
+    "Represend ebuild Keyword as object"
     __slots__ = ('name', 'status')
     status_repr = ['','~','-']
     
@@ -135,8 +103,12 @@ class Portage(object):
     
 
 class PortTree(ToStrMixin):
+    "Represent portage tree as object"
     
     def __init__(self, porttree = '/usr/portage'):
+        """Args:
+            porttree -- full path to portage tree as str
+        """
         self.porttree = porttree # TODO: it should be read-only
 
     def iter_categories(self):
@@ -159,14 +131,20 @@ class PortTree(ToStrMixin):
     
     @property
     def porttree_path(self):
+        "Full path to portage tree"
         return self.porttree
 
 
 class Category(ToStrMixin):
+    "Represent category of portage tree as object"
 
     __slots__ = ('porttree', 'category')
     
     def __init__(self, porttree, category):
+        """Args:
+            porttree -- PortTree object
+            category -- category name as str
+        """
         self.porttree = porttree
         self.category = category
     
@@ -187,10 +165,12 @@ class Category(ToStrMixin):
     
     @property
     def category_path(self):
+        "Full path to category"
         return os.path.join(self.porttree.porttree_path, self.category)
 
 
 class Package(ToStrMixin):
+    "Represent package as object"
 
     __slots__ = ('category', 'package', '_cache')
 
@@ -214,6 +194,10 @@ class Package(ToStrMixin):
     @cached_property
     def metadata(self):
         return MetaData( self.metadata_path)
+
+    @property
+    def cp(self):
+        return self.package
 
     mtime = property(_file_mtime("package_path"))
 
@@ -240,6 +224,7 @@ class Package(ToStrMixin):
 
 
 class Ebuild(ToStrMixin):
+    "Represent ebuild as object"
 
     __slots__ = ('package', 'ebuild', 'package_object', '_cache')
 
@@ -297,10 +282,12 @@ class Ebuild(ToStrMixin):
 
     @property
     def fullversion(self):
+        "Version with revision"
         return self.package_object.fullversion
 
     @property
     def ebuild_path(self):
+        "Full path to ebuild"
         return self.package_object.ebuild_path()
 
     homepage_val = cached_property(_ebuild_environment('HOMEPAGE'), name = 'homepage_val')
@@ -311,20 +298,19 @@ class Ebuild(ToStrMixin):
 
     @cached_property
     def homepages(self):
+        "List of homepages"
         return self.homepage_val.split()
 
     @cached_property
     def homepage(self):
+        "First homepage in list"
         return self.homepages[0] if len(self.homepages)>=1 else ''
 
 
     @cached_property
     def licenses(self):
+        "List of licenses used in ebuild"
         return filter(_license_filter, self.license.split())
-
-    @property
-    def ebuild_path(self):
-        return self.package_object.ebuild_path()
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
     mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')
