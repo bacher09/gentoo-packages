@@ -3,6 +3,13 @@ from django.db import models
 from porttree import Category, Package, Ebuild
 import managers
 
+class AbstractDateTimeModel(models.Model):
+    created_datetime = models.DateTimeField(auto_now_add = True)
+    updated_datetime = models.DateTimeField(auto_now = True)
+
+    class Meta:
+        abstract = True
+
 class HomepageModel(models.Model):
     url = models.URLField(max_length=255, unique = True)
 
@@ -42,7 +49,7 @@ class CategoryModel(models.Model):
     def __unicode__(self):
         return self.category
 
-class MaintainerModel(models.Model):
+class MaintainerModel(AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
         #TODO: Bad code, maybe use some libraries for overload methods
@@ -75,7 +82,7 @@ class MaintainerModel(models.Model):
     def __unicode__(self):
         return ':'.join((unicode(self.name), self.email))
 
-class HerdsModel(models.Model):
+class HerdsModel(AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
         herd = None
@@ -109,7 +116,7 @@ class HerdsModel(models.Model):
     def __unicode__(self):
         return self.name
 
-class PackageModel(models.Model):
+class PackageModel(AbstractDateTimeModel):
     def __init__(self, *args, **kwargs):
         # TODO: Bad code, maybe use some library to overload method
         package_object = None
@@ -209,7 +216,7 @@ class LicensModel(models.Model):
         return self.name
 
 
-class EbuildModel(models.Model):
+class EbuildModel(AbstractDateTimeModel):
     package = models.ForeignKey(PackageModel)
     #repository = models.ForeignKey(RepositoryModel)
     version = models.CharField(max_length = 26)
@@ -219,7 +226,6 @@ class EbuildModel(models.Model):
     license = models.CharField(max_length = 254, blank = True )
     ebuild_hash = models.CharField(max_length = 128)
     ebuild_mtime = models.DateTimeField(blank = True, null = True)
-    ebuild_datetime = models.DateTimeField(auto_now = True)
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
