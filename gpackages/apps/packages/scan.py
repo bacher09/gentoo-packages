@@ -196,7 +196,7 @@ def scan_uses_description():
                     use_desc_obj.save(force_update = True)
         models.UseFlagDescriptionModel.objects.bulk_create(to_create)
             
-def scanpackages():
+def scanpackages(delete = True, force_update = False):
     licenses_cache = {}
     def get_licenses_objects(ebuild):
         licenses = ebuild.licenses
@@ -297,33 +297,36 @@ def scanpackages():
                 update_related_to_ebuild(ebuild, ebuild_object)
                 ebuild_object.save(force_update = True)
         if delete:
-            models.EbuildModel.objects.exclude(pk__in = not_del).delete()
+            models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
+
+    def update_package(package, package_object, force_update = False):
+        if package_object.need_update_metadata(package) or force_update:
+            package_object.herds.clear()
+            package_object.maintainers.clear()
+
+        if package_object.need_update_ebuilds(package) or force_update:
+            update_ebuilds(package, package_object)
+
+        package_object.update_info(package)
+        package_object.save(force_update = True)
 
     # Load homepages to cache
     #for homepage in models.HomepageModel.objects.all():
         #homepages_cache[homepage.url] = homepage
     existend_categorys = []
-    existend_packages = []
     for category in porttree.iter_categories():
+        existend_packages = []
         category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
         existend_categorys.append(category_object.pk)
         for package in category.iter_packages():
-            #print package
+            print package
             package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object)
             existend_packages.append(package_object.pk)
             if not package_created:
-                if package_object.check_or_need_update(package):
+                if package_object.check_or_need_update(package) or force_update:
                     print package
                     # need update
-                    if package_object.need_update_metadata(package):
-                        package_object.herds.clear()
-                        package_object.maintainers.clear()
-
-                    if package_object.need_update_ebuilds(package):
-                        update_ebuilds(package, package_object)
-
-                    package_object.update_info(package)
-                    package_object.save(force_update = True)
+                    update_package(package, package_object)
                 else:
                     # not need to update, ebuilds too
                     continue
@@ -331,6 +334,9 @@ def scanpackages():
             package_object.maintainers.add(*get_maintainers_objects(package))
             if package_created:
                 create_ebuilds(package, package_object)
+
+        if delete:
+            models.PackageModel.objects.filter(category = category_object).exclude(pk__in = existend_packages).delete()
     # del 
     #models.CategoryModel.objects.exclude(pk__in = existend_categorys).delete()
 
