@@ -160,9 +160,7 @@ class PackageModel(models.Model):
 
     def check_or_need_update(self, package):
         # Need add metadata check to
-        return not( self.changelog_hash == package.changelog_sha1 and \
-                    self.metadata_hash == package.metadata_sha1 and \
-                    self.manifest_hash == package.manifest_sha1)
+        return self.manifest_hash != package.manifest_sha1
 
     def need_update_metadata(self, package):
         return self.metadata_hash != package.metadata_sha1
@@ -243,23 +241,25 @@ class EbuildModel(models.Model):
             del kwargs['ebuild']
         super(EbuildModel, self).__init__(*args, **kwargs)
         if ebuild is not None and isinstance(ebuild, Ebuild):
-            self.init_with_keywords(ebuild)
+            self.init_by_ebuild(ebuild)
     
     def __unicode__(self):
         return self.cpv
     
     def init_by_ebuild(self, ebuild):
+        self.update_by_ebuild(ebuild)
+
+    def update_by_ebuild(self, ebuild):
         self.is_masked = ebuild.is_masked
         self.version = ebuild.version
         self.revision = ebuild.revision
         self.license = ebuild.license
         self.ebuild_mtime = ebuild.mtime
         self.ebuild_hash = ebuild.sha1
-        #self.homepage = ebuild.homepage
         self.description = ebuild.description
 
     def check_or_need_update(self, ebuild):
-        return not(self.ebuild_hash == ebuild.sha1)
+        return self.ebuild_hash != ebuild.sha1
 
     def init_related(self, ebuild, package = None):
         self.init_by_ebuild(ebuild)

@@ -257,39 +257,81 @@ def scanpackages():
                 herds_objects.append(herds_cache[herd])
 
         return herds_objects
+
+    def add_related_to_ebuild(ebuild, ebuild_object):
+        # Add licenses
+        ebuild_object.licenses.add(*get_licenses_objects(ebuild))
+        ebuild_object.use_flags.add(*get_uses_objects(ebuild))
+        ebuild_object.homepages.add(*get_homepages_objects(ebuild))
+        get_keywords_objects(ebuild, ebuild_object)
+        
+    def clear_related_to_ebuild(ebuild_object):
+        ebuild_object.licenses.clear()
+        ebuild_object.use_flags.clear()
+        ebuild_object.homepages.clear()
+        models.Keyword.objects.filter(ebuild = ebuild_object).delete()
+
+    def update_related_to_ebuild(ebuild, ebuild_object):
+        clear_related_to_ebuild(ebuild_object)
+        add_related_to_ebuild(ebuild, ebuild_object)
+
+    def create_ebuilds(package, package_object):
+        for ebuild in package.iter_ebuilds():
+            ebuild_object = models.EbuildModel()
+            ebuild_object.init_by_ebuild(ebuild)
+            ebuild_object.package = package_object
+            # To Add some related objects it should have pk
+            ebuild_object.save(force_insert=True)
+            add_related_to_ebuild(ebuild, ebuild_object)
+
+    def update_ebuilds(package, package_object, delete = True):
+        not_del = []
+        for ebuild in package.iter_ebuilds():
+            ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
+            not_del.append(ebuild_object.pk)
+            if ebuild_created:
+                add_related_to_ebuild(ebuild, ebuild_object)
+                continue
+            if ebuild_object.check_or_need_update(ebuild):
+                ebuild_object.update_by_ebuild(ebuild)
+                update_related_to_ebuild(ebuild, ebuild_object)
+                ebuild_object.save(force_update = True)
+        if delete:
+            models.EbuildModel.objects.exclude(pk__in = not_del).delete()
+
     # Load homepages to cache
     #for homepage in models.HomepageModel.objects.all():
         #homepages_cache[homepage.url] = homepage
-
+    existend_categorys = []
+    existend_packages = []
     for category in porttree.iter_categories():
         category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
+        existend_categorys.append(category_object.pk)
         for package in category.iter_packages():
-            print package
+            #print package
             package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object)
+            existend_packages.append(package_object.pk)
             if not package_created:
                 if package_object.check_or_need_update(package):
+                    print package
                     # need update
-                    pass
+                    if package_object.need_update_metadata(package):
+                        package_object.herds.clear()
+                        package_object.maintainers.clear()
+
+                    if package_object.need_update_ebuilds(package):
+                        update_ebuilds(package, package_object)
+
+                    package_object.update_info(package)
+                    package_object.save(force_update = True)
                 else:
+                    # not need to update, ebuilds too
                     continue
             package_object.herds.add(*get_herds_objects(package))
             package_object.maintainers.add(*get_maintainers_objects(package))
-            for ebuild in package.iter_ebuilds():
-                ebuild_object = models.EbuildModel()
-                ebuild_object.init_by_ebuild(ebuild)
-                ebuild_object.package = package_object
-                # To Add some related objects it should have pk
-                ebuild_object.save(force_insert=True)
-                # Add licenses
-                ebuild_object.licenses.add(*get_licenses_objects(ebuild))
-                ebuild_object.use_flags.add(*get_uses_objects(ebuild))
-                ebuild_object.homepages.add(*get_homepages_objects(ebuild))
-                get_keywords_objects(ebuild, ebuild_object)
-                #homepages_list = []
-                #for homepage in ebuild.homepages:
-                    #homepage_object = models.HomepageModel(url = homepage,
-                                                           #ebuild = ebuild_object)
-                    #homepages_list.append(homepage_object)
-                #models.HomepageModel.objects.bulk_create(homepages_list)
+            if package_created:
+                create_ebuilds(package, package_object)
+    # del 
+    #models.CategoryModel.objects.exclude(pk__in = existend_categorys).delete()
 
 
