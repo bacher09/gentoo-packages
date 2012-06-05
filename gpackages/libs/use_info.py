@@ -1,6 +1,8 @@
 import re
 from collections import defaultdict
 
+__all__ = ('get_uses_info', 'get_local_uses_info')
+
 USES_RE = r'(?P<use>[^#].*) - (?P<description>.*)'
 USES_DESC_RE = r'^%s$' % USES_RE
 USES_LOCAL_DESC_RE = r'^(?P<package>[^#].*):%s$' % USES_RE

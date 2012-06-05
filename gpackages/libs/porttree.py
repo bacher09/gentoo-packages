@@ -7,6 +7,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from generic import ToStrMixin, file_sha1, file_mtime, cached_property
+from use_info import get_uses_info, get_local_uses_info
 import os
 
 BINDB = portage.db[portage.root]["bintree"].dbapi
@@ -32,6 +33,13 @@ def _file_mtime(attr):
 def _ebuild_environment(name):
     return lambda self: self.package_object.environment(name)
 
+
+def _get_info_by_func(func, path1, path2):
+        path = os.path.join(path1, path2)
+        try:
+            return func(path)
+        except IOError:
+            return None
 
 class Use(ToStrMixin):
     "Represend Use flag as object"
@@ -89,27 +97,59 @@ class Keyword(ToStrMixin):
         "Return arch name"
         return self.name
 
+def _gen_all_use(func, iterator):
+    use_g = iterator
+    use_all_dict = next(use_g)
+    for use_dict in use_g:
+        if use_dict is not None:
+            func(use_all_dict, use_dict)
+    return use_all_dict
 
 class Portage(object):
     
     def iter_trees(self):
-        for tree in PORTDB.porttrees:
-            yield PortTree(tree)
+        tree_dict = PORTDB.repositories.treemap
+        for tree_name in PORTDB.repositories.prepos_order:
+            yield PortTree(tree_dict[tree_name], tree_name)
+
+    def iter_packages():
+        for tree in self.iter_trees():
+            for package in tree.iter_package():
+                yield package
 
     def iter_ebuilds():
         for tree in self.iter_trees():
             for ebuild in tree.iter_ebuilds():
                 yield ebuild
     
+    def iter_use_desc(self):
+        for tree in self.iter_trees():
+            yield tree.use_desc
+
+    def iter_use_local_desc(self):
+        for tree in self.iter_trees():
+            yield tree.use_local_desc
+
+    def get_all_use_desc(self):
+        return _gen_all_use(lambda x,y: x.update(y), self.iter_use_desc())
+
+    def get_all_use_local_desc(self):
+        def action(all_dict, use_dict):
+            for key, value in use_dict.iteritems():
+                all_dict[key].update(value)
+
+        return _gen_all_use(action, self.iter_use_local_desc())
+
 
 class PortTree(ToStrMixin):
     "Represent portage tree as object"
     
-    def __init__(self, porttree = '/usr/portage'):
+    def __init__(self, tree_path = '/usr/portage', name = 'main'):
         """Args:
-            porttree -- full path to portage tree as str
+            tree_path -- full path to portage tree as str
         """
-        self.porttree = porttree # TODO: it should be read-only
+        self.porttree = tree_path
+        self.name = name
 
     def iter_categories(self):
         for category in sorted(PORTDB.settings.categories):
@@ -133,6 +173,18 @@ class PortTree(ToStrMixin):
     def porttree_path(self):
         "Full path to portage tree"
         return self.porttree
+
+    @cached_property
+    def use_desc(self):
+        return _get_info_by_func(get_uses_info,
+                                 self.porttree_path,
+                                 'profiles/use.desc')
+
+    @cached_property
+    def use_local_desc(self):
+        return _get_info_by_func(get_local_uses_info,
+                                 self.porttree_path,
+                                 'profiles/use.local.desc')
 
 
 class Category(ToStrMixin):
