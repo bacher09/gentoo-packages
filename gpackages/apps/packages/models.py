@@ -132,6 +132,7 @@ class PackageModel(models.Model):
     changelog = models.TextField(blank = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
+    metadata_hash = models.CharField(max_length = 128)
     changelog_mtime = models.DateTimeField(blank = True, null = True)
     manifest_mtime = models.DateTimeField(blank = True, null = True)
     mtime = models.DateTimeField(blank = True, null = True)
@@ -160,7 +161,14 @@ class PackageModel(models.Model):
     def check_or_need_update(self, package):
         # Need add metadata check to
         return not( self.changelog_hash == package.changelog_sha1 and \
+                    self.metadata_hash == package.metadata_sha1 and \
                     self.manifest_hash == package.manifest_sha1)
+
+    def need_update_metadata(self, package):
+        return self.metadata_hash != package.metadata_sha1
+
+    def need_update_ebuilds(self, package):
+        return self.manifest_hash != package.manifest_sha1
 
     def update_info(self, package):
         self.mtime = package.mtime
@@ -169,6 +177,7 @@ class PackageModel(models.Model):
         self.changelog_hash = package.changelog_sha1
         self.manifest_mtime = package.manifest_mtime
         self.manifest_hash = package.manifest_sha1
+        self.metadata_hash = package.metadata_sha1
 
     class Meta:
         unique_together = ('name', 'category')
