@@ -48,6 +48,24 @@ def file_mtime(file_path):
     else:
         return None
 
+class cached_property(object):
+    def __init__(self, func, name = None):
+        self.func = func
+        if name is None:
+            name = func.__name__
+        self.__name__ = name
+        self.__module__ = func.__module__
+
+    def __get__(self, inst, owner):
+        try:
+            value = inst._cache[self.__name__]
+        except (KeyError, AttributeError):
+            value = self.func(inst)
+            if not hasattr(inst, '_cache'):
+                inst._cache = {}
+            inst._cache[self.__name__] = value
+        return value
+
 class Use(ToStrMixin):
     "Represend Use flag as object"
     __slots__ = ('name',)
@@ -174,13 +192,12 @@ class Category(ToStrMixin):
 
 class Package(ToStrMixin):
 
-    __slots__ = ('category', 'package', '_metadata', '_changelog')
+    __slots__ = ('category', 'package', '_cache')
 
     def __init__(self, category, package):
         self.category = category
         self.package = package
-        self._metadata = None
-        self._changelog = None
+        self._cache = {}
 
     def iter_ebuilds(self):
         ebuilds = PORTDB.cp_list(self.package, mytree=self.category.porttree.porttree)
@@ -194,11 +211,9 @@ class Package(ToStrMixin):
     def package_path(self):
         return os.path.join(self.category.porttree.porttree_path, self.package)
 
-    @property
+    @cached_property
     def metadata(self):
-        if self._metadata is None:
-            self._metadata = MetaData( self.metadata_path)
-        return self._metadata
+        return MetaData( self.metadata_path)
 
     mtime = property(_file_mtime("package_path"))
 
@@ -211,30 +226,28 @@ class Package(ToStrMixin):
     metadata_path = property(_file_path('metadata.xml'))
 
     #Hashes
-    manifest_sha1 = property(_file_hash('manifest_path'))
-    changelog_sha1 = property(_file_hash('changelog_path'))
-    metadata_sha1 = property(_file_hash('metadata_path'))
+    manifest_sha1 = cached_property(_file_hash('manifest_path'), name = 'manifest_sha1')
+    changelog_sha1 = cached_property(_file_hash('changelog_path'), name = 'changelog_sha1')
+    metadata_sha1 = cached_property(_file_hash('metadata_path'), name = 'metadata_sha1')
     # Modify times
     manifest_mtime = property(_file_mtime("manifest_path"))
     changelog_mtime = property(_file_mtime("changelog_path"))
     metadata_mtime = property(_file_mtime("metadata_path"))
 
-    @property
+    @cached_property
     def changelog(self):
-        if self._changelog is not None:
-            return self._changelog
-        self._changelog = open(self.changelog_path,'r').read()
-        return self._changelog
+        return open(self.changelog_path,'r').read()
 
 
 class Ebuild(ToStrMixin):
 
-    __slots__ = ('package', 'ebuild', 'package_object')
+    __slots__ = ('package', 'ebuild', 'package_object', '_cache')
 
     def __init__(self, package, ebuild):
         self.package = package
         self.ebuild = ebuild
         self.package_object = PackageInfo(ebuild)
+        self._cache = {}
 
     @property
     def keywords_env(self):
@@ -270,7 +283,7 @@ class Ebuild(ToStrMixin):
         return l
 
     #Could be faster
-    @property
+    @cached_property
     def is_masked(self):
         return self.package_object.is_masked()
 
@@ -290,22 +303,22 @@ class Ebuild(ToStrMixin):
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
-    homepage_val = property(_ebuild_environment('HOMEPAGE'))
-    license = property(_ebuild_environment('LICENSE'))
-    description = property(_ebuild_environment('DESCRIPTION'))
-    eapi = property(_ebuild_environment('EAPI'))
-    slot = property(_ebuild_environment('SLOT'))
+    homepage_val = cached_property(_ebuild_environment('HOMEPAGE'), name = 'homepage_val')
+    license = cached_property(_ebuild_environment('LICENSE'), name = 'license')
+    description = cached_property(_ebuild_environment('DESCRIPTION'), name = 'description')
+    eapi = cached_property(_ebuild_environment('EAPI'), name = 'eapi')
+    slot = cached_property(_ebuild_environment('SLOT'), name = 'slot')
 
-    @property
+    @cached_property
     def homepages(self):
         return self.homepage_val.split()
 
-    @property
+    @cached_property
     def homepage(self):
         return self.homepages[0] if len(self.homepages)>=1 else ''
 
 
-    @property
+    @cached_property
     def licenses(self):
         return filter(_license_filter, self.license.split())
 
@@ -313,8 +326,8 @@ class Ebuild(ToStrMixin):
     def ebuild_path(self):
         return self.package_object.ebuild_path()
 
-    sha1 = property(_file_hash("ebuild_path"))
-    mtime = property(_file_mtime("ebuild_path"))
+    sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
+    mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')
 
     def __unicode__(self):
         return self.ebuild
