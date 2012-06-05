@@ -146,6 +146,8 @@ class PackageModel(AbstractDateTimeModel):
 
     herds = models.ManyToManyField(HerdsModel, blank = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
+
+    description = models.TextField(blank = True, null = True)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -183,6 +185,7 @@ class PackageModel(AbstractDateTimeModel):
         self.manifest_mtime = package.manifest_mtime
         self.manifest_hash = package.manifest_sha1
         self.metadata_hash = package.metadata_sha1
+        self.description = package.description
 
     class Meta:
         unique_together = ('name', 'category')

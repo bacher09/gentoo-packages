@@ -223,6 +223,17 @@ class Package(ToStrMixin):
     metadata_mtime = property(_file_mtime("metadata_path"))
 
     @cached_property
+    def descriptions(self):
+        return self.metadata.descriptions()
+
+    @property
+    def description(self):
+        if len(self.descriptions)>0:
+            return self.descriptions[0]
+        else:
+            return None
+
+    @cached_property
     def changelog(self):
         return open(self.changelog_path,'r').read()
 
