@@ -23,6 +23,8 @@ def _get_from_database(Model, field_name, request_items):
 
 def _update_cache_by_queryset(cache, queryset, field_name):
     geted_items = set()
+    if queryset is None:
+        return None
     for item in queryset:
         cache[getattr(item, field_name)] = item
         geted_items.add(getattr(item, field_name))
@@ -77,20 +79,23 @@ def _get_items(items_list, Model, field_name, cache_var):
 
 def scan_maintainers(maintainers_dict):
     existend_maintainers = models.MaintainerModel.objects.all()
+    main_dict = {}
     mo_dict = {}
-    to_del = []
+    #to_del = []
+    _update_cache_by_queryset(main_dict, maintainers_dict.keys(), 'email')
     for maintainer_object in existend_maintainers:
-        if maintainer_object in maintainers_dict:
-            maintainer_cmp = maintainers_dict[maintainer_object]
+        if maintainer_object.email in main_dict:
+            maintainer_cmp = main_dict[maintainer_object.email]
             # need update ?
             if maintainer_object.check_or_need_update(maintainer_cmp):
                 # updating
                 maintainer_object.update_by_maintainer(maintainer_cmp)
                 maintainer_object.save(force_update = True)
             mo_dict[maintainer_object.email] = maintainer_object
-        else:
-            to_del.append(maintainer_object.pk)
-
+        #else:
+            #to_del.append(maintainer_object.pk)
+    #print to_del
+    #print mo_dict
     to_create = []
     for maintainer in maintainers_dict.iterkeys():
         if maintainer.email not in mo_dict:
@@ -265,6 +270,8 @@ def scanpackages():
                 if package_object.check_or_need_update(package):
                     # need update
                     pass
+                else:
+                    continue
             package_object.herds.add(*get_herds_objects(package))
             package_object.maintainers.add(*get_maintainers_objects(package))
             for ebuild in package.iter_ebuilds():

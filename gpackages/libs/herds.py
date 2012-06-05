@@ -46,7 +46,10 @@ class Maintainer(AbstractXmlObject, ToStrMixin):
             self._email = self._email.lower()
 
     def __eq__(self, other):
-        return self.email == other.email
+        if isinstance(other, Maintainer):
+            return self.email == other.email
+        else:
+            return self.email == unicode(other)
 
     def __ne__(self, other):
         return self.email != other.email
