@@ -2,6 +2,21 @@ import os.path
 import hashlib
 from datetime import datetime
 
+class StrThatIgnoreCase(unicode):
+    
+    def __init__(self, value):
+        super(StrThatIgnoreCase, self).__init__(value)
+        self._forcmp = value.lower()
+
+    def __hash__(self):
+        return hash(self._forcmp)
+
+    def __eq__(self, other):
+        return self._forcmp == unicode(other).lower()
+
+    def __ne__(self, other):
+        return self._forcmp != unicode(other).lower()
+
 class ToStrMixin(object):
     """Abstract class for inheritence, allow add simple `__str__` and `__repr__`
     methods
@@ -13,12 +28,19 @@ class ToStrMixin(object):
         return '<%s %s>' % (type(self).__name__, self.__str__())
 
 
+def file_get_content(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            content = f.read()
+        return content
+    else:
+        return None
+
 def file_sha1(file_path):
     sha1 = 'NULL'
     if os.path.exists(file_path):
-        f = open(file_path, 'r')
-        sha1 = hashlib.sha1(f.read()).hexdigest()
-        f.close()
+        with open(file_path, 'r') as f:
+            sha1 = hashlib.sha1(f.read()).hexdigest()
     return sha1
 
 def file_mtime(file_path):

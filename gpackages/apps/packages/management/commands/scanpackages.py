@@ -12,5 +12,6 @@ class Command(BaseCommand):
     help = 'Will scan package tree and update info about it in database'
     def handle(self, *args, **options):
         st = datetime.datetime.now()
-        scan.scanpackages()
+        #scan.scanpackages()
+        scan.scan_all_repos()
         print (datetime.datetime.now() - st).total_seconds()

@@ -23,9 +23,12 @@ class ArchesModel(models.Model):
         return self.name
 
 class RepositoryModel(models.Model):
-    name = models.CharField(max_length = 60)
+    name = models.CharField(unique = True, max_length = 60)
     description = models.TextField(blank = True, null = True)
     # And other fields
+
+    def __unicode__(self):
+        return self.name
 
 class CategoryModel(models.Model):
     def __init__(self, *args, **kwargs):
@@ -125,9 +128,10 @@ class PackageModel(AbstractDateTimeModel):
         
         if 'package' in kwargs:
             package_object = kwargs['package']
+            del kwargs['package']
 
         if isinstance(package_object, Package):
-            super(PackageModel, self).__init__()
+            super(PackageModel, self).__init__(*args, **kwargs)
             self.init_by_package(package_object, category = kwargs.get('category'))
         else:
             super(PackageModel, self).__init__(*args, **kwargs)
@@ -136,7 +140,7 @@ class PackageModel(AbstractDateTimeModel):
 
     name = models.CharField(max_length = 254)
     category = models.ForeignKey(CategoryModel)
-    changelog = models.TextField(blank = True)
+    changelog = models.TextField(blank = True, null = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
     metadata_hash = models.CharField(max_length = 128)
@@ -148,6 +152,7 @@ class PackageModel(AbstractDateTimeModel):
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
 
     description = models.TextField(blank = True, null = True)
+    repository = models.ForeignKey(RepositoryModel)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -188,7 +193,7 @@ class PackageModel(AbstractDateTimeModel):
         self.description = package.description
 
     class Meta:
-        unique_together = ('name', 'category')
+        unique_together = ('name', 'category', 'repository')
 
 class UseFlagModel(models.Model):
     name = models.CharField(unique = True, max_length = 60)
@@ -221,7 +226,6 @@ class LicensModel(models.Model):
 
 class EbuildModel(AbstractDateTimeModel):
     package = models.ForeignKey(PackageModel)
-    #repository = models.ForeignKey(RepositoryModel)
     version = models.CharField(max_length = 26)
     revision = models.CharField(max_length = 12)
     use_flags = models.ManyToManyField(UseFlagModel)

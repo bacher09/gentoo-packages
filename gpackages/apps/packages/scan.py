@@ -1,16 +1,19 @@
 from packages import models
+from django.db import IntegrityError
 from collections import defaultdict
+from generic import StrThatIgnoreCase
 import porttree
 import herds
 import use_info
 
-porttree = porttree.PortTree()
+portage = porttree.Portage()
 
 def _get_from_cache(cache, what):
     save_to = []
     geted_items = set()
     for item in what:
-        if item in cache:
+        if item.lower() in cache:
+            item = StrThatIgnoreCase(item)
             geted_items.add(item)
             save_to.append(cache[item])
     return save_to, geted_items
@@ -26,8 +29,9 @@ def _update_cache_by_queryset(cache, queryset, field_name):
     if queryset is None:
         return None
     for item in queryset:
-        cache[getattr(item, field_name)] = item
-        geted_items.add(getattr(item, field_name))
+        val = StrThatIgnoreCase(getattr(item, field_name))
+        cache[val] = item
+        geted_items.add(val)
     return geted_items
 
 def _get_from_database_and_update_cache(Model, field_name, request_items, cache):
@@ -159,6 +163,7 @@ def update_globals_uses_descriptions():
     
 
 def scan_uses_description():
+    # need changes for support many repos !!!
     uses_local = use_info.get_local_uses_info()
     existend_use_objects = models.UseFlagModel.objects.filter(name__in = uses_local.keys())
     existend_use_local_descr = models.UseFlagDescriptionModel.objects.all()
@@ -196,18 +201,21 @@ def scan_uses_description():
                     use_desc_obj.save(force_update = True)
         models.UseFlagDescriptionModel.objects.bulk_create(to_create)
             
-def scanpackages(delete = True, force_update = False):
-    licenses_cache = {}
+licenses_cache = {}
+uses_cache = {}
+arches_cache = {}
+homepages_cache = {}    
+herds_cache = {}
+maintainers_cache = {}
+def scanpackages(porttree, porttree_obj, delete = True, force_update = False):
     def get_licenses_objects(ebuild):
         licenses = ebuild.licenses
         return _get_items(licenses, models.LicensModel, 'name', licenses_cache)
 
-    uses_cache = {}
     def get_uses_objects(ebuild):
         uses = [ use.name for use in ebuild.iter_uses() ]
         return _get_items(uses, models.UseFlagModel, 'name', uses_cache)
 
-    arches_cache = {}
     def get_keywords_objects(ebuild, ebuild_object):
         keywords_list = []
         for keyword in ebuild.get_keywords():
@@ -226,13 +234,11 @@ def scanpackages(delete = True, force_update = False):
         models.Keyword.objects.bulk_create(keywords_list)
 
 
-    homepages_cache = {}    
     def get_homepages_objects(ebuild):
         homepages = ebuild.homepages
         return _get_items(homepages, models.HomepageModel, 'url', homepages_cache)
 
     
-    herds_cache, maintainers_cache = scan_herds()
     def get_maintainers_objects(package):
         maintainers = package.metadata.maintainers()
         objects = []
@@ -319,8 +325,8 @@ def scanpackages(delete = True, force_update = False):
         category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
         existend_categorys.append(category_object.pk)
         for package in category.iter_packages():
-            print package
-            package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object)
+            print('%s [%s]' % (package, porttree))
+            package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object, repository = porttree_obj)
             existend_packages.append(package_object.pk)
             if not package_created:
                 if package_object.check_or_need_update(package) or force_update:
@@ -341,3 +347,8 @@ def scanpackages(delete = True, force_update = False):
     #models.CategoryModel.objects.exclude(pk__in = existend_categorys).delete()
 
 
+def scan_all_repos():
+    herds_cache, maintainers_cache = scan_herds()
+    for repo in portage.iter_trees():
+        repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
+        scanpackages(repo, repo_obj)

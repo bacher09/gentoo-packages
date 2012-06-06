@@ -6,7 +6,8 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
-from generic import ToStrMixin, file_sha1, file_mtime, cached_property
+from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
+                    file_get_content, StrThatIgnoreCase
 from use_info import get_uses_info, get_local_uses_info
 import os
 
@@ -41,6 +42,21 @@ def _get_info_by_func(func, path1, path2):
         except IOError:
             return None
 
+class FakeMetaData(ToStrMixin):
+
+    def herds(self):
+        return []
+
+    def maintainers(self):
+        return []
+
+    def descriptions(self):
+        return []
+    
+    def __unicode__(self):
+        return 'fake'
+
+
 class Use(ToStrMixin):
     "Represend Use flag as object"
     __slots__ = ('name',)
@@ -51,7 +67,7 @@ class Use(ToStrMixin):
         """
         if name.startswith('+') or name.startswith('-'):
             name = name[1:]
-        self.name = name
+        self.name = StrThatIgnoreCase(name)
 
     def __unicode__(self):
         return self.name
@@ -106,18 +122,28 @@ def _gen_all_use(func, iterator):
     return use_all_dict
 
 class Portage(object):
+
+    def __init__(self):
+        self.treemap = PORTDB.repositories.treemap
+        self.tree_order = PORTDB.repositories.prepos_order
+
+    def get_tree_by_name(self, tree_name):
+        if tree_name in self.treemap:
+            return PortTree(self.treemap[tree_name], tree_name)
+        else:
+            raise AttributeError
     
     def iter_trees(self):
-        tree_dict = PORTDB.repositories.treemap
-        for tree_name in PORTDB.repositories.prepos_order:
+        tree_dict = self.treemap
+        for tree_name in self.tree_order:
             yield PortTree(tree_dict[tree_name], tree_name)
 
-    def iter_packages():
+    def iter_packages(self):
         for tree in self.iter_trees():
             for package in tree.iter_package():
                 yield package
 
-    def iter_ebuilds():
+    def iter_ebuilds(self):
         for tree in self.iter_trees():
             for ebuild in tree.iter_ebuilds():
                 yield ebuild
@@ -147,6 +173,7 @@ class PortTree(ToStrMixin):
     def __init__(self, tree_path = '/usr/portage', name = 'main'):
         """Args:
             tree_path -- full path to portage tree as str
+            name -- repo name as str
         """
         self.porttree = tree_path
         self.name = name
@@ -220,6 +247,10 @@ class Category(ToStrMixin):
         "Full path to category"
         return os.path.join(self.porttree.porttree_path, self.category)
 
+    @property
+    def porttree_path(self):
+        return self.porttree.porttree
+
 
 class Package(ToStrMixin):
     "Represent package as object"
@@ -235,7 +266,12 @@ class Package(ToStrMixin):
         ebuilds = PORTDB.cp_list(self.package,
                                  mytree = self.category.porttree.porttree)
         for ebuild in ebuilds:
-            yield Ebuild(self ,ebuild)
+            try:
+                PORTDB.aux_get(ebuild, [], mytree = self.category.porttree_path)
+            except KeyError:
+                pass
+            else:
+                yield Ebuild(self ,ebuild)
 
     def __unicode__(self):
         return '%s' % self.package
@@ -246,7 +282,10 @@ class Package(ToStrMixin):
 
     @cached_property
     def metadata(self):
-        return MetaData( self.metadata_path)
+        try:
+            return MetaData( self.metadata_path)
+        except IOError:
+            return FakeMetaData()
 
     @property
     def cp(self):
@@ -287,7 +326,7 @@ class Package(ToStrMixin):
 
     @cached_property
     def changelog(self):
-        return open(self.changelog_path,'r').read()
+        return file_get_content(self.changelog_path)
 
 
 class Ebuild(ToStrMixin):
@@ -371,7 +410,11 @@ class Ebuild(ToStrMixin):
     @cached_property
     def homepages(self):
         "List of homepages"
-        return self.homepage_val.split()
+        ho_list = self.homepage_val.split()
+        ret_list = []
+        for ho in ho_list:
+            ret_list.append(StrThatIgnoreCase(ho))
+        return ret_list
 
     @cached_property
     def homepage(self):
@@ -382,7 +425,11 @@ class Ebuild(ToStrMixin):
     @cached_property
     def licenses(self):
         "List of licenses used in ebuild"
-        return filter(_license_filter, self.license.split())
+        license_list = filter(_license_filter, self.license.split())
+        ret_list = []
+        for lic in license_list:
+            ret_list.append(StrThatIgnoreCase(lic))
+        return ret_list
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
     mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')
