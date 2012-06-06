@@ -141,7 +141,7 @@ class Portage(object):
 
     def iter_packages(self):
         for tree in self.iter_trees():
-            for package in tree.iter_package():
+            for package in tree.iter_packages():
                 yield package
 
     def iter_ebuilds(self):
