@@ -6,6 +6,8 @@ import porttree
 import herds
 import use_info
 
+import anydbm
+
 portage = porttree.Portage()
 
 def _get_from_cache(cache, what):
@@ -207,7 +209,10 @@ arches_cache = {}
 homepages_cache = {}    
 herds_cache = {}
 maintainers_cache = {}
-def scanpackages(porttree, porttree_obj, delete = True, force_update = False):
+
+cache_dict =  None
+def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
+                update_cache = True, use_cache = True):
     def get_licenses_objects(ebuild):
         licenses = ebuild.licenses
         return _get_items(licenses, models.LicensModel, 'name', licenses_cache)
@@ -325,8 +330,19 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False):
         category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
         existend_categorys.append(category_object.pk)
         for package in category.iter_packages():
+            if use_cache:
+                key = str(porttree.name)+'/'+str(package)
+                val = None
+                if key in cache_dict:
+                    val = cache_dict[key]
+                if val is not None and val == package.manifest_sha1:
+                    continue
             print('%s [%s]' % (package, porttree))
             package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object, repository = porttree_obj)
+            if update_cache:
+                key = str(porttree.name)+'/'+str(package)
+                cache_dict[key] = package.manifest_sha1
+                
             existend_packages.append(package_object.pk)
             if not package_created:
                 if package_object.check_or_need_update(package) or force_update:
@@ -347,7 +363,10 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False):
 
 
 def scan_all_repos():
+    global cache_dict
+    cache_dict = anydbm.open('cache.db','c')
     herds_cache, maintainers_cache = scan_herds()
     for repo in portage.iter_trees():
         repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
         scanpackages(repo, repo_obj)
+    cache_dict.close()
