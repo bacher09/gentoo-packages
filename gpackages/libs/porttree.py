@@ -6,6 +6,7 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
+from gentoolkit import errors
 from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
                     file_get_content, StrThatIgnoreCase
 from use_info import get_uses_info, get_local_uses_info
@@ -266,12 +267,9 @@ class Package(ToStrMixin):
         ebuilds = PORTDB.cp_list(self.package,
                                  mytree = self.category.porttree.porttree)
         for ebuild in ebuilds:
-            try:
-                PORTDB.aux_get(ebuild, [], mytree = self.category.porttree_path)
-            except KeyError:
-                pass
-            else:
-                yield Ebuild(self ,ebuild)
+            ebuild_obj = Ebuild(self, ebuild)
+            if ebuild_obj.is_valid:
+                yield ebuild_obj
 
     def __unicode__(self):
         return '%s' % self.package
@@ -343,6 +341,16 @@ class Ebuild(ToStrMixin):
     @property
     def keywords_env(self):
         return self.package_object.environment("KEYWORDS", prefer_vdb = False)
+
+    @property
+    def is_valid(self):
+        try:
+            self.package_object.environment("EAPI")
+        except errors.GentoolkitFatalError:
+            return False
+        else:
+            return True
+
 
     @property
     def keywords(self):

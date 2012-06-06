@@ -330,7 +330,6 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False):
             existend_packages.append(package_object.pk)
             if not package_created:
                 if package_object.check_or_need_update(package) or force_update:
-                    print package
                     # need update
                     update_package(package, package_object)
                 else:

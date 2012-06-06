@@ -2,8 +2,12 @@ import os.path
 import hashlib
 from datetime import datetime
 
+__all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1', \
+           'file_mtime', 'cached_property' )
+
 class StrThatIgnoreCase(unicode):
-    
+    __slots__ = ('_forcmp',)
+
     def __init__(self, value):
         super(StrThatIgnoreCase, self).__init__(value)
         self._forcmp = value.lower()
