@@ -31,21 +31,6 @@ class RepositoryModel(models.Model):
         return self.name
 
 class CategoryModel(models.Model):
-    def __init__(self, *args, **kwargs):
-        category_object = None
-        
-        if len(args)>=1:
-            category_object = args[0]
-        if 'category_object' in kwargs:
-            category_object = kwargs['category_object']
-        elif 'category' in kwargs:
-            category_object = kwargs['category']
-        
-        if isinstance(category_object, Category):
-            return super(CategoryModel, self).__init__(category = category_object.category)
-        else:
-            return super(CategoryModel, self).__init__(*args, **kwargs)
-
 
     category = models.CharField(unique = True, max_length = 70)
     
