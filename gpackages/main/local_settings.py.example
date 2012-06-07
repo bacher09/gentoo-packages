@@ -1,0 +1,35 @@
+# This is config file
+# Rename that file to local_settings.py
+
+ADMINS = (
+     ('Your Name', 'your_email@example.com'),
+)
+
+# Uncomment and config this for using MySQL
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql', 
+#        'NAME': 'database-name',                      
+#        'USER': 'user-name',                      
+#        'PASSWORD': 'password',                  
+#        'HOST': '',                      
+#        'PORT': '',                      
+#    }
+#}
+# Uncomment and config this for using PostgreSQL
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.pgsql', 
+#        'NAME': 'database-name',                      
+#        'USER': 'user-name',                      
+#        'PASSWORD': 'password',                  
+#        'HOST': '',                      
+#        'PORT': '',                      
+#    }
+#}
+
+# Uncomment and change this if you want change time zone
+#TIME_ZONE = 'America/Chicago'
+
+# Please uncoment this line, and enter random string in it !!
+#SECRET_KEY = ''
