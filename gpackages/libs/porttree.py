@@ -195,7 +195,7 @@ class PortTree(ToStrMixin):
                 yield ebuild
 
     def __unicode__(self):
-        return self.porttree
+        return self.name
     
     @property
     def porttree_path(self):
@@ -280,6 +280,7 @@ class Package(ToStrMixin):
 
     @cached_property
     def metadata(self):
+        "Return `MetaData` object that represent package metadata.xml file"
         try:
             return MetaData( self.metadata_path)
         except IOError:
@@ -317,6 +318,7 @@ class Package(ToStrMixin):
 
     @property
     def description(self):
+        "Return first description in package metadata.xml"
         if len(self.descriptions)>0:
             return self.descriptions[0]
         else:
@@ -324,6 +326,7 @@ class Package(ToStrMixin):
 
     @cached_property
     def changelog(self):
+        "Return ChangeLog content"
         return file_get_content(self.changelog_path)
 
 
@@ -344,6 +347,7 @@ class Ebuild(ToStrMixin):
 
     @property
     def is_valid(self):
+        "Check if ebuild is valid"
         try:
             self.package_object.environment("EAPI")
         except errors.GentoolkitFatalError:
@@ -357,6 +361,7 @@ class Ebuild(ToStrMixin):
         return list(set(self.keywords_env.split()))
     
     def iter_keywords(self):
+        "Iterate over keywords, yields Keyword object"
         keywords = self.keywords
         for keyword in keywords:
             yield Keyword(keyword)
@@ -372,6 +377,7 @@ class Ebuild(ToStrMixin):
     
 
     def iter_uses(self):
+        "Iterator over all uses, yiels `Use` object"
         for use in self.get_uses_names():
             yield Use(use)
 
@@ -388,10 +394,12 @@ class Ebuild(ToStrMixin):
 
     @property
     def version(self):
+        "Ebuild version"
         return self.package_object.version
 
     @property
     def revision(self):
+        "Ebuild revision"
         return self.package_object.revision
 
     @property
