@@ -364,6 +364,7 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
 
 
 def scan_all_repos():
+    global herds_cache, maintainers_cache
     #global cache_dict
     #cache_dict = anydbm.open('cache.db','c')
     herds_cache, maintainers_cache = scan_herds()
