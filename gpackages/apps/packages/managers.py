@@ -36,6 +36,7 @@ class PackageMixin(object):#{{{
             else:
                 kwargs.update({'name': name})
         elif package is not None:
+            # Bad code !!
             category, name = package.split('/')
             kwargs.update({'name': name, 'category__category': category})
         return super(PackageMixin, self).get(*args, **kwargs)#}}}
@@ -64,10 +65,8 @@ class EbuildMixin(object):#{{{
                         'package__name': ebuild.package.name })
             else:
                 kwargs.update({'package': package})
-            version = ebuild.version
-            revision = ebuild.revision
-            kwargs.update({ 'version': version,
-                            'revision': revision })
+            kwargs.update({ 'version': ebuild.version,
+                            'revision': ebuild.revision })
         return super(EbuildMixin, self).get(*args, **kwargs)#}}}
 
 
