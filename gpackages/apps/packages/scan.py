@@ -330,18 +330,19 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
         category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
         existend_categorys.append(category_object.pk)
         for package in category.iter_packages():
-            if use_cache:
-                key = str(porttree.name)+'/'+str(package)
-                val = None
-                if key in cache_dict:
-                    val = cache_dict[key]
-                if val is not None and val == package.manifest_sha1:
-                    continue
+            #if use_cache:
+                #key = str(porttree.name)+'/'+str(package)
+                #val = None
+                #if key in cache_dict:
+                    #val = cache_dict[key]
+                #if val is not None and val == package.manifest_sha1:
+                    #continue
             print('%s [%s]' % (package, porttree))
-            package_object, package_created = models.PackageModel.objects.get_or_create(package = package, category = category_object, repository = porttree_obj)
-            if update_cache:
-                key = str(porttree.name)+'/'+str(package)
-                cache_dict[key] = package.manifest_sha1
+            package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
+                        .get_or_create(package = package, category = category_object, repository = porttree_obj)
+            #if update_cache:
+                #key = str(porttree.name)+'/'+str(package)
+                #cache_dict[key] = package.manifest_sha1
                 
             existend_packages.append(package_object.pk)
             if not package_created:
@@ -357,16 +358,16 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
                 create_ebuilds(package, package_object)
 
         if delete:
-            models.PackageModel.objects.filter(category = category_object).exclude(pk__in = existend_packages).delete()
+            models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
     # del 
     #models.CategoryModel.objects.exclude(pk__in = existend_categorys).delete()
 
 
 def scan_all_repos():
-    global cache_dict
-    cache_dict = anydbm.open('cache.db','c')
+    #global cache_dict
+    #cache_dict = anydbm.open('cache.db','c')
     herds_cache, maintainers_cache = scan_herds()
     for repo in portage.iter_trees():
         repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
         scanpackages(repo, repo_obj)
-    cache_dict.close()
+    #cache_dict.close()
