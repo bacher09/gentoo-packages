@@ -44,7 +44,8 @@ class KeywordMixin(object):#{{{
     def get_or_create(self, keyword=None,  **kwargs):
         if keyword is not None:
             if isinstance(keyword, Keyword):
-                arch, created = packages.models.ArchesModel.objects.get_or_create(name = keyword.name)
+                arch, created = packages.models.ArchesModel.objects \
+                    .get_or_create(name = keyword.name)
                 kwargs.update({'arch': arch, 'status': keyword.status})
             else:
                 raise ValueError("Bad keyword object")
@@ -53,43 +54,6 @@ class KeywordMixin(object):#{{{
 
 
 class EbuildMixin(object):#{{{
-    #def create(self, **kwargs):
-        #if 'ebuild' in kwargs:
-            #obj = self.model(**kwargs)
-        #else:
-            #obj = super(EbuildMixin, self).create(**kwargs)
-        #return obj
-
-    #def get_or_create(self, **kwargs):
-        #assert kwargs, \
-                #'get_or_create() must be passed at least one keyword argument'
-        #defaults = kwargs.pop('defaults', {})
-        #lookup = kwargs.copy()
-        #for f in self.model._meta.fields:
-            #if f.attname in lookup:
-                #lookup[f.name] = lookup.pop(f.attname)
-        #try:
-            #self._for_write = True
-            #return self.get(**lookup), False
-        #except self.model.DoesNotExist:
-            #try:
-                #params = dict([(k, v) for k, v in kwargs.items() if '__' not in k])
-                #params.update(defaults)
-                #sid = transaction.savepoint(using=self.db)
-                #obj = self.model(**params)
-                #if 'ebuild' not in kwargs:
-                    #obj.save(force_insert=True, using=self.db)
-                #transaction.savepoint_commit(sid, using=self.db)
-                #return obj, True
-            #except IntegrityError as e:
-                #transaction.savepoint_rollback(sid, using=self.db)
-                #exc_info = sys.exc_info()
-                #try:
-                    #return self.get(**lookup), False
-                #except self.model.DoesNotExist:
-                    ## Re-raise the IntegrityError with its original traceback.
-                    #raise exc_info[1], None, exc_info[2]
-    
     
     def get(self, ebuild=None,package = None, *args, **kwargs):
         if ebuild is not None and isinstance(ebuild, Ebuild):
