@@ -1,3 +1,5 @@
+from functools import total_ordering
+from collections import defaultdict
 import portage
 from portage.util.listdir import listdir
 from portage.dep import Atom
@@ -74,15 +76,15 @@ class Use(ToStrMixin):
         return self.name
 
     def __eq__(self, other):
-        self.name == other.name
+        return self.name == other.name
 
     def __ne__(self, other):
-        self.name != other.name
+        return self.name != other.name
 
     def __hash__(self):
         return hash(self.name)
         
-
+@total_ordering
 class Keyword(ToStrMixin):
     "Represend ebuild Keyword as object"
     __slots__ = ('name', 'status')
@@ -109,10 +111,41 @@ class Keyword(ToStrMixin):
     def __unicode__(self):
         return self.status_repr[self.status] + self.name
 
+    def __hash__(self):
+        return hash((self.name, self.status))
+
+    def is_same(self, other):
+        return self.name == other.name
+
+    def is_higer(self, other):
+        return self.status < other.status
+
+    def is_lower(self, other):
+        return self.status > other.status
+
+    def __eq__(self, other):
+        return (self.arch, self.status) == (other.arch, other.status)
+
+    def __lt__(self, other):
+        return (self.status, self.arch) > (other.status, other.arch)
+
     @property
     def arch(self):
         "Return arch name"
         return self.name
+
+class KeywordsSet(set):
+    def __init__(self, init_list):
+        start = defaultdict(list)
+        for item in init_list:
+            start[item.arch].append(item)
+
+        to_create = []
+        for item in start.itervalues():
+            item.sort(reverse = True)
+            if len(item)>=1:
+                to_create.append(item[0])
+        super(KeywordsSet, self).__init__(to_create)
 
 def _gen_all_use(func, iterator):
     use_g = iterator
@@ -371,6 +404,9 @@ class Ebuild(ToStrMixin):
         for keyword in self.iter_keywords():
             l.append(keyword)
         return l
+
+    def get_uniq_keywords(self):
+        return KeywordsSet(self.get_keywords)
 
     def get_uses_names(self):
         return self.package_object.environment("IUSE").split()
