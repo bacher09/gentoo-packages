@@ -1,6 +1,7 @@
 from django.db import models, connections, router, transaction, IntegrityError
 from porttree import Category, Package, Ebuild, Keyword
 import packages.models
+from generic import get_from_kwargs_and_del
 
 
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
@@ -72,19 +73,17 @@ class EbuildMixin(object):#{{{
 
 class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):
-        if 'herd__in' in kwargs:
-            herds = kwargs['herd__in']
-            del kwargs['herd__in']
-            kwargs['name__in'] = herds
+        herd__in = get_from_kwargs_and_del('herd__in',kwargs)
+        if herd__in is not None:
+            kwargs['name__in'] = herd__in
         return super(HerdsMixin, self).filter(*args, **kwargs)#}}}
 
 
 class MaintainerMixin(object):#{{{
     def filter(self, *args, **kwargs):
-        if 'maintainer__in'  in kwargs:
-            maintars = kwargs['maintainer__in']
-            del kwargs['maintainer__in']
-            kwargs['email__in'] = maintars
+        maintainer__in = get_from_kwargs_and_del('maintainer__in', kwargs)
+        if maintainer__in is not None:
+            kwargs['email__in'] = maintainer__in
         return super(MaintainerMixin, self).filter(*args, **kwargs)#}}}
 
 

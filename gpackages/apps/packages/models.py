@@ -2,6 +2,7 @@ from django.db import models
 
 from porttree import Category, Package, Ebuild
 import managers
+from generic import get_from_kwargs_and_del
 
 class AbstractDateTimeModel(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
@@ -40,11 +41,7 @@ class CategoryModel(models.Model):
 class MaintainerModel(AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
-        #TODO: Bad code, maybe use some libraries for overload methods
-        maintainer = None
-        if 'maintainer' in kwargs:
-            maintainer = kwargs['maintainer']
-            del kwargs['maintainer']
+        maintainer = get_from_kwargs_and_del('maintainer', kwargs)
         super(MaintainerModel, self).__init__(*args, **kwargs)
         if maintainer is not None:
             self.init_by_maintainer(maintainer)
@@ -73,10 +70,7 @@ class MaintainerModel(AbstractDateTimeModel):
 class HerdsModel(AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
-        herd = None
-        if 'herd' in kwargs:
-            herd = kwargs['herd']
-            del kwargs['herd']
+        herd = get_from_kwargs_and_del('herd', kwargs)
         super(HerdsModel, self).__init__(*args, **kwargs)
         if herd is not None:
             self.init_by_herd(herd)
@@ -106,20 +100,11 @@ class HerdsModel(AbstractDateTimeModel):
 
 class PackageModel(AbstractDateTimeModel):
     def __init__(self, *args, **kwargs):
-        # TODO: Bad code, maybe use some library to overload method
-        package_object = None
-        if len(args)>=1:
-            package_object = args[0] 
+        package_object = get_from_kwargs_and_del('package', kwargs)
         
-        if 'package' in kwargs:
-            package_object = kwargs['package']
-            del kwargs['package']
-
+        super(PackageModel, self).__init__(*args, **kwargs)
         if isinstance(package_object, Package):
-            super(PackageModel, self).__init__(*args, **kwargs)
             self.init_by_package(package_object, category = kwargs.get('category'))
-        else:
-            super(PackageModel, self).__init__(*args, **kwargs)
             
         
 
@@ -221,7 +206,6 @@ class EbuildModel(AbstractDateTimeModel):
     is_deleted = models.BooleanField(default = False)
     is_masked = models.BooleanField(default = False)
 
-    #homepage = models.URLField(blank = True, null = True, max_length=255)
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
 
@@ -233,12 +217,9 @@ class EbuildModel(AbstractDateTimeModel):
     objects = managers.EbuildManager()
 
     def __init__(self, *args, **kwargs ):
-        ebuild = None
-        if 'ebuild' in kwargs:
-            ebuild = kwargs['ebuild']
-            del kwargs['ebuild']
+        ebuild = get_from_kwargs_and_del('ebuild', kwargs)
         super(EbuildModel, self).__init__(*args, **kwargs)
-        if ebuild is not None and isinstance(ebuild, Ebuild):
+        if isinstance(ebuild, Ebuild):
             self.init_by_ebuild(ebuild)
     
     def __unicode__(self):

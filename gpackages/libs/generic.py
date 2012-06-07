@@ -1,10 +1,33 @@
 import os.path
 import hashlib
+import types
 from datetime import datetime
 
 __all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1', \
            'file_mtime', 'cached_property' )
 
+def del_from_dict(what_list, dict_todel):
+    for item in what_list:
+        if item in dict_todel:
+            del dict_todel[item]
+    #dict_todel already modified
+    return dict_todel
+
+def get_from_kwargs_and_del(list_what, kwargs):
+    ret_list = []
+    if isinstance(list_what, types.StringTypes):
+        list_what = (list_what, )
+    for item in list_what:
+        if item in kwargs:
+            ret_list.append(v)
+        else:
+            ret_list.append(None)
+    del_from_dict(ret_list, kwargs)
+    if len(ret_list)==1:
+        return ret_list[0]
+    else:
+        return ret_list
+            
 class StrThatIgnoreCase(unicode):
     __slots__ = ('_forcmp',)
 
