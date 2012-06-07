@@ -33,7 +33,7 @@ class StrThatIgnoreCase(unicode):
 
     def __init__(self, value):
         super(StrThatIgnoreCase, self).__init__(value)
-        self._forcmp = value.lower()
+        self._forcmp = self.lower()
 
     def __hash__(self):
         return hash(self._forcmp)
