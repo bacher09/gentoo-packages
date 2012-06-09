@@ -14,6 +14,8 @@ from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
 from use_info import get_uses_info, get_local_uses_info
 import os
 
+__all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
+
 BINDB = portage.db[portage.root]["bintree"].dbapi
 PORTDB = portage.db[portage.root]["porttree"].dbapi
 VARDB = portage.db[portage.root]["vartree"].dbapi
