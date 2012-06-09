@@ -19,10 +19,10 @@ def get_from_kwargs_and_del(list_what, kwargs):
         list_what = (list_what, )
     for item in list_what:
         if item in kwargs:
-            ret_list.append(v)
+            ret_list.append(kwargs[item])
         else:
             ret_list.append(None)
-    del_from_dict(ret_list, kwargs)
+    del_from_dict(list_what, kwargs)
     if len(ret_list)==1:
         return ret_list[0]
     else:
