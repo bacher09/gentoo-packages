@@ -36,7 +36,7 @@ class CategoryModel(models.Model):
     category = models.CharField(unique = True, max_length = 70)
     
     def __unicode__(self):
-        return self.category
+        return unicode(self.category)
 
 class MaintainerModel(AbstractDateTimeModel):
 
@@ -126,11 +126,11 @@ class PackageModel(AbstractDateTimeModel):
     objects = managers.PackageManager()
 
     def __unicode__(self):
-        return self.cp
+        return unicode(self.cp)
 
     @property
     def cp(self):
-        return '%s/%s' % (self.category, self.name)
+        return "%s/%s" % (unicode(self.category), self.name)
     
     def init_by_package(self, package, category = None):
         self.name = package.name

@@ -12,9 +12,10 @@ class Command(BaseCommand):
     args = ''
     help = 'Will scan package tree and update info about it in database'
     def handle(self, *args, **options):
+        verbosity = int(options['verbosity'])
         st = datetime.datetime.now()
         #scan.scanpackages()
         #scan.scan_all_repos()
-        Scanner().scan_all_repos()
+        Scanner(verbosity = verbosity).scan_all_repos()
         self.stdout.write(unicode((datetime.datetime.now() - st).total_seconds()))
         self.stdout.write("\n")

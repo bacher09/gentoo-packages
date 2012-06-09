@@ -1,4 +1,5 @@
 from packages import models
+import sys
 from django.db import IntegrityError
 from collections import defaultdict
 from generic import StrThatIgnoreCase
@@ -87,7 +88,7 @@ def _get_items(items_list, Model, field_name, cache_var):
 
 
 class Scanner(object):
-    def __init__(self, verbosity = 0):
+    def __init__(self, verbosity = 1):
         # maintainers_cache: maintainer.email as key, and maintainer object as
         # value
         self.maintainers_cache = {}
@@ -105,7 +106,16 @@ class Scanner(object):
 
         self.arches_cache = {}
 
-        self.verbosity = verbosity
+        self.verbosity = int(verbosity)
+
+    def write(self, what, verbosity = 1):
+        if verbosity <= self.verbosity:
+            sys.stdout.write(what)
+
+    def output(self, format_str, whats, verbosity = 1):
+        # Maybe implement lazy format string ?
+        if verbosity <= self.verbosity:
+            sys.stdout.write(format_str % whats)
 
     def get_existent_maintainers(self):
         return models.MaintainerModel.objects.all()
@@ -148,11 +158,15 @@ class Scanner(object):
                     # updating
                     maintainer_object.update_by_maintainer(maintainer_cmp)
                     maintainer_object.save(force_update = True)
+
+                    # Show info if need
+                    self.output("update maintainer '%s'\n", maintainer_object, 2)
                 mo_dict[maintainer_object.email] = maintainer_object
 
         to_create = []
         for maintainer in maintainers_dict.iterkeys():
             if maintainer.email not in mo_dict:
+                self.output("create maintainer '%s'\n", maintainer, 2)
                 to_create.append(maintainer)
 
         mobjects = _create_objects(models.MaintainerModel, 'maintainer', to_create)
@@ -170,6 +184,7 @@ class Scanner(object):
         for herd_object in existent_herds:
             if herd_object.name not in herds_dict:
                 to_del.append(herd_object.pk)
+                self.output("herd to del '%s'\n", herd_object, 2)
             else:
                 herd_cmp = herds_dict[herd_object.name]
                 # need update ?
@@ -177,6 +192,7 @@ class Scanner(object):
                     # updating 
                     herd_object.update_by_herd(herd_cmp)
                     herd_object.save(force_update = True)
+                    self.output("update herd '%s'\n", herd_object, 2)
                 herds_objects_dict[herd_object.name] = herd_object
 
         models.HerdsModel.objects.filter(pk__in = to_del).delete()
@@ -185,6 +201,7 @@ class Scanner(object):
         for herd in herds_dict.itervalues():
             if herd.name not in herds_objects_dict:
                 to_create.append(herd)
+                self.output("create herd '%s'\n", herd, 2)
 
         cobjects = _create_objects(models.HerdsModel, 'herd', to_create)
         _update_cache_by_queryset(herds_objects_dict, cobjects, 'name')
@@ -213,6 +230,9 @@ class Scanner(object):
             herd_object.maintainers.clear()
             herd_object.maintainers.add(*res[herd_name])
 
+            self.output("add maintainers '%s' to mantainer '%s'\n", 
+                (res[herd_name], herd_object), 3)
+
     def get_maintainers(self):
         if not self.maintainers_cache_loaded:
             self.load_maintainers_to_cache()
@@ -221,8 +241,12 @@ class Scanner(object):
     def scan_all_repos(self, scan_herds = True):
         #cache_dict = anydbm.open('cache.db','c')
         if scan_herds:
+            self.write('Scaning herds\n', 3)
             self.scan_herds()
+
         for repo in portage.iter_trees():
+            self.output("Scaning repository '%s'\n", repo.name, 3)
+
             repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
             self.scanpackages(repo, repo_obj)
         #cache_dict.close()
@@ -265,7 +289,8 @@ class Scanner(object):
         if arch_name in self.arches_cache:
             arch = self.arches_cache[arch_name]
         else:
-            arch, created = models.ArchesModel.objects.get_or_create(name = arch_name)
+            arch, created = models.ArchesModel.objects \
+                .get_or_create(name = arch_name)
             self.arches_cache[arch_name] = arch
         return arch
 
@@ -309,6 +334,8 @@ class Scanner(object):
             ebuild_object.save(force_insert=True)
             self.add_related_to_ebuild(ebuild, ebuild_object)
 
+            self.output("ebuild created '%s'\n", ebuild_object, 3)
+
     def clear_related_to_package(self, package_object):
         package_object.herds.clear()
         package_object.maintainers.clear()
@@ -325,15 +352,20 @@ class Scanner(object):
     def update_ebuilds(self, package, package_object, delete = True):
         not_del = []
         for ebuild in package.iter_ebuilds():
-            ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
+            ebuild_object, ebuild_created = models.EbuildModel.objects \
+                .get_or_create(ebuild = ebuild, package = package_object)
+
             not_del.append(ebuild_object.pk)
             if ebuild_created:
                 self.add_related_to_ebuild(ebuild, ebuild_object)
-                continue
+                self.output("ebuild created '%s'\n", ebuild_object, 3)
+
             if ebuild_object.check_or_need_update(ebuild):
                 ebuild_object.update_by_ebuild(ebuild)
                 self.update_related_to_ebuild(ebuild, ebuild_object)
                 ebuild_object.save(force_update = True)
+
+                self.output("ebuild updated '%s'\n", ebuild_object, 3)
         if delete:
             models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
 
@@ -351,9 +383,6 @@ class Scanner(object):
     def scanpackages(self, porttree, porttree_obj, delete = True,
                      force_update = False, update_cache = True, use_cache = True):
 
-        # Load homepages to cache
-        #for homepage in models.HomepageModel.objects.all():
-            #homepages_cache[homepage.url] = homepage
         existend_categorys = []
         for category in porttree.iter_categories():
             existend_packages = []
@@ -367,7 +396,7 @@ class Scanner(object):
                         #val = cache_dict[key]
                     #if val is not None and val == package.manifest_sha1:
                         #continue
-                print('%-44s [%s]' % (package, porttree))
+                self.output('%-44s [%s]\n', (package, porttree))
                 package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
                             .get_or_create(package = package, category = category_object, repository = porttree_obj)
                 #if update_cache:
