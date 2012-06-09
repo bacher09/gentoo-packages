@@ -48,7 +48,6 @@ class MaintainerModel(AbstractDateTimeModel):
         
     name = models.CharField(max_length = 255, blank = True, null = True)
     email = models.EmailField(unique = True)
-    role = models.TextField(blank = True, null = True)
 
     objects = managers.MaintainerManager()
 

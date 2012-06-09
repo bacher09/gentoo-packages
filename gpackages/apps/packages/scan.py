@@ -66,7 +66,8 @@ def _get_items(items_list, Model, field_name, cache_var):
     # Getting from cache
     items_objects, geted_items = _get_from_cache(cache_var, items_set)
     # Getting from database
-    queryset, geted = _get_from_database_and_update_cache(Model, field_name, items_set - geted_items, cache_var)
+    queryset, geted = _get_from_database_and_update_cache(Model, field_name, 
+        items_set - geted_items, cache_var)
     if queryset is None:
         return items_objects
     geted_items = geted_items | geted
@@ -75,7 +76,8 @@ def _get_items(items_list, Model, field_name, cache_var):
     items_objects.extend(queryset)
     # Create not existend items fast using bulk_create, works only in django 1.4 or gt
     need_create = list(items_set - geted_items)
-    created, geted = _create_objects_and_update_cache(Model, field_name, need_create, cache_var)
+    created, geted = _create_objects_and_update_cache(Model, field_name, 
+                                                      need_create, cache_var)
     if created is None:
         return items_objects
     items_objects.extend(created)
@@ -281,76 +283,73 @@ class Scanner(object):
     def clean_keywords_object(self, ebuild_object):
         models.Keyword.objects.filter(ebuild = ebuild_object).delete()
 
+    def add_related_to_ebuild(self, ebuild, ebuild_object):
+        # Add licenses
+        ebuild_object.licenses.add(*self.get_licenses_objects(ebuild))
+        ebuild_object.use_flags.add(*self.get_uses_objects(ebuild))
+        ebuild_object.homepages.add(*self.get_homepages_objects(ebuild))
+        self.create_keywords_objects(ebuild, ebuild_object)
+        
+    def clear_related_to_ebuild(self, ebuild_object):
+        ebuild_object.licenses.clear()
+        ebuild_object.use_flags.clear()
+        ebuild_object.homepages.clear()
+        self.clean_keywords_object(ebuild_object)
+
+    def update_related_to_ebuild(self, ebuild, ebuild_object):
+        self.clear_related_to_ebuild(ebuild_object)
+        self.add_related_to_ebuild(ebuild, ebuild_object)
+
+    def create_ebuilds(self, package, package_object):
+        for ebuild in package.iter_ebuilds():
+            ebuild_object = models.EbuildModel()
+            ebuild_object.init_by_ebuild(ebuild)
+            ebuild_object.package = package_object
+            # To Add some related objects it should have pk
+            ebuild_object.save(force_insert=True)
+            self.add_related_to_ebuild(ebuild, ebuild_object)
+
+    def clear_related_to_package(self, package_object):
+        package_object.herds.clear()
+        package_object.maintainers.clear()
+        
+
+    def add_related_to_package(self, package, package_object):
+        package_object.herds.add(*self.get_herds_objects(package))
+        package_object.maintainers.add(*self.get_maintainers_objects(package))
+
+    def update_related_to_package(self, package, package_object):
+        self.clear_related_to_package(package_object)
+        self.add_related_to_package(package, package_object)
+
+    def update_ebuilds(self, package, package_object, delete = True):
+        not_del = []
+        for ebuild in package.iter_ebuilds():
+            ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
+            not_del.append(ebuild_object.pk)
+            if ebuild_created:
+                self.add_related_to_ebuild(ebuild, ebuild_object)
+                continue
+            if ebuild_object.check_or_need_update(ebuild):
+                ebuild_object.update_by_ebuild(ebuild)
+                self.update_related_to_ebuild(ebuild, ebuild_object)
+                ebuild_object.save(force_update = True)
+        if delete:
+            models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
+
+    def update_package(package, package_object, force_update = False):
+        if package_object.need_update_metadata(package) or force_update:
+            #Updating related objects to package
+            self.update_related_to_package(package, package_object)
+
+        if package_object.need_update_ebuilds(package) or force_update:
+            self.update_ebuilds(package, package_object)
+
+        package_object.update_info(package)
+        package_object.save(force_update = True)
+
     def scanpackages(self, porttree, porttree_obj, delete = True,
                      force_update = False, update_cache = True, use_cache = True):
-
-                    
-
-
-        def add_related_to_ebuild(ebuild, ebuild_object):
-            # Add licenses
-            ebuild_object.licenses.add(*self.get_licenses_objects(ebuild))
-            ebuild_object.use_flags.add(*self.get_uses_objects(ebuild))
-            ebuild_object.homepages.add(*self.get_homepages_objects(ebuild))
-            self.create_keywords_objects(ebuild, ebuild_object)
-            
-        def clear_related_to_ebuild(ebuild_object):
-            ebuild_object.licenses.clear()
-            ebuild_object.use_flags.clear()
-            ebuild_object.homepages.clear()
-            self.clean_keywords_object(ebuild_object)
-
-        def update_related_to_ebuild(ebuild, ebuild_object):
-            clear_related_to_ebuild(ebuild_object)
-            add_related_to_ebuild(ebuild, ebuild_object)
-
-        def create_ebuilds(package, package_object):
-            for ebuild in package.iter_ebuilds():
-                ebuild_object = models.EbuildModel()
-                ebuild_object.init_by_ebuild(ebuild)
-                ebuild_object.package = package_object
-                # To Add some related objects it should have pk
-                ebuild_object.save(force_insert=True)
-                add_related_to_ebuild(ebuild, ebuild_object)
-
-        def update_ebuilds(package, package_object, delete = True):
-            not_del = []
-            for ebuild in package.iter_ebuilds():
-                ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
-                not_del.append(ebuild_object.pk)
-                if ebuild_created:
-                    add_related_to_ebuild(ebuild, ebuild_object)
-                    continue
-                if ebuild_object.check_or_need_update(ebuild):
-                    ebuild_object.update_by_ebuild(ebuild)
-                    update_related_to_ebuild(ebuild, ebuild_object)
-                    ebuild_object.save(force_update = True)
-            if delete:
-                models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
-
-        def clear_related_to_package(package_object):
-            package_object.herds.clear()
-            package_object.maintainers.clear()
-            
-
-        def add_related_to_package(package, package_object):
-            package_object.herds.add(*self.get_herds_objects(package))
-            package_object.maintainers.add(*self.get_maintainers_objects(package))
-
-        def update_related_to_package(package, package_object):
-            clear_related_to_package(package_object)
-            add_related_to_package(package, package_object)
-
-        def update_package(package, package_object, force_update = False):
-            if package_object.need_update_metadata(package) or force_update:
-                #Updating related objects to package
-                update_related_to_package(package, package_object)
-
-            if package_object.need_update_ebuilds(package) or force_update:
-                update_ebuilds(package, package_object)
-
-            package_object.update_info(package)
-            package_object.save(force_update = True)
 
         # Load homepages to cache
         #for homepage in models.HomepageModel.objects.all():
@@ -368,7 +367,7 @@ class Scanner(object):
                         #val = cache_dict[key]
                     #if val is not None and val == package.manifest_sha1:
                         #continue
-                print('%s [%s]' % (str(package).ljust(44), porttree))
+                print('%-44s [%s]' % (package, porttree))
                 package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
                             .get_or_create(package = package, category = category_object, repository = porttree_obj)
                 #if update_cache:
@@ -379,12 +378,12 @@ class Scanner(object):
                 if not package_created:
                     if package_object.check_or_need_update(package) or force_update:
                         # need update
-                        update_package(package, package_object)
+                        self.update_package(package, package_object)
 
                     continue
                 # if package_created:
-                add_related_to_package(package, package_object)
-                create_ebuilds(package, package_object)
+                self.add_related_to_package(package, package_object)
+                self.create_ebuilds(package, package_object)
 
             if delete:
                 models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
