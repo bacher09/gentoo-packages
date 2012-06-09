@@ -310,10 +310,23 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
         if delete:
             models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
 
+    def clear_related_to_package(package_object):
+        package_object.herds.clear()
+        package_object.maintainers.clear()
+        
+
+    def add_related_to_package(package, package_object):
+        package_object.herds.add(*get_herds_objects(package))
+        package_object.maintainers.add(*get_maintainers_objects(package))
+
+    def update_related_to_package(package, package_object):
+        clear_related_to_package(package_object)
+        add_related_to_package(package, package_object)
+
     def update_package(package, package_object, force_update = False):
         if package_object.need_update_metadata(package) or force_update:
-            package_object.herds.clear()
-            package_object.maintainers.clear()
+            #Updating related objects to package
+            update_related_to_package(package, package_object)
 
         if package_object.need_update_ebuilds(package) or force_update:
             update_ebuilds(package, package_object)
@@ -337,7 +350,7 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
                     #val = cache_dict[key]
                 #if val is not None and val == package.manifest_sha1:
                     #continue
-            print('%s [%s]' % (package, porttree))
+            print('%s [%s]' % (str(package).ljust(44), porttree))
             package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
                         .get_or_create(package = package, category = category_object, repository = porttree_obj)
             #if update_cache:
@@ -349,18 +362,14 @@ def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
                 if package_object.check_or_need_update(package) or force_update:
                     # need update
                     update_package(package, package_object)
-                else:
-                    # not need to update, ebuilds too
-                    continue
-            package_object.herds.add(*get_herds_objects(package))
-            package_object.maintainers.add(*get_maintainers_objects(package))
+
+                continue
+            add_related_to_package(package, package_object)
             if package_created:
                 create_ebuilds(package, package_object)
 
         if delete:
             models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
-    # del 
-    #models.CategoryModel.objects.exclude(pk__in = existend_categorys).delete()
 
 
 def scan_all_repos():
