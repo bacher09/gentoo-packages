@@ -29,4 +29,6 @@ if DEBUG:
                              UseFlagDescriptionModel, RepositoryModel)
     urlpatterns += (
         url(r'^data/(.*)',databrowse.site.root),
+        url(r'^404/$','django.views.defaults.page_not_found', name = '404'),
+        url(r'^500/$','django.views.defaults.server_error', name = '500'),
         )
