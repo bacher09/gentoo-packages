@@ -80,9 +80,12 @@ class HerdsMixin(object):#{{{
 
 class MaintainerMixin(object):#{{{
     def filter(self, *args, **kwargs):
-        maintainer__in = get_from_kwargs_and_del('maintainer__in', kwargs)
+        maintainer__in, maintainer = \
+            get_from_kwargs_and_del(['maintainer__in', 'maintainer'], kwargs)
         if maintainer__in is not None:
             kwargs['email__in'] = maintainer__in
+        elif maintainer is not None:
+            kwargs['email'] = maintainer.email
         return super(MaintainerMixin, self).filter(*args, **kwargs)#}}}
 
 

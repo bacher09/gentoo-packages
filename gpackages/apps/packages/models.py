@@ -55,7 +55,6 @@ class MaintainerModel(AbstractDateTimeModel):
     def init_by_maintainer(self, maintainer):
         self.name = maintainer.name
         self.email = maintainer.email
-        self.role = maintainer.role
 
     def update_by_maintainer(self, maintainer):
         self.name = maintainer.name

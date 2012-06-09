@@ -83,78 +83,315 @@ def _get_items(items_list, Model, field_name, cache_var):
     return items_objects
     
 
-def scan_maintainers(maintainers_dict):
-    existend_maintainers = models.MaintainerModel.objects.all()
-    main_dict = {}
-    mo_dict = {}
-    #to_del = []
-    _update_cache_by_queryset(main_dict, maintainers_dict.keys(), 'email')
-    for maintainer_object in existend_maintainers:
-        if maintainer_object.email in main_dict:
-            maintainer_cmp = main_dict[maintainer_object.email]
-            # need update ?
-            if maintainer_object.check_or_need_update(maintainer_cmp):
-                # updating
-                maintainer_object.update_by_maintainer(maintainer_cmp)
-                maintainer_object.save(force_update = True)
-            mo_dict[maintainer_object.email] = maintainer_object
-        #else:
-            #to_del.append(maintainer_object.pk)
-    #print to_del
-    #print mo_dict
-    to_create = []
-    for maintainer in maintainers_dict.iterkeys():
-        if maintainer.email not in mo_dict:
-            to_create.append(maintainer)
 
-    mobjects = _create_objects(models.MaintainerModel, 'maintainer', to_create)
-    _update_cache_by_queryset(mo_dict, mobjects, 'email')
+class Scanner(object):
+    def __init__(self, verbosity = 0):
+        # maintainers_cache: maintainer.email as key, and maintainer object as
+        # value
+        self.maintainers_cache = {}
+        self.maintainers_cache_loaded = False
+        # herds cache: herd.name as key and herd object as value
+        self.herds_cache = {}
+        self.herds_cache_loaded = False
+        self.licenses_cache = {}
+        self.uses_cache = {}
+        self.arches_cache = {}
+        self.homepages_cache = {}    
+        self.herds_cache = {}
+        self.maintainers_cache = {}
+        self.herds_object = herds.Herds()
 
-    return mo_dict
+        self.arches_cache = {}
+
+        self.verbosity = verbosity
+
+    def get_existent_maintainers(self):
+        return models.MaintainerModel.objects.all()
+
+    def get_existent_herds(self):
+        return models.HerdsModel.objects.all()
+
+    def get_maintainers_cache(self):
+        maintainers_dict = {}
+        existent_maintainers = self.get_existent_maintainers()
+        _update_cache_by_queryset(maintainers_dict, existent_maintainers, 'email')
+        return maintainers_dict
+
+    def load_maintainers_to_cache(self):
+        self.maintainers_cache = self.get_maintainers_cache()
+        self.maintainers_cache_loaded = True
+        
+    def get_herds_cache(self):
+        herds_dict = {}
+        existent_herds = self.get_existent_herds()
+        _update_cache_by_queryset(herds_dict, existent_herds, 'name')
+        return herds_dict
+
+    def load_herds_to_cache(self):
+        if not self.herds_cache_loaded:
+            self.herds_cache = self.get_herds_cache()
+            self.herds_cache_loaded = True
+
+    def scan_maintainers(self, maintainers_dict):
+        existend_maintainers = self.get_existent_maintainers()
+        main_dict = {}
+        mo_dict = {}
+        #to_del = []
+        _update_cache_by_queryset(main_dict, maintainers_dict.keys(), 'email')
+        for maintainer_object in existend_maintainers:
+            if maintainer_object.email in main_dict:
+                maintainer_cmp = main_dict[maintainer_object.email]
+                # need update ?
+                if maintainer_object.check_or_need_update(maintainer_cmp):
+                    # updating
+                    maintainer_object.update_by_maintainer(maintainer_cmp)
+                    maintainer_object.save(force_update = True)
+                mo_dict[maintainer_object.email] = maintainer_object
+
+        to_create = []
+        for maintainer in maintainers_dict.iterkeys():
+            if maintainer.email not in mo_dict:
+                to_create.append(maintainer)
+
+        mobjects = _create_objects(models.MaintainerModel, 'maintainer', to_create)
+        _update_cache_by_queryset(mo_dict, mobjects, 'email')
+
+        self.maintainers_cache = mo_dict
+        self.maitainers_cache_loaded = True
             
 
-def scan_herds():
-    existent_herds = models.HerdsModel.objects.all()
-    herds_object = herds.Herds()
-    herds_dict = herds_object.get_herds_indict()
-    maintainers_dict = herds_object.get_maintainers_with_herds()
-    ho_dict = {}
-    to_del = []
-    for herd_object in existent_herds:
-        if herd_object.name not in herds_dict:
-            to_del.append(herd_object.pk)
+    def scan_herds(self):
+        existent_herds = self.get_existent_herds()
+        herds_dict = self.herds_object.get_herds_indict()
+        herds_objects_dict = {}
+        to_del = []
+        for herd_object in existent_herds:
+            if herd_object.name not in herds_dict:
+                to_del.append(herd_object.pk)
+            else:
+                herd_cmp = herds_dict[herd_object.name]
+                # need update ?
+                if herd_object.check_or_need_update(herd_cmp):
+                    # updating 
+                    herd_object.update_by_herd(herd_cmp)
+                    herd_object.save(force_update = True)
+                herds_objects_dict[herd_object.name] = herd_object
+
+        models.HerdsModel.objects.filter(pk__in = to_del).delete()
+
+        to_create = []
+        for herd in herds_dict.itervalues():
+            if herd.name not in herds_objects_dict:
+                to_create.append(herd)
+
+        cobjects = _create_objects(models.HerdsModel, 'herd', to_create)
+        _update_cache_by_queryset(herds_objects_dict, cobjects, 'name')
+
+        # Add to cache
+        self.herds_cache = herds_objects_dict
+        self.herds_cache_loaded = True
+        # Add related maintainers to herds
+        self._add_related_to_herds()
+
+
+    def _get_maintainers_for_relation_with_herds(self, maintainers_dict):
+        res = defaultdict(list)
+        for mainteiner, herds_names in maintainers_dict.iteritems():
+           for herd in herds_names:
+               res[herd].append(self.maintainers_cache[mainteiner.email])
+        return res
+
+    def _add_related_to_herds(self):
+        maintainers_dict = self.herds_object.get_maintainers_with_herds()
+        self.scan_maintainers(maintainers_dict)
+        #Gen data for relate with herds
+        res = self._get_maintainers_for_relation_with_herds(maintainers_dict)
+
+        for herd_name, herd_object in self.herds_cache.iteritems():
+            herd_object.maintainers.clear()
+            herd_object.maintainers.add(*res[herd_name])
+
+    def get_maintainers(self):
+        if not self.maintainers_cache_loaded:
+            self.load_maintainers_to_cache()
+        return self.maintainers_cache
+
+    def scan_all_repos(self, scan_herds = True):
+        #cache_dict = anydbm.open('cache.db','c')
+        if scan_herds:
+            self.scan_herds()
+        for repo in portage.iter_trees():
+            repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
+            self.scanpackages(repo, repo_obj)
+        #cache_dict.close()
+
+    def get_licenses_objects(self, ebuild):
+        licenses = ebuild.licenses
+        return _get_items(licenses, models.LicensModel, 'name', self.licenses_cache)
+
+    def get_uses_objects(self, ebuild):
+        uses = [ use.name for use in ebuild.iter_uses() ]
+        return _get_items(uses, models.UseFlagModel, 'name', self.uses_cache)
+
+    def get_homepages_objects(self, ebuild):
+        homepages = ebuild.homepages
+        return _get_items(homepages, models.HomepageModel, 'url', self.homepages_cache)
+
+    def get_maintainers_objects(self, package):
+        objects = []
+        for maintainer in package.metadata.maintainers():
+            if maintainer.email in self.maintainers_cache:
+                objects.append(self.maintainers_cache[maintainer.email])
+            else:
+                maintainer_object, created = models.MaintainerModel \
+                        .objects.get_or_create(maintainer = maintainer)
+                objects.append(maintainer_object)
+                # Add to cache
+                self.maintainers_cache[maintainer_object.email] = maintainer_object
+        return objects
+
+    def get_herds_objects(self, package):
+        self.load_herds_to_cache()
+        herds_objects = []
+        for herd in package.metadata.herds():
+            if herd in self.herds_cache:
+                herds_objects.append(self.herds_cache[herd])
+
+        return herds_objects
+
+    def get_arch_object(self, arch_name):
+        if arch_name in self.arches_cache:
+            arch = self.arches_cache[arch_name]
         else:
-            herd_cmp = herds_dict[herd_object.name]
-            # need update ?
-            if herd_object.check_or_need_update(herd_cmp):
-                # updating 
-                herd_object.update_by_herd(herd_cmp)
-                herd_object.save(force_update = True)
-            ho_dict[herd_object.name] = herd_object
+            arch, created = models.ArchesModel.objects.get_or_create(name = arch_name)
+            self.arches_cache[arch_name] = arch
+        return arch
 
-    models.HerdsModel.objects.filter(pk__in = to_del).delete()
+    def create_keywords_objects(self, ebuild, ebuild_object):
+        keywords_list = []
+        for keyword in ebuild.get_keywords():
+            keyword_object = models.Keyword(status = keyword.status,
+                                            ebuild = ebuild_object)
 
-    to_create = []
-    for herd in herds_dict.itervalues():
-        if herd.name not in ho_dict:
-            to_create.append(herd)
+            keyword_object.arch = self.get_arch_object(keyword.arch)
+            keywords_list.append(keyword_object)
 
-    cobjects = _create_objects(models.HerdsModel, 'herd', to_create)
-    _update_cache_by_queryset(ho_dict, cobjects, 'name')
+        models.Keyword.objects.bulk_create(keywords_list)
 
-    mo_dict = scan_maintainers(maintainers_dict)
-    #Gen data for relate with herds
-    res = defaultdict(list)
-    for mainteiner, herds_names in maintainers_dict.iteritems():
-       for herd in herds_names:
-           res[herd].append(mo_dict[mainteiner.email])
+    def clean_keywords_object(self, ebuild_object):
+        models.Keyword.objects.filter(ebuild = ebuild_object).delete()
 
-    for herd_name, herd_object in ho_dict.iteritems():
-        herd_object.maintainers.clear()
-        herd_object.maintainers.add(*res[herd_name])
+    def scanpackages(self, porttree, porttree_obj, delete = True,
+                     force_update = False, update_cache = True, use_cache = True):
 
-    return ho_dict, mo_dict
+                    
 
+
+        def add_related_to_ebuild(ebuild, ebuild_object):
+            # Add licenses
+            ebuild_object.licenses.add(*self.get_licenses_objects(ebuild))
+            ebuild_object.use_flags.add(*self.get_uses_objects(ebuild))
+            ebuild_object.homepages.add(*self.get_homepages_objects(ebuild))
+            self.create_keywords_objects(ebuild, ebuild_object)
+            
+        def clear_related_to_ebuild(ebuild_object):
+            ebuild_object.licenses.clear()
+            ebuild_object.use_flags.clear()
+            ebuild_object.homepages.clear()
+            self.clean_keywords_object(ebuild_object)
+
+        def update_related_to_ebuild(ebuild, ebuild_object):
+            clear_related_to_ebuild(ebuild_object)
+            add_related_to_ebuild(ebuild, ebuild_object)
+
+        def create_ebuilds(package, package_object):
+            for ebuild in package.iter_ebuilds():
+                ebuild_object = models.EbuildModel()
+                ebuild_object.init_by_ebuild(ebuild)
+                ebuild_object.package = package_object
+                # To Add some related objects it should have pk
+                ebuild_object.save(force_insert=True)
+                add_related_to_ebuild(ebuild, ebuild_object)
+
+        def update_ebuilds(package, package_object, delete = True):
+            not_del = []
+            for ebuild in package.iter_ebuilds():
+                ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
+                not_del.append(ebuild_object.pk)
+                if ebuild_created:
+                    add_related_to_ebuild(ebuild, ebuild_object)
+                    continue
+                if ebuild_object.check_or_need_update(ebuild):
+                    ebuild_object.update_by_ebuild(ebuild)
+                    update_related_to_ebuild(ebuild, ebuild_object)
+                    ebuild_object.save(force_update = True)
+            if delete:
+                models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
+
+        def clear_related_to_package(package_object):
+            package_object.herds.clear()
+            package_object.maintainers.clear()
+            
+
+        def add_related_to_package(package, package_object):
+            package_object.herds.add(*self.get_herds_objects(package))
+            package_object.maintainers.add(*self.get_maintainers_objects(package))
+
+        def update_related_to_package(package, package_object):
+            clear_related_to_package(package_object)
+            add_related_to_package(package, package_object)
+
+        def update_package(package, package_object, force_update = False):
+            if package_object.need_update_metadata(package) or force_update:
+                #Updating related objects to package
+                update_related_to_package(package, package_object)
+
+            if package_object.need_update_ebuilds(package) or force_update:
+                update_ebuilds(package, package_object)
+
+            package_object.update_info(package)
+            package_object.save(force_update = True)
+
+        # Load homepages to cache
+        #for homepage in models.HomepageModel.objects.all():
+            #homepages_cache[homepage.url] = homepage
+        existend_categorys = []
+        for category in porttree.iter_categories():
+            existend_packages = []
+            category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
+            existend_categorys.append(category_object.pk)
+            for package in category.iter_packages():
+                #if use_cache:
+                    #key = str(porttree.name)+'/'+str(package)
+                    #val = None
+                    #if key in cache_dict:
+                        #val = cache_dict[key]
+                    #if val is not None and val == package.manifest_sha1:
+                        #continue
+                print('%s [%s]' % (str(package).ljust(44), porttree))
+                package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
+                            .get_or_create(package = package, category = category_object, repository = porttree_obj)
+                #if update_cache:
+                    #key = str(porttree.name)+'/'+str(package)
+                    #cache_dict[key] = package.manifest_sha1
+                    
+                existend_packages.append(package_object.pk)
+                if not package_created:
+                    if package_object.check_or_need_update(package) or force_update:
+                        # need update
+                        update_package(package, package_object)
+
+                    continue
+                # if package_created:
+                add_related_to_package(package, package_object)
+                create_ebuilds(package, package_object)
+
+            if delete:
+                models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
+
+
+
+cache_dict =  None
 def update_globals_uses_descriptions():
     # Need changes 
     uses_g = use_info.get_uses_info()
@@ -203,181 +440,3 @@ def scan_uses_description():
                     use_desc_obj.save(force_update = True)
         models.UseFlagDescriptionModel.objects.bulk_create(to_create)
             
-licenses_cache = {}
-uses_cache = {}
-arches_cache = {}
-homepages_cache = {}    
-herds_cache = {}
-maintainers_cache = {}
-
-cache_dict =  None
-def scanpackages(porttree, porttree_obj, delete = True, force_update = False,
-                update_cache = True, use_cache = True):
-    def get_licenses_objects(ebuild):
-        licenses = ebuild.licenses
-        return _get_items(licenses, models.LicensModel, 'name', licenses_cache)
-
-    def get_uses_objects(ebuild):
-        uses = [ use.name for use in ebuild.iter_uses() ]
-        return _get_items(uses, models.UseFlagModel, 'name', uses_cache)
-
-    def get_keywords_objects(ebuild, ebuild_object):
-        keywords_list = []
-        for keyword in ebuild.get_keywords():
-            keyword_object = models.Keyword(status = keyword.status,
-                                            ebuild = ebuild_object)
-
-            if keyword.arch in arches_cache:
-                arch = arches_cache[keyword.arch]
-            else:
-                arch, created = models.ArchesModel.objects.get_or_create(name = keyword.arch)
-                arches_cache[keyword.arch] = arch
-            
-            keyword_object.arch = arch
-            keywords_list.append(keyword_object)
-
-        models.Keyword.objects.bulk_create(keywords_list)
-
-
-    def get_homepages_objects(ebuild):
-        homepages = ebuild.homepages
-        return _get_items(homepages, models.HomepageModel, 'url', homepages_cache)
-
-    
-    def get_maintainers_objects(package):
-        maintainers = package.metadata.maintainers()
-        objects = []
-        for maintainer in maintainers:
-            if maintainer.email in maintainers_cache:
-                objects.append(maintainers_cache[maintainer.email])
-            else:
-                maintainer_object, created = models.MaintainerModel \
-                        .objects.get_or_create(email = maintainer.email)
-                if created:
-                    maintainer_object.name = maintainer.name
-                    maintainer_object.save()
-                objects.append(maintainer_object)
-        return objects
-                
-
-    def get_herds_objects(package):
-        herds = package.metadata.herds()
-        herds_objects = []
-        for herd in herds:
-            if herd in herds_cache:
-                herds_objects.append(herds_cache[herd])
-
-        return herds_objects
-
-    def add_related_to_ebuild(ebuild, ebuild_object):
-        # Add licenses
-        ebuild_object.licenses.add(*get_licenses_objects(ebuild))
-        ebuild_object.use_flags.add(*get_uses_objects(ebuild))
-        ebuild_object.homepages.add(*get_homepages_objects(ebuild))
-        get_keywords_objects(ebuild, ebuild_object)
-        
-    def clear_related_to_ebuild(ebuild_object):
-        ebuild_object.licenses.clear()
-        ebuild_object.use_flags.clear()
-        ebuild_object.homepages.clear()
-        models.Keyword.objects.filter(ebuild = ebuild_object).delete()
-
-    def update_related_to_ebuild(ebuild, ebuild_object):
-        clear_related_to_ebuild(ebuild_object)
-        add_related_to_ebuild(ebuild, ebuild_object)
-
-    def create_ebuilds(package, package_object):
-        for ebuild in package.iter_ebuilds():
-            ebuild_object = models.EbuildModel()
-            ebuild_object.init_by_ebuild(ebuild)
-            ebuild_object.package = package_object
-            # To Add some related objects it should have pk
-            ebuild_object.save(force_insert=True)
-            add_related_to_ebuild(ebuild, ebuild_object)
-
-    def update_ebuilds(package, package_object, delete = True):
-        not_del = []
-        for ebuild in package.iter_ebuilds():
-            ebuild_object, ebuild_created = models.EbuildModel.objects.get_or_create(ebuild = ebuild, package = package_object)
-            not_del.append(ebuild_object.pk)
-            if ebuild_created:
-                add_related_to_ebuild(ebuild, ebuild_object)
-                continue
-            if ebuild_object.check_or_need_update(ebuild):
-                ebuild_object.update_by_ebuild(ebuild)
-                update_related_to_ebuild(ebuild, ebuild_object)
-                ebuild_object.save(force_update = True)
-        if delete:
-            models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
-
-    def clear_related_to_package(package_object):
-        package_object.herds.clear()
-        package_object.maintainers.clear()
-        
-
-    def add_related_to_package(package, package_object):
-        package_object.herds.add(*get_herds_objects(package))
-        package_object.maintainers.add(*get_maintainers_objects(package))
-
-    def update_related_to_package(package, package_object):
-        clear_related_to_package(package_object)
-        add_related_to_package(package, package_object)
-
-    def update_package(package, package_object, force_update = False):
-        if package_object.need_update_metadata(package) or force_update:
-            #Updating related objects to package
-            update_related_to_package(package, package_object)
-
-        if package_object.need_update_ebuilds(package) or force_update:
-            update_ebuilds(package, package_object)
-
-        package_object.update_info(package)
-        package_object.save(force_update = True)
-
-    # Load homepages to cache
-    #for homepage in models.HomepageModel.objects.all():
-        #homepages_cache[homepage.url] = homepage
-    existend_categorys = []
-    for category in porttree.iter_categories():
-        existend_packages = []
-        category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
-        existend_categorys.append(category_object.pk)
-        for package in category.iter_packages():
-            #if use_cache:
-                #key = str(porttree.name)+'/'+str(package)
-                #val = None
-                #if key in cache_dict:
-                    #val = cache_dict[key]
-                #if val is not None and val == package.manifest_sha1:
-                    #continue
-            print('%s [%s]' % (str(package).ljust(44), porttree))
-            package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
-                        .get_or_create(package = package, category = category_object, repository = porttree_obj)
-            #if update_cache:
-                #key = str(porttree.name)+'/'+str(package)
-                #cache_dict[key] = package.manifest_sha1
-                
-            existend_packages.append(package_object.pk)
-            if not package_created:
-                if package_object.check_or_need_update(package) or force_update:
-                    # need update
-                    update_package(package, package_object)
-
-                continue
-            add_related_to_package(package, package_object)
-            if package_created:
-                create_ebuilds(package, package_object)
-
-        if delete:
-            models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
-
-
-def scan_all_repos():
-    global herds_cache, maintainers_cache
-    #global cache_dict
-    #cache_dict = anydbm.open('cache.db','c')
-    herds_cache, maintainers_cache = scan_herds()
-    for repo in portage.iter_trees():
-        repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
-        scanpackages(repo, repo_obj)
-    #cache_dict.close()
