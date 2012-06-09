@@ -1,6 +1,4 @@
-*.pyc
-*.pyo
-*.swo
-*.swp
+*.py[co]
+*.sw[op]
 *.db
 gpackages/main/local_settings.py
