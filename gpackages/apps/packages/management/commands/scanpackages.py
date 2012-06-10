@@ -29,6 +29,11 @@ class Command(BaseCommand):
             dest='show_time',
             default=True,
             help='Show time of scanning'),
+        make_option('--not-del',
+            action='store_false',
+            dest='delete',
+            default=True,
+            help='Not delete'),
         #make_option('-r', '--repo',
             #action='store',
             #type="string",
@@ -41,6 +46,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         verbosity = int(options['verbosity'])
         Scanner(repos = args, **options).scan()
-        #Scanner(verbosity = verbosity).scan_all_repos()
-        #self.stdout.write(unicode((datetime.datetime.now() - st).total_seconds()))
-        #self.stdout.write("\n")

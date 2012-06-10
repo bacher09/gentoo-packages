@@ -125,7 +125,8 @@ class Scanner(object):
         self.s_all = bool(kwargs.get('scan_all', False))
         self.is_show_time = bool(kwargs.get('show_time', True))
         self.is_scan_herds = bool(kwargs.get('scan_herds', True))
-        #self.force_update = bool(kwargs.get('force_update', False))
+        self.force_update = bool(kwargs.get('force_update', False))
+        self.delete = bool(kwargs.get('delete', True))
         self.scan_repos_name = tuple(kwargs.get('repos',[]))
 
     def show_time(self):
@@ -138,9 +139,12 @@ class Scanner(object):
             self.scan_herds()
 
         if self.s_all:
-            self.scan_all_repos()
+            self.scan_all_repos(force_update = self.force_update,
+                                delete = self.delete)
         else:
-            self.scan_repos_by_name(self.scan_repos_name)
+            self.scan_repos_by_name(self.scan_repos_name,
+                                    force_update = self.force_update,
+                                    delete = self.delete)
 
         if self.is_show_time:
             self.show_time()
@@ -276,32 +280,32 @@ class Scanner(object):
             self.load_maintainers_to_cache()
         return self.maintainers_cache
 
-    def scan_all_repos(self):
+    def scan_all_repos(self, **kwargs):
         #cache_dict = anydbm.open('cache.db','c')
 
         for repo in portage.iter_trees():
-            self.scan_repo(repo)
+            self.scan_repo(repo, **kwargs)
         #cache_dict.close()
 
-    def scan_repos_by_name(self, repo_names):
+    def scan_repos_by_name(self, repo_names, **kwargs):
         for repo_name in repo_names:
-            self.scan_repo_by_name(repo_name)
+            self.scan_repo_by_name(repo_name, **kwargs)
 
-    def scan_repo_by_name(self, repo_name):
+    def scan_repo_by_name(self, repo_name, **kwargs):
         try:
             repo = portage.get_tree_by_name(repo_name)
         except ValueError:
             self.output("Bad repository name '%s'", repo.name, 1)
         else:
-            self.scan_repo(repo)
+            self.scan_repo(repo, **kwargs)
 
-    def scan_repo(self, repo):
+    def scan_repo(self, repo, **kwargs):
         self.output("Scaning repository '%s'\n", repo.name, 3)
 
         repo_obj, repo_created = models.RepositoryModel \
             .objects.get_or_create(name = repo.name)
 
-        self.scanpackages(repo, repo_obj)
+        self.scanpackages(repo, repo_obj, **kwargs)
         
 
     def get_licenses_objects(self, ebuild):
@@ -402,7 +406,9 @@ class Scanner(object):
         self.clear_related_to_package(package_object)
         self.add_related_to_package(package, package_object)
 
-    def update_ebuilds(self, package, package_object, delete = True):
+    def update_ebuilds(self, package, package_object, delete = True,
+                                                      force_update = False):
+
         not_del = []
         for ebuild in package.iter_ebuilds():
             ebuild_object, ebuild_created = models.EbuildModel.objects \
@@ -413,7 +419,7 @@ class Scanner(object):
                 self.add_related_to_ebuild(ebuild, ebuild_object)
                 self.output("ebuild created '%s'\n", ebuild_object, 3)
 
-            if ebuild_object.check_or_need_update(ebuild):
+            if ebuild_object.check_or_need_update(ebuild) or force_update:
                 ebuild_object.update_by_ebuild(ebuild)
                 self.update_related_to_ebuild(ebuild, ebuild_object)
                 ebuild_object.save(force_update = True)
@@ -429,7 +435,8 @@ class Scanner(object):
             self.update_related_to_package(package, package_object)
 
         if package_object.need_update_ebuilds(package) or force_update:
-            self.update_ebuilds(package, package_object)
+            self.update_ebuilds(package, package_object,
+                force_update = force_update)
 
         package_object.update_info(package)
         package_object.save(force_update = True)
@@ -466,7 +473,8 @@ class Scanner(object):
                 if not package_created:
                     if package_object.check_or_need_update(package) or force_update:
                         # need update
-                        self.update_package(package, package_object)
+                        self.update_package(package, package_object,
+                            force_update = force_update)
 
                     continue
                 # if package_created:
