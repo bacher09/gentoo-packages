@@ -167,7 +167,7 @@ class Portage(object):
         if tree_name in self.treemap:
             return PortTree(self.treemap[tree_name], tree_name)
         else:
-            raise AttributeError
+            raise ValueError
     
     def iter_trees(self):
         tree_dict = self.treemap
