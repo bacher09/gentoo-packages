@@ -1,3 +1,4 @@
+from datetime import datetime
 from packages import models
 import sys
 from django.db import IntegrityError
@@ -86,9 +87,15 @@ def _get_items(items_list, Model, field_name, cache_var):
     return items_objects
     
 
+def toint(val, defval):
+    try:
+        return int(val)
+    except ValueError:
+        return defval
+
 
 class Scanner(object):
-    def __init__(self, verbosity = 1):
+    def __init__(self, **kwargs):
         # maintainers_cache: maintainer.email as key, and maintainer object as
         # value
         self.maintainers_cache = {}
@@ -106,7 +113,37 @@ class Scanner(object):
 
         self.arches_cache = {}
 
-        self.verbosity = int(verbosity)
+        self.update_options(**kwargs)
+        self.reset_timer()
+
+    def reset_timer(self):
+        self.start_time = datetime.now()
+
+    def update_options(self, **kwargs):
+        self.verbosity = toint(kwargs.get('verbosity',1),1)
+        self.traceback = bool(kwargs.get('traceback',False))
+        self.s_all = bool(kwargs.get('scan_all', False))
+        self.is_show_time = bool(kwargs.get('show_time', True))
+        self.is_scan_herds = bool(kwargs.get('scan_herds', True))
+        #self.force_update = bool(kwargs.get('force_update', False))
+        self.scan_repos_name = tuple(kwargs.get('repos',[]))
+
+    def show_time(self):
+        end = datetime.now()
+        t_time = end - self.start_time
+        self.output("Scanning time is: %s secconds.\n", t_time.total_seconds())
+
+    def scan(self):
+        if self.is_scan_herds:
+            self.scan_herds()
+
+        if self.s_all:
+            self.scan_all_repos()
+        else:
+            self.scan_repos_by_name(self.scan_repos_name)
+
+        if self.is_show_time:
+            self.show_time()
 
     def write(self, what, verbosity = 1):
         if verbosity <= self.verbosity:
@@ -177,6 +214,7 @@ class Scanner(object):
             
 
     def scan_herds(self):
+        self.write('Scaning herds\n', 3)
         existent_herds = self.get_existent_herds()
         herds_dict = self.herds_object.get_herds_indict()
         herds_objects_dict = {}
@@ -238,20 +276,33 @@ class Scanner(object):
             self.load_maintainers_to_cache()
         return self.maintainers_cache
 
-    def scan_all_repos(self, scan_herds = True):
+    def scan_all_repos(self):
         #cache_dict = anydbm.open('cache.db','c')
-        if scan_herds:
-            self.write('Scaning herds\n', 3)
-            self.scan_herds()
 
         for repo in portage.iter_trees():
-            self.output("Scaning repository '%s'\n", repo.name, 3)
-
-            repo_obj, repo_created = models.RepositoryModel.objects \
-                .get_or_create(name = repo.name)
-
-            self.scanpackages(repo, repo_obj)
+            self.scan_repo(repo)
         #cache_dict.close()
+
+    def scan_repos_by_name(self, repo_names):
+        for repo_name in repo_names:
+            self.scan_repo_by_name(repo_name)
+
+    def scan_repo_by_name(self, repo_name):
+        try:
+            repo = portage.get_tree_by_name(repo_name)
+        except ValueError:
+            self.output("Bad repository name '%s'", repo.name, 1)
+        else:
+            self.scan_repo(repo)
+
+    def scan_repo(self, repo):
+        self.output("Scaning repository '%s'\n", repo.name, 3)
+
+        repo_obj, repo_created = models.RepositoryModel \
+            .objects.get_or_create(name = repo.name)
+
+        self.scanpackages(repo, repo_obj)
+        
 
     def get_licenses_objects(self, ebuild):
         licenses = ebuild.licenses
