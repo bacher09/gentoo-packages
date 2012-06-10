@@ -247,7 +247,9 @@ class Scanner(object):
         for repo in portage.iter_trees():
             self.output("Scaning repository '%s'\n", repo.name, 3)
 
-            repo_obj, repo_created = models.RepositoryModel.objects.get_or_create(name = repo.name)
+            repo_obj, repo_created = models.RepositoryModel.objects \
+                .get_or_create(name = repo.name)
+
             self.scanpackages(repo, repo_obj)
         #cache_dict.close()
 
@@ -367,9 +369,10 @@ class Scanner(object):
 
                 self.output("ebuild updated '%s'\n", ebuild_object, 3)
         if delete:
-            models.EbuildModel.objects.filter(package = package_object).exclude(pk__in = not_del).delete()
+            models.EbuildModel.objects.filter(package = package_object) \
+                .exclude(pk__in = not_del).delete()
 
-    def update_package(package, package_object, force_update = False):
+    def update_package(self, package, package_object, force_update = False):
         if package_object.need_update_metadata(package) or force_update:
             #Updating related objects to package
             self.update_related_to_package(package, package_object)
@@ -386,7 +389,9 @@ class Scanner(object):
         existend_categorys = []
         for category in porttree.iter_categories():
             existend_packages = []
-            category_object, category_created = models.CategoryModel.objects.get_or_create(category = category)
+            category_object, category_created = models.CategoryModel \
+                .objects.get_or_create(category = category)
+
             existend_categorys.append(category_object.pk)
             for package in category.iter_packages():
                 #if use_cache:
@@ -397,8 +402,11 @@ class Scanner(object):
                     #if val is not None and val == package.manifest_sha1:
                         #continue
                 self.output('%-44s [%s]\n', (package, porttree))
-                package_object, package_created = models.PackageModel.objects.only('changelog_hash', 'manifest_hash', 'metadata_hash') \
-                            .get_or_create(package = package, category = category_object, repository = porttree_obj)
+                package_object, package_created = models.PackageModel.objects \
+                    .only('changelog_hash', 'manifest_hash', 'metadata_hash') \
+                    .get_or_create(package = package,
+                                   category = category_object,
+                                   repository = porttree_obj)
                 #if update_cache:
                     #key = str(porttree.name)+'/'+str(package)
                     #cache_dict[key] = package.manifest_sha1
@@ -415,7 +423,9 @@ class Scanner(object):
                 self.create_ebuilds(package, package_object)
 
             if delete:
-                models.PackageModel.objects.filter(category = category_object, repository = porttree_obj).exclude(pk__in = existend_packages).delete()
+                models.PackageModel.objects \
+                .filter(category = category_object, repository = porttree_obj) \
+                .exclude(pk__in = existend_packages).delete()
 
 
 
