@@ -136,7 +136,9 @@ class PackageModel(AbstractDateTimeModel):
         self.name = package.name
         self.update_info(package)
         if category is None:
-            self.category, created = CategoryModel.objects.get_or_create(category = package.category)
+            self.category, created = CategoryModel \
+                .objects.get_or_create(category = package.category)
+
         elif isinstance(category, CategoryModel):
             self.category = category
 

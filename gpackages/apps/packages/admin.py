@@ -23,12 +23,20 @@ class PackagesCountAdmin(AbstractAnnotateAdmin):
     def packages_count(self, obj):
         return obj.packages_count
 
+class KeywordAdmin(admin.TabularInline):
+    model = Keyword 
+
+class ArchesAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
 class EbuildAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'is_masked', )
     list_filter = ('created_datetime','updated_datetime', 'licenses', 'is_masked')
     filter_horizontal = ('licenses', 'use_flags', 'homepages')
     date_hierarchy = 'updated_datetime'
     list_select_related = True
+    inlines = (KeywordAdmin,)
 
 class PackageAdmin(EbuildsCountAdmin, admin.ModelAdmin):
     list_display = ('__unicode__', 'ebuilds_count')
@@ -70,3 +78,4 @@ admin.site.register(RepositoryModel)
 admin.site.register(HomepageModel, HomepageAdmin)
 admin.site.register(HerdsModel, HerdsAdmin)
 admin.site.register(MaintainerModel, MaintainerAdmin)
+admin.site.register(ArchesModel, ArchesAdmin)
