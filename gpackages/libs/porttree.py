@@ -202,6 +202,14 @@ class Portage(object):
 
         return _gen_all_use(action, self.iter_use_local_desc())
 
+    @property
+    def list_repos(self):
+        return self.tree_order
+
+    @property
+    def dict_repos(self):
+        return self.treemap
+
 
 class PortTree(ToStrMixin):
     "Represent portage tree as object"
