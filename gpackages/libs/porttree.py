@@ -416,7 +416,7 @@ class Ebuild(ToStrMixin):
         return l
 
     def get_uniq_keywords(self):
-        return KeywordsSet(self.get_keywords)
+        return KeywordsSet(self.get_keywords())
 
     def get_uses_names(self):
         return self.package_object.environment("IUSE").split()
@@ -432,6 +432,9 @@ class Ebuild(ToStrMixin):
         for use in self.iter_uses():
             l.append(use)
         return l
+
+    def get_uniq_uses(self):
+        return frozenset(self.get_uses())
 
     #Could be faster
     @cached_property
@@ -478,6 +481,9 @@ class Ebuild(ToStrMixin):
             ret_list.append(StrThatIgnoreCase(ho))
         return ret_list
 
+    def get_uniq_homepages(self):
+        return frozenset(self.homepages)
+
     @cached_property
     def homepage(self):
         "First homepage in list"
@@ -492,6 +498,9 @@ class Ebuild(ToStrMixin):
         for lic in license_list:
             ret_list.append(StrThatIgnoreCase(lic))
         return ret_list
+
+    def get_uniq_licenses(self):
+        return frozenset(self.licenses)
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
     mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')
