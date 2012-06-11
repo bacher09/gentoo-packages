@@ -353,7 +353,7 @@ class Scanner(object):
 
     def create_keywords_objects(self, ebuild, ebuild_object):
         keywords_list = []
-        for keyword in ebuild.get_keywords():
+        for keyword in ebuild.get_uniq_keywords():
             keyword_object = models.Keyword(status = keyword.status,
                                             ebuild = ebuild_object)
 
