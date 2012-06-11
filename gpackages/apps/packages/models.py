@@ -96,18 +96,31 @@ class HerdsModel(AbstractDateTimeModel):
     def __unicode__(self):
         return self.name
 
+class VirtualPackageModel(models.Model):
+    name = models.CharField(max_length = 254)
+    category = models.ForeignKey(CategoryModel)
+
+    @property
+    def cp(self):
+        return "%s/%s" % (unicode(self.category), self.name)
+
+    def __unicode__(self):
+        return unicode(self.cp)
+
+    class Meta:
+        unique_together = ('name', 'category')
+
 class PackageModel(AbstractDateTimeModel):
     def __init__(self, *args, **kwargs):
-        package_object = get_from_kwargs_and_del('package', kwargs)
+        package_object, category = \
+            get_from_kwargs_and_del(('package','category' ), kwargs)
         
         super(PackageModel, self).__init__(*args, **kwargs)
         if isinstance(package_object, Package):
-            self.init_by_package(package_object, category = kwargs.get('category'))
+            self.init_by_package(package_object, category = category)
             
         
-
-    name = models.CharField(max_length = 254)
-    category = models.ForeignKey(CategoryModel)
+    virtual_package = models.ForeignKey(VirtualPackageModel)
     changelog = models.TextField(blank = True, null = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
@@ -130,14 +143,18 @@ class PackageModel(AbstractDateTimeModel):
 
     @property
     def cp(self):
-        return "%s/%s" % (unicode(self.category), self.name)
-    
-    def init_by_package(self, package, category = None):
-        self.name = package.name
+        return self.virtual_package.cp 
+
+    def init_by_package(self, package, category = None, virtual_package = None):
+        #self.name = package.name
         self.update_info(package)
-        if category is None:
-            self.category, created = CategoryModel \
-                .objects.get_or_create(category = package.category)
+        if virtual_package is None:
+            if category is None:
+                category, created = CategoryModel \
+                    .objects.get_or_create(category = package.category)
+            self.virtual_package, created = VirtualPackageModel.objects \
+                .get_or_create(name = package.name, category = category)
+
 
         elif isinstance(category, CategoryModel):
             self.category = category
@@ -163,7 +180,7 @@ class PackageModel(AbstractDateTimeModel):
         self.description = package.description
 
     class Meta:
-        unique_together = ('name', 'category', 'repository')
+        unique_together = ('virtual_package', 'repository')
 
 class UseFlagModel(models.Model):
     name = models.CharField(unique = True, max_length = 60)
@@ -211,7 +228,6 @@ class EbuildModel(AbstractDateTimeModel):
 
     #eapi = models.PositiveSmallIntegerField(default = 0)
     #slot = models.PositiveSmallIntegerField(default = 0)
-
     
 
     objects = managers.EbuildManager()
@@ -290,7 +306,6 @@ class EbuildModel(AbstractDateTimeModel):
         unique_together = ('package', 'version', 'revision')
         
             
-
 class Keyword(models.Model):
     STATUS_CHOICES = (
         (0, 'STABLE'),

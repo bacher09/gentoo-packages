@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.db.models import Count
 from models import EbuildModel, PackageModel, LicensModel, CategoryModel, \
-                   UseFlagModel,  RepositoryModel, HomepageModel, HerdsModel, \
-                   MaintainerModel, Keyword, ArchesModel, UseFlagDescriptionModel
+                   UseFlagModel,  RepositoryModel, HomepageModel, MaintainerModel, \
+                   Keyword, ArchesModel, UseFlagDescriptionModel, HerdsModel, \
+                   VirtualPackageModel
 
 class AbstractAnnotateAdmin(object):
     annotate_dict = {}
@@ -38,6 +39,10 @@ class EbuildAdmin(admin.ModelAdmin):
     list_select_related = True
     inlines = (KeywordAdmin,)
 
+class VirtualPackageAdmin(admin.ModelAdmin):
+    list_display = ('__unicode__',)
+    search_fields = ('name',)
+
 class PackageAdmin(EbuildsCountAdmin, admin.ModelAdmin):
     list_display = ('__unicode__', 'ebuilds_count')
     list_filter = ('created_datetime', 'updated_datetime', 'herds')
@@ -69,6 +74,7 @@ class LicensAdmin(EbuildsCountAdmin, admin.ModelAdmin):
 
 
 admin.site.register(EbuildModel, EbuildAdmin)
+admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
 admin.site.register(PackageModel, PackageAdmin)
 admin.site.register(LicensModel, LicensAdmin)
 admin.site.register(CategoryModel)
