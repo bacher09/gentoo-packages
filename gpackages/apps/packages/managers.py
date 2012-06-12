@@ -3,7 +3,6 @@ from porttree import Category, Package, Ebuild, Keyword
 import packages.models
 from generic import get_from_kwargs_and_del
 
-
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
     QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})
     ManagerClass = type(ManagerClassName, (MixinClass, models.Manager),{
@@ -100,7 +99,20 @@ class MaintainerMixin(object):#{{{
             kwargs['email'] = maintainer.email
         return super(MaintainerMixin, self).filter(*args, **kwargs)#}}}
 
+def get_name_and_category_by_cp(package):
+    return package.split('/')
+
+
+class VirtualPackageMixin(object):
+    def filter(self, **kwargs):
+        package = get_from_kwargs_and_del('package', kwargs)
+        if package is not None:
+            category, name = get_name_and_category_by_cp(package)
+            kwargs.update({'name': name, 'category__category': category})
+
+        return super(VirtualPackageMixin, self).filter(**kwargs)
+
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
                            PackageMixin, KeywordMixin, EbuildMixin, HerdsMixin,
-                           MaintainerMixin)
+                           MaintainerMixin, VirtualPackageMixin)

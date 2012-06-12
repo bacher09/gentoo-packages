@@ -120,6 +120,8 @@ class VirtualPackageModel(models.Model):
     name = models.CharField(max_length = 254)
     category = models.ForeignKey(CategoryModel)
 
+    objects = managers.VirtualPackageManager()
+
     @property
     def cp(self):
         return "%s/%s" % (unicode(self.category), self.name)
@@ -211,7 +213,7 @@ class UseFlagModel(models.Model):
 
 class UseFlagDescriptionModel(models.Model):
     use_flag = models.ForeignKey(UseFlagModel)
-    package = models.ForeignKey(PackageModel)
+    package = models.ForeignKey(VirtualPackageModel)
     description = models.TextField()
 
     def check_or_need_update(self, description):

@@ -6,7 +6,6 @@ from collections import defaultdict
 from generic import StrThatIgnoreCase
 import porttree
 import herds
-import use_info
 
 import anydbm
 
@@ -493,53 +492,63 @@ class Scanner(object):
                 .exclude(pk__in = existend_packages).delete()
 
 
+    def update_globals_uses_descriptions(self, use_dict):
+        existend_use_objects = models.UseFlagModel.objects.only('name') \
+            .filter(name__in = use_dict.keys())
 
-cache_dict =  None
-def update_globals_uses_descriptions():
-    # Need changes 
-    uses_g = use_info.get_uses_info()
-    existend_use_objects = models.UseFlagModel.objects.filter(name__in = uses_g.keys())
-    for use_object in existend_use_objects:
-        use_object.description = uses_g[use_object.name]
-        use_object.save(force_update = True)
-    
+        for use_object in existend_use_objects:
+            use_object.description = use_dict[use_object.name]
+            use_object.save(force_update = True)
 
-def scan_uses_description():
-    # need changes for support many repos !!!
-    uses_local = use_info.get_local_uses_info()
-    existend_use_objects = models.UseFlagModel.objects.filter(name__in = uses_local.keys())
-    existend_use_local_descr = models.UseFlagDescriptionModel.objects.all()
-    cache_uses = {}
-    _update_cache_by_queryset(cache_uses, existend_use_objects, 'name')
-    use_local_cache = defaultdict(dict)
-    for use_obj in existend_use_local_descr:
-        use_local_cache[use_obj.use_flag.name][use_obj.package.cp] = use_obj
+    def update_all_globals_uses_descriptions(self):
+        self.update_globals_uses_descriptions(portage.get_all_use_desc())
 
-    package_cache = dict()
-    for use_flag, packages_dict in uses_local.iteritems():
-        if use_flag not in cache_uses:
-            continue
-        use_flag_object = cache_uses[use_flag]
-        to_create = []
-        for package, description in packages_dict.iteritems():
-            if package in package_cache:
-                package_object = package_cache[package]
+    def scan_all_uses_description(self):
+        self.scan_uses_description(portage.get_all_use_local_desc())
+
+    def scan_uses_description(self, use_local_desc):
+        existent_use_objects = models.UseFlagModel.objects.filter(name__in = use_local_desc.keys())
+        existent_use_local_descr = models.UseFlagDescriptionModel.objects.all()
+        cache_uses = {}
+        _update_cache_by_queryset(cache_uses, existent_use_objects, 'name')
+
+        # Cache existent Use Local Descr
+        use_local_cache = defaultdict(dict)
+        for use_obj in existent_use_local_descr:
+            use_local_cache[use_obj.use_flag.name][use_obj.package.cp] = use_obj
+
+        package_cache = dict()
+        for use_flag, packages_dict in use_local_desc.iteritems():
+            # If this use flag not in database than create it
+            if use_flag not in cache_uses:
+                # Maybe get_or_create ?
+                use_flag_object = models.UseFlagModel.objects.create(name = use_flag)
+                # Add to cache
+                cache_uses[use_flag.lower()] = use_flag_object
             else:
-                try:
-                    package_object = models.PackageModel.objects.get(package = package)
-                except models.PackageModel.DoesNotExist:
-                    continue
+                use_flag_object = cache_uses[use_flag]
+
+            to_create = []
+            for package, description in packages_dict.iteritems():
+                if package in package_cache:
+                    package_object = package_cache[package]
                 else:
-                    package_cache[package] = package_object
-            if package not in use_local_cache[use_flag]:
-                to_create.append(
-                models.UseFlagDescriptionModel(package = package_object,
-                                               use_flag = use_flag_object,
-                                               description = description))
-            else:
-                use_desc_obj = use_local_cache[use_flag][package]
-                if use_desc_obj.check_or_need_update(description):
-                    use_desc_obj.description = description
-                    use_desc_obj.save(force_update = True)
-        models.UseFlagDescriptionModel.objects.bulk_create(to_create)
-            
+                    try:
+                        package_object = models.VirtualPackageModel.objects.get(package = package)
+                    except models.VirtualPackageModel.DoesNotExist:
+                        continue
+                    else:
+                        package_cache[package] = package_object
+
+                if package not in use_local_cache[use_flag]:
+                    to_create.append(
+                    models.UseFlagDescriptionModel(package = package_object,
+                                                   use_flag = use_flag_object,
+                                                   description = description))
+                else:
+                    use_desc_obj = use_local_cache[use_flag][package]
+                    if use_desc_obj.check_or_need_update(description):
+                        use_desc_obj.description = description
+                        use_desc_obj.save(force_update = True)
+            models.UseFlagDescriptionModel.objects.bulk_create(to_create)
+                

@@ -3,7 +3,7 @@ from collections import defaultdict
 
 __all__ = ('get_uses_info', 'get_local_uses_info')
 
-USES_RE = r'(?P<use>[^#].*) - (?P<description>.*)'
+USES_RE = r'(?P<use>[a-zA-Z0-9\-]+) - (?P<description>.*)'
 USES_DESC_RE = r'^%s$' % USES_RE
 USES_LOCAL_DESC_RE = r'^(?P<package>[^#].*):%s$' % USES_RE
 
@@ -32,7 +32,7 @@ def get_uses_info(filename = '/usr/portage/profiles/use.desc'):
         In portage public api `get_use_flag_dict`
     """
     def action(res_dict, match):
-        res_dict[match['use']] = match['description']
+        res_dict[match['use'].lower()] = match['description']
 
     return _get_info(filename, use_re, action)
 
@@ -48,6 +48,6 @@ def get_local_uses_info(filename = '/usr/portage/profiles/use.local.desc'):
         In portage public api `get_use_flag_dict`
     """
     def action(res_dict, match):
-        res_dict[match['use']][match['package']] = match['description']
+        res_dict[match['use'].lower()][match['package']] = match['description']
 
     return _get_info(filename, use_local_re, action, defaultdict(dict))
