@@ -4,6 +4,11 @@ from porttree import Category, Package, Ebuild
 import managers
 from generic import get_from_kwargs_and_del
 
+from django.core.validators import URLValidator, validate_email 
+from django.core.exceptions import ValidationError
+
+validate_url = URLValidator()
+
 class AbstractDateTimeModel(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
     updated_datetime = models.DateTimeField(auto_now = True)
@@ -12,7 +17,7 @@ class AbstractDateTimeModel(models.Model):
         abstract = True
 
 class HomepageModel(models.Model):
-    url = models.URLField(max_length=255, unique = True)
+    url = models.URLField(max_length=255, unique = True, validators = [validate_url])
 
     def __unicode__(self):
         return self.url
@@ -47,7 +52,7 @@ class MaintainerModel(AbstractDateTimeModel):
             self.init_by_maintainer(maintainer)
         
     name = models.CharField(max_length = 255, blank = True, null = True)
-    email = models.EmailField(unique = True)
+    email = models.EmailField(unique = True, validators = [validate_email])
 
     objects = managers.MaintainerManager()
 
@@ -74,7 +79,7 @@ class HerdsModel(AbstractDateTimeModel):
             self.init_by_herd(herd)
 
     name = models.CharField(unique = True, max_length = 150)
-    email = models.EmailField()
+    email = models.EmailField(validators = [validate_email])
     description = models.TextField(blank = True, null = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
 

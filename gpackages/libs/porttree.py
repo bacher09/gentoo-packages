@@ -10,9 +10,15 @@ from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from gentoolkit import errors
 from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
-                    file_get_content, StrThatIgnoreCase
+                    file_get_content, StrThatIgnoreCase, lofstr_to_ig
 from use_info import get_uses_info, get_local_uses_info
 import os
+
+# Validators
+from django.core.validators import URLValidator, validate_email 
+from django.core.exceptions import ValidationError
+
+validate_url = URLValidator()
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -473,34 +479,39 @@ class Ebuild(ToStrMixin):
                            name = 'slot')
 
     @cached_property
-    def homepages(self):
-        "List of homepages"
-        ho_list = self.homepage_val.split()
-        ret_list = []
-        for ho in ho_list:
-            ret_list.append(StrThatIgnoreCase(ho))
-        return ret_list
+    def homepages_splited(self):
+        return self.homepage_val.split()
 
-    def get_uniq_homepages(self):
-        return frozenset(self.homepages)
+    @cached_property
+    def homepages_validated(self):
+        ret = []
+        for homepage in self.homepages_splited:
+            try:
+                validate_url(homepage)
+            except ValidationError:
+                pass
+            else:
+                ret.append(homepage)
+        return ret
+        
+
+    @cached_property
+    def homepages(self):
+        "Tuple of homepages"
+        return tuple(set(lofstr_to_ig(self.homepages_validated)))
 
     @cached_property
     def homepage(self):
         "First homepage in list"
-        return self.homepages[0] if len(self.homepages)>=1 else ''
+        return self.homepages_validated[0] if len(self.homepages)>=1 else ''
 
+    @cached_property
+    def _licenses(self):
+        return filter(_license_filter, self.license.split())
 
     @cached_property
     def licenses(self):
-        "List of licenses used in ebuild"
-        license_list = filter(_license_filter, self.license.split())
-        ret_list = []
-        for lic in license_list:
-            ret_list.append(StrThatIgnoreCase(lic))
-        return ret_list
-
-    def get_uniq_licenses(self):
-        return frozenset(self.licenses)
+        return tuple(set(lofstr_to_ig(self._licenses)))
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
     mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')

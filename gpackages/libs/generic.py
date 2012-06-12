@@ -44,6 +44,9 @@ class StrThatIgnoreCase(unicode):
     def __ne__(self, other):
         return self._forcmp != unicode(other).lower()
 
+def lofstr_to_ig(list_obj):
+    return [ StrThatIgnoreCase(item) for item in list_obj]
+
 class ToStrMixin(object):
     """Abstract class for inheritence, allow add simple `__str__` and `__repr__`
     methods
