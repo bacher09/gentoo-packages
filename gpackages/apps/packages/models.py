@@ -37,8 +37,23 @@ class RepositoryModel(models.Model):
         return self.name
 
 class CategoryModel(models.Model):
+    def __init__(self, *args, **kwargs):
+        super(CategoryModel, self).__init__(*args, **kwargs)
+
+        category = kwargs.get('category')
+        if isinstance(category, Category):  
+            self.update_by_category(category)
+
+    def update_by_category(self, category):
+        self.description = category.metadata.default_descr
+        self.metadata_hash = category.metadata_sha1
+
+    def check_or_need_update(self, category):
+        return self.metadata_hash == category.metadata_sha1
 
     category = models.CharField(unique = True, max_length = 70)
+    description = models.TextField(blank = True, null = True)
+    metadata_hash = models.CharField(max_length = 128, null = True)
     
     def __unicode__(self):
         return unicode(self.category)

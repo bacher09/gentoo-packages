@@ -271,9 +271,10 @@ class PortTree(ToStrMixin):
                                  self.porttree_path,
                                  'profiles/use.local.desc')
 
-class CategoryMetadata(object):
+class CategoryMetadata(ToStrMixin):
 
     def __init__(self, metadata_path):
+        self._metadata_path = metadata_path
         self._metadata_xml = etree.parse(metadata_path)
         self._descrs = {}
         self._parse_descrs()
@@ -290,6 +291,9 @@ class CategoryMetadata(object):
     @property
     def default_descr(self):
         return self._descrs.get('en')
+
+    def __unicode__(self):
+        return unicode(self._metadata_path)
 
 
 class Category(ToStrMixin):
@@ -329,6 +333,10 @@ class Category(ToStrMixin):
     @property
     def metadata_path(self):
         return os.path.join(self.category_path, 'metadata.xml')
+
+    @cached_property
+    def metadata_sha1(self):
+        return file_sha1(self.metadata_path)
 
     @cached_property
     def metadata(self):

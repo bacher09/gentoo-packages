@@ -448,7 +448,13 @@ class Scanner(object):
         for category in porttree.iter_categories():
             existend_packages = []
             category_object, category_created = models.CategoryModel \
-                .objects.get_or_create(category = category)
+                .objects.only('category','metadata_hash') \
+                .get_or_create(category = category)
+
+            if not category_created:
+                if category_object.check_or_need_update(category):
+                    category_object.update_by_category(category)
+                    category_object.save(force_update = True)
 
             existend_categorys.append(category_object.pk)
             for package in category.iter_packages():
