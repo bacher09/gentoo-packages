@@ -1,10 +1,6 @@
-try:
-    import xml.etree.cElementTree as etree
-except (ImportError, SystemError):
-    import xml.etree.ElementTree as etree
-
 from collections import defaultdict
 from generic import ToStrMixin
+from my_etree import etree
 
 def _gen_func(name):
     return lambda self: getattr(self, name)

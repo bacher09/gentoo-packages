@@ -15,10 +15,7 @@ from use_info import get_uses_info, get_local_uses_info
 import os
 
 #XML
-try:
-    import xml.etree.cElementTree as etree
-except (ImportError, SystemError):
-    import xml.etree.ElementTree as etree
+from my_etree import etree
 
 # Validators
 from django.core.validators import URLValidator, validate_email 
