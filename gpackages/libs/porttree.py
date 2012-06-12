@@ -14,6 +14,12 @@ from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
 from use_info import get_uses_info, get_local_uses_info
 import os
 
+#XML
+try:
+    import xml.etree.cElementTree as etree
+except (ImportError, SystemError):
+    import xml.etree.ElementTree as etree
+
 # Validators
 from django.core.validators import URLValidator, validate_email 
 from django.core.exceptions import ValidationError
@@ -180,6 +186,11 @@ class Portage(object):
         for tree_name in self.tree_order:
             yield PortTree(tree_dict[tree_name], tree_name)
 
+    def iter_categories(self):
+        for tree in self.iter_trees():
+            for category in tree.iter_categories():
+                yield category
+
     def iter_packages(self):
         for tree in self.iter_trees():
             for package in tree.iter_packages():
@@ -263,11 +274,31 @@ class PortTree(ToStrMixin):
                                  self.porttree_path,
                                  'profiles/use.local.desc')
 
+class CategoryMetadata(object):
+
+    def __init__(self, metadata_path):
+        self._metadata_xml = etree.parse(metadata_path)
+        self._descrs = {}
+        self._parse_descrs()
+
+    def _parse_descrs(self):
+        for descr_xml in self._metadata_xml.iterfind('longdescription'):
+            lang = descr_xml.attrib.get('lang', 'en')
+            self._descrs[lang] = descr_xml.text
+
+    @property
+    def descrs(self):
+        return self._descrs
+
+    @property
+    def default_descr(self):
+        return self._descrs.get('en')
+
 
 class Category(ToStrMixin):
     "Represent category of portage tree as object"
 
-    __slots__ = ('porttree', 'category')
+    __slots__ = ('porttree', 'category', '_cache')
     
     def __init__(self, porttree, category):
         """Args:
@@ -276,6 +307,7 @@ class Category(ToStrMixin):
         """
         self.porttree = porttree
         self.category = category
+        self._cache = {}
     
     def iter_packages(self):
         packages = listdir(self.porttree.porttree + '/'+ self.category,
@@ -296,6 +328,14 @@ class Category(ToStrMixin):
     def category_path(self):
         "Full path to category"
         return os.path.join(self.porttree.porttree_path, self.category)
+
+    @property
+    def metadata_path(self):
+        return os.path.join(self.category_path, 'metadata.xml')
+
+    @cached_property
+    def metadata(self):
+        return CategoryMetadata(self.metadata_path)
 
     @property
     def porttree_path(self):
