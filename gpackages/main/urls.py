@@ -17,11 +17,12 @@ urlpatterns = patterns('',
 
 if DEBUG:
     from django.contrib import databrowse
+    from packages.views import BaseView
     from packages.models import EbuildModel, PackageModel, UseFlagModel, \
                                 LicensModel, CategoryModel, Keyword, \
                                 ArchesModel, HomepageModel, HerdsModel, \
                                 MaintainerModel, UseFlagDescriptionModel, \
-                                RepositoryModel, VirtualPackageModel
+                                RepositoryModel, VirtualPackageModel 
 
     databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, 
                              LicensModel, CategoryModel, Keyword, ArchesModel, 
@@ -30,6 +31,7 @@ if DEBUG:
                              VirtualPackageModel)
     urlpatterns += (
         url(r'^data/(.*)',databrowse.site.root),
+        url(r'^base/$',BaseView.as_view()),
         url(r'^404/$','django.views.defaults.page_not_found', name = '404'),
         url(r'^500/$','django.views.defaults.server_error', name = '500'),
         )
