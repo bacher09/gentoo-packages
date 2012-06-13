@@ -104,13 +104,13 @@ def get_name_and_category_by_cp(package):
 
 
 class VirtualPackageMixin(object):
-    def filter(self, **kwargs):
+    def filter(self,*args, **kwargs):
         package = get_from_kwargs_and_del('package', kwargs)
         if package is not None:
             category, name = get_name_and_category_by_cp(package)
             kwargs.update({'name': name, 'category__category': category})
 
-        return super(VirtualPackageMixin, self).filter(**kwargs)
+        return super(VirtualPackageMixin, self).filter(*args, **kwargs)
 
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',

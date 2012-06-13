@@ -127,6 +127,8 @@ class Scanner(object):
         self.force_update = bool(kwargs.get('force_update', False))
         self.delete = bool(kwargs.get('delete', True))
         self.scan_repos_name = tuple(kwargs.get('repos',[]))
+        self.scan_global_use_descr = bool(kwargs.get('scan_global_use', False))
+        self.scan_local_use_descr = bool(kwargs.get('scan_local_use', False))
 
     def show_time(self):
         end = datetime.now()
@@ -140,10 +142,16 @@ class Scanner(object):
         if self.s_all:
             self.scan_all_repos(force_update = self.force_update,
                                 delete = self.delete)
-        else:
+        elif len(self.scan_repos_name) > 0:
             self.scan_repos_by_name(self.scan_repos_name,
                                     force_update = self.force_update,
                                     delete = self.delete)
+
+        if self.scan_global_use_descr:
+            self.update_all_globals_uses_descriptions()
+
+        if self.scan_local_use_descr:
+            self.scan_all_uses_description()
 
         if self.is_show_time:
             self.show_time()
@@ -497,7 +505,7 @@ class Scanner(object):
             .filter(name__in = use_dict.keys())
 
         for use_object in existend_use_objects:
-            use_object.description = use_dict[use_object.name]
+            use_object.description = use_dict[use_object.name.lower()]
             use_object.save(force_update = True)
 
     def update_all_globals_uses_descriptions(self):
@@ -507,7 +515,9 @@ class Scanner(object):
         self.scan_uses_description(portage.get_all_use_local_desc())
 
     def scan_uses_description(self, use_local_desc):
-        existent_use_objects = models.UseFlagModel.objects.filter(name__in = use_local_desc.keys())
+        existent_use_objects = models.UseFlagModel.objects \
+            .filter(name__in = use_local_desc.keys())
+
         existent_use_local_descr = models.UseFlagDescriptionModel.objects.all()
         cache_uses = {}
         _update_cache_by_queryset(cache_uses, existent_use_objects, 'name')
@@ -522,7 +532,8 @@ class Scanner(object):
             # If this use flag not in database than create it
             if use_flag not in cache_uses:
                 # Maybe get_or_create ?
-                use_flag_object = models.UseFlagModel.objects.create(name = use_flag)
+                use_flag_object = models.UseFlagModel.objects \
+                    .create(name = use_flag)
                 # Add to cache
                 cache_uses[use_flag.lower()] = use_flag_object
             else:
@@ -534,7 +545,9 @@ class Scanner(object):
                     package_object = package_cache[package]
                 else:
                     try:
-                        package_object = models.VirtualPackageModel.objects.get(package = package)
+                        package_object = models.VirtualPackageModel.objects \
+                            .get(package = package)
+
                     except models.VirtualPackageModel.DoesNotExist:
                         continue
                     else:

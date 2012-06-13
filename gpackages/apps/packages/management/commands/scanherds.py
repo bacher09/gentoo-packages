@@ -1,13 +1,17 @@
 from django.core.management.base import BaseCommand, CommandError
-import datetime
-import logging
-from packages import scan
+from packages.scan import Scanner
+from optparse import make_option
 
 
 class Command(BaseCommand):
+    option_list = BaseCommand.option_list + (
+        make_option('--not-show-time',
+            action='store_false',
+            dest='show_time',
+            default=True,
+            help='Show time of scanning'),
+        )
     args = ''
     help = 'Will scan only herds and maintainers'
     def handle(self, *args, **options):
-        st = datetime.datetime.now()
-        scan.scan_herds()
-        print (datetime.datetime.now() - st).total_seconds()
+        Scanner(scan_herds = True, **options).scan()
