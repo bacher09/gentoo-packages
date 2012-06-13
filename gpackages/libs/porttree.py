@@ -10,9 +10,18 @@ from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from gentoolkit import errors
 from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
-                    file_get_content, StrThatIgnoreCase
+                    file_get_content, StrThatIgnoreCase, lofstr_to_ig
 from use_info import get_uses_info, get_local_uses_info
 import os
+
+#XML
+from my_etree import etree
+
+# Validators
+from django.core.validators import URLValidator, validate_email 
+from django.core.exceptions import ValidationError
+
+validate_url = URLValidator()
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -174,6 +183,11 @@ class Portage(object):
         for tree_name in self.tree_order:
             yield PortTree(tree_dict[tree_name], tree_name)
 
+    def iter_categories(self):
+        for tree in self.iter_trees():
+            for category in tree.iter_categories():
+                yield category
+
     def iter_packages(self):
         for tree in self.iter_trees():
             for package in tree.iter_packages():
@@ -257,11 +271,35 @@ class PortTree(ToStrMixin):
                                  self.porttree_path,
                                  'profiles/use.local.desc')
 
+class CategoryMetadata(ToStrMixin):
+
+    def __init__(self, metadata_path):
+        self._metadata_path = metadata_path
+        self._metadata_xml = etree.parse(metadata_path)
+        self._descrs = {}
+        self._parse_descrs()
+
+    def _parse_descrs(self):
+        for descr_xml in self._metadata_xml.iterfind('longdescription'):
+            lang = descr_xml.attrib.get('lang', 'en')
+            self._descrs[lang] = descr_xml.text
+
+    @property
+    def descrs(self):
+        return self._descrs
+
+    @property
+    def default_descr(self):
+        return self._descrs.get('en')
+
+    def __unicode__(self):
+        return unicode(self._metadata_path)
+
 
 class Category(ToStrMixin):
     "Represent category of portage tree as object"
 
-    __slots__ = ('porttree', 'category')
+    __slots__ = ('porttree', 'category', '_cache')
     
     def __init__(self, porttree, category):
         """Args:
@@ -270,6 +308,7 @@ class Category(ToStrMixin):
         """
         self.porttree = porttree
         self.category = category
+        self._cache = {}
     
     def iter_packages(self):
         packages = listdir(self.porttree.porttree + '/'+ self.category,
@@ -290,6 +329,18 @@ class Category(ToStrMixin):
     def category_path(self):
         "Full path to category"
         return os.path.join(self.porttree.porttree_path, self.category)
+
+    @property
+    def metadata_path(self):
+        return os.path.join(self.category_path, 'metadata.xml')
+
+    @cached_property
+    def metadata_sha1(self):
+        return file_sha1(self.metadata_path)
+
+    @cached_property
+    def metadata(self):
+        return CategoryMetadata(self.metadata_path)
 
     @property
     def porttree_path(self):
@@ -416,7 +467,7 @@ class Ebuild(ToStrMixin):
         return l
 
     def get_uniq_keywords(self):
-        return KeywordsSet(self.get_keywords)
+        return KeywordsSet(self.get_keywords())
 
     def get_uses_names(self):
         return self.package_object.environment("IUSE").split()
@@ -432,6 +483,9 @@ class Ebuild(ToStrMixin):
         for use in self.iter_uses():
             l.append(use)
         return l
+
+    def get_uniq_uses(self):
+        return frozenset(self.get_uses())
 
     #Could be faster
     @cached_property
@@ -470,28 +524,39 @@ class Ebuild(ToStrMixin):
                            name = 'slot')
 
     @cached_property
+    def homepages_splited(self):
+        return self.homepage_val.split()
+
+    @cached_property
+    def homepages_validated(self):
+        ret = []
+        for homepage in self.homepages_splited:
+            try:
+                validate_url(homepage)
+            except ValidationError:
+                pass
+            else:
+                ret.append(homepage)
+        return ret
+        
+
+    @cached_property
     def homepages(self):
-        "List of homepages"
-        ho_list = self.homepage_val.split()
-        ret_list = []
-        for ho in ho_list:
-            ret_list.append(StrThatIgnoreCase(ho))
-        return ret_list
+        "Tuple of homepages"
+        return tuple(set(lofstr_to_ig(self.homepages_validated)))
 
     @cached_property
     def homepage(self):
         "First homepage in list"
-        return self.homepages[0] if len(self.homepages)>=1 else ''
+        return self.homepages_validated[0] if len(self.homepages)>=1 else ''
 
+    @cached_property
+    def _licenses(self):
+        return filter(_license_filter, self.license.split())
 
     @cached_property
     def licenses(self):
-        "List of licenses used in ebuild"
-        license_list = filter(_license_filter, self.license.split())
-        ret_list = []
-        for lic in license_list:
-            ret_list.append(StrThatIgnoreCase(lic))
-        return ret_list
+        return tuple(set(lofstr_to_ig(self._licenses)))
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
     mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')

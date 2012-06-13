@@ -4,6 +4,11 @@ from porttree import Category, Package, Ebuild
 import managers
 from generic import get_from_kwargs_and_del
 
+from django.core.validators import URLValidator, validate_email 
+from django.core.exceptions import ValidationError
+
+validate_url = URLValidator()
+
 class AbstractDateTimeModel(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
     updated_datetime = models.DateTimeField(auto_now = True)
@@ -12,7 +17,7 @@ class AbstractDateTimeModel(models.Model):
         abstract = True
 
 class HomepageModel(models.Model):
-    url = models.URLField(max_length=255, unique = True)
+    url = models.URLField(max_length=255, unique = True, validators = [validate_url])
 
     def __unicode__(self):
         return self.url
@@ -32,8 +37,23 @@ class RepositoryModel(models.Model):
         return self.name
 
 class CategoryModel(models.Model):
+    def __init__(self, *args, **kwargs):
+        super(CategoryModel, self).__init__(*args, **kwargs)
+
+        category = kwargs.get('category')
+        if isinstance(category, Category):  
+            self.update_by_category(category)
+
+    def update_by_category(self, category):
+        self.description = category.metadata.default_descr
+        self.metadata_hash = category.metadata_sha1
+
+    def check_or_need_update(self, category):
+        return self.metadata_hash == category.metadata_sha1
 
     category = models.CharField(unique = True, max_length = 70)
+    description = models.TextField(blank = True, null = True)
+    metadata_hash = models.CharField(max_length = 128, null = True)
     
     def __unicode__(self):
         return unicode(self.category)
@@ -47,7 +67,7 @@ class MaintainerModel(AbstractDateTimeModel):
             self.init_by_maintainer(maintainer)
         
     name = models.CharField(max_length = 255, blank = True, null = True)
-    email = models.EmailField(unique = True)
+    email = models.EmailField(unique = True, validators = [validate_email])
 
     objects = managers.MaintainerManager()
 
@@ -74,7 +94,7 @@ class HerdsModel(AbstractDateTimeModel):
             self.init_by_herd(herd)
 
     name = models.CharField(unique = True, max_length = 150)
-    email = models.EmailField()
+    email = models.EmailField(validators = [validate_email])
     description = models.TextField(blank = True, null = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
 
@@ -96,18 +116,33 @@ class HerdsModel(AbstractDateTimeModel):
     def __unicode__(self):
         return self.name
 
+class VirtualPackageModel(models.Model):
+    name = models.CharField(max_length = 254)
+    category = models.ForeignKey(CategoryModel)
+
+    objects = managers.VirtualPackageManager()
+
+    @property
+    def cp(self):
+        return "%s/%s" % (unicode(self.category), self.name)
+
+    def __unicode__(self):
+        return unicode(self.cp)
+
+    class Meta:
+        unique_together = ('name', 'category')
+
 class PackageModel(AbstractDateTimeModel):
     def __init__(self, *args, **kwargs):
-        package_object = get_from_kwargs_and_del('package', kwargs)
+        package_object, category = \
+            get_from_kwargs_and_del(('package','category' ), kwargs)
         
         super(PackageModel, self).__init__(*args, **kwargs)
         if isinstance(package_object, Package):
-            self.init_by_package(package_object, category = kwargs.get('category'))
+            self.init_by_package(package_object, category = category)
             
         
-
-    name = models.CharField(max_length = 254)
-    category = models.ForeignKey(CategoryModel)
+    virtual_package = models.ForeignKey(VirtualPackageModel)
     changelog = models.TextField(blank = True, null = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
@@ -130,14 +165,18 @@ class PackageModel(AbstractDateTimeModel):
 
     @property
     def cp(self):
-        return "%s/%s" % (unicode(self.category), self.name)
-    
-    def init_by_package(self, package, category = None):
-        self.name = package.name
+        return self.virtual_package.cp 
+
+    def init_by_package(self, package, category = None, virtual_package = None):
+        #self.name = package.name
         self.update_info(package)
-        if category is None:
-            self.category, created = CategoryModel \
-                .objects.get_or_create(category = package.category)
+        if virtual_package is None:
+            if category is None:
+                category, created = CategoryModel \
+                    .objects.get_or_create(category = package.category)
+            self.virtual_package, created = VirtualPackageModel.objects \
+                .get_or_create(name = package.name, category = category)
+
 
         elif isinstance(category, CategoryModel):
             self.category = category
@@ -163,7 +202,7 @@ class PackageModel(AbstractDateTimeModel):
         self.description = package.description
 
     class Meta:
-        unique_together = ('name', 'category', 'repository')
+        unique_together = ('virtual_package', 'repository')
 
 class UseFlagModel(models.Model):
     name = models.CharField(unique = True, max_length = 60)
@@ -174,7 +213,7 @@ class UseFlagModel(models.Model):
 
 class UseFlagDescriptionModel(models.Model):
     use_flag = models.ForeignKey(UseFlagModel)
-    package = models.ForeignKey(PackageModel)
+    package = models.ForeignKey(VirtualPackageModel)
     description = models.TextField()
 
     def check_or_need_update(self, description):
@@ -211,7 +250,6 @@ class EbuildModel(AbstractDateTimeModel):
 
     #eapi = models.PositiveSmallIntegerField(default = 0)
     #slot = models.PositiveSmallIntegerField(default = 0)
-
     
 
     objects = managers.EbuildManager()
@@ -290,7 +328,6 @@ class EbuildModel(AbstractDateTimeModel):
         unique_together = ('package', 'version', 'revision')
         
             
-
 class Keyword(models.Model):
     STATUS_CHOICES = (
         (0, 'STABLE'),

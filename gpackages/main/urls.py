@@ -21,12 +21,13 @@ if DEBUG:
                                 LicensModel, CategoryModel, Keyword, \
                                 ArchesModel, HomepageModel, HerdsModel, \
                                 MaintainerModel, UseFlagDescriptionModel, \
-                                RepositoryModel
+                                RepositoryModel, VirtualPackageModel
 
     databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, 
-                             LicensModel, CategoryModel, Keyword, ArchesModel, \
-                             HomepageModel, HerdsModel, MaintainerModel, \
-                             UseFlagDescriptionModel, RepositoryModel)
+                             LicensModel, CategoryModel, Keyword, ArchesModel, 
+                             HomepageModel, HerdsModel, MaintainerModel, 
+                             UseFlagDescriptionModel, RepositoryModel, 
+                             VirtualPackageModel)
     urlpatterns += (
         url(r'^data/(.*)',databrowse.site.root),
         url(r'^404/$','django.views.defaults.page_not_found', name = '404'),

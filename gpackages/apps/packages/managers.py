@@ -3,7 +3,6 @@ from porttree import Category, Package, Ebuild, Keyword
 import packages.models
 from generic import get_from_kwargs_and_del
 
-
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
     QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})
     ManagerClass = type(ManagerClassName, (MixinClass, models.Manager),{
@@ -23,11 +22,11 @@ def _gen_all_query_and_manager(mixin_name, name_for_query, name_for_manager, *ar
         globals()[q_name], globals()[m_name] = q, m
         
 
-class PackageMixin(object):#{{{
+class PackageMixin(object):
     def get(self, package = None, *args, **kwargs):
         if package is not None and isinstance(package, Package):
             if 'category' not in kwargs:
-                kwargs.update({'category__category' : package.category})
+                kwargs.update({'category' : package.category})
             name = package.name
             if len(args)>=1:
                 args[0] = name
@@ -38,8 +37,20 @@ class PackageMixin(object):#{{{
         elif package is not None:
             # Bad code !!
             category, name = package.split('/')
-            kwargs.update({'name': name, 'category__category': category})
-        return super(PackageMixin, self).get(*args, **kwargs)#}}}
+            kwargs.update({'name': name, 'category': category})
+        return super(PackageMixin, self).get(*args, **kwargs)
+
+    def filter(self, **kwargs):
+        category, name = get_from_kwargs_and_del(('category','name'), kwargs)
+        if name is not None:
+            kwargs.update({'virtual_package__name': name})
+        if category is not None:
+            if isinstance(category, packages.models.CategoryModel):
+                kwargs.update({'virtual_package__category': category})
+            else:
+                kwargs.update({'virtual_package__category__category': category})
+
+        return super(PackageMixin, self).filter(**kwargs)
 
 
 class KeywordMixin(object):#{{{
@@ -88,7 +99,20 @@ class MaintainerMixin(object):#{{{
             kwargs['email'] = maintainer.email
         return super(MaintainerMixin, self).filter(*args, **kwargs)#}}}
 
+def get_name_and_category_by_cp(package):
+    return package.split('/')
+
+
+class VirtualPackageMixin(object):
+    def filter(self,*args, **kwargs):
+        package = get_from_kwargs_and_del('package', kwargs)
+        if package is not None:
+            category, name = get_name_and_category_by_cp(package)
+            kwargs.update({'name': name, 'category__category': category})
+
+        return super(VirtualPackageMixin, self).filter(*args, **kwargs)
+
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
                            PackageMixin, KeywordMixin, EbuildMixin, HerdsMixin,
-                           MaintainerMixin)
+                           MaintainerMixin, VirtualPackageMixin)
