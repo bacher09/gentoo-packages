@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table class='table table-striped table-hover'>
+    <colgroup>
+        <col class="span3" >
+        <col class="span3" >
+    </colgroup>
+    <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+    </thead>
+    <tbody>
+        {% for maintainer in maintainers %}
+            <tr>
+                <td class="nowrap"><a href="#">{{ maintainer.name|default:"Not represented" }}</a></td>
+                <!-- email should be obfuscated -->
+                <td class="nowrap"><a href="#">{{ maintainer.email }}</a></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<div class="pagination pagination-centered">
+  <ul>
+        {% if page_obj.has_previous %}
+    <li><a href="?page={{ page_obj.previous_page_number }}">&larr; Prev</a></li>
+        {% endif %}
+    <li class="active"> <a href="#">{{ page_obj.number }}</a></li>
+    {% if page_obj.has_next %}
+    <li><a href="?page={{ page_obj.next_page_number }}">Next &rarr;</a></li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+
+{% endblock content %}
