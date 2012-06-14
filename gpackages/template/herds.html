@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table class='table table-striped table-hover'>
+    <colgroup>
+        <col class="span1" >
+        <col class="span1" >
+        <col class="span7" >
+    </colgroup>
+    <thead>
+            <tr>
+                <th>Herd</th>
+                <th>Email</th>
+                <th>Description</th>
+            </tr>
+    </thead>
+    <tbody>
+        {% for herd in herds %}
+            <tr>
+                <td class="nowrap"><a href="#">{{ herd.name }}</a></td>
+                <!-- email should be obfuscated -->
+                <td class="nowrap"><a href="#">{{ herd.email }}</a></td>
+                <td>{{ herd.description|default_if_none:"" }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}

@@ -116,6 +116,9 @@ class HerdsModel(AbstractDateTimeModel):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 class VirtualPackageModel(models.Model):
     name = models.CharField(max_length = 254)
     category = models.ForeignKey(CategoryModel)

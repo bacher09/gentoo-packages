@@ -25,6 +25,11 @@
             padding: 8px 10px 8px 10px;
             margin: 0px 0px 20px 0px;
             background-color: #CCC;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
 
     </style>
     <link href="{{ STATIC_URL }}css/bootstrap-responsive.css" rel="stylesheet">
@@ -82,7 +87,7 @@
     {% block container %}
                             <div class="row"> <!-- Page type --><!--{{{-->
                                                         <ul class="breadcrumb">
-                                                        <li class="active">Categories</li>
+                                                        <li class="active">{{ page_name }}</li>
                                                       </ul>
                             </div> <!-- end page type --><!--}}}-->
         <div class="row">

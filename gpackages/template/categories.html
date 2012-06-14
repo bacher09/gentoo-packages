@@ -4,8 +4,8 @@
 
 <table class='table table-striped table-hover'>
     <colgroup>
-        <col class="span2" >
-        <col class="span7" >
+        <col class="span1" >
+        <col class="span8" >
     </colgroup>
     <thead>
             <tr>
@@ -16,7 +16,7 @@
     <tbody>
         {% for category in categories %}
             <tr>
-                <td><a href="#">{{ category.category }}</a></td>
+                <td class="nowrap"><a href="#">{{ category.category }}</a></td>
                 <td>{{ category.description|default_if_none:"" }}</td>
             </tr>
         {% endfor %}
