@@ -275,9 +275,13 @@ class CategoryMetadata(ToStrMixin):
 
     def __init__(self, metadata_path):
         self._metadata_path = metadata_path
-        self._metadata_xml = etree.parse(metadata_path)
         self._descrs = {}
-        self._parse_descrs()
+        try:
+            self._metadata_xml = etree.parse(metadata_path)
+        except IOError:
+            pass
+        else:
+            self._parse_descrs()
 
     def _parse_descrs(self):
         for descr_xml in self._metadata_xml.iterfind('longdescription'):
