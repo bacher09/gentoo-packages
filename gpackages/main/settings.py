@@ -17,6 +17,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+INTERNAL_IPS = ('127.0.0.1',)
+
 
 # If config not provided using sqlite
 DATABASES = {
@@ -120,9 +122,11 @@ INSTALLED_APPS = (
 )
 
 if DEBUG:
-    INSTALLED_APPS += ('django.contrib.databrowse','debug_toolbar') 
+    INSTALLED_APPS += ('django.contrib.databrowse', 'debug_toolbar') 
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(PROJECT_ROOT,'mail.mbox')
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
 else:
     TEMPLATE_LOADERS = (
         ('django.template.loaders.cached.Loader', TEMPLATE_LOADERS),)
