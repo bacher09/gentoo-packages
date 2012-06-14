@@ -317,7 +317,7 @@ class Scanner(object):
 
     def get_licenses_objects(self, ebuild):
         licenses = ebuild.licenses
-        return _get_items(licenses, models.LicensModel, 'name', self.licenses_cache)
+        return _get_items(licenses, models.LicenseModel, 'name', self.licenses_cache)
 
     def get_uses_objects(self, ebuild):
         uses = [ use.name for use in ebuild.iter_uses() ]

@@ -19,13 +19,13 @@ if DEBUG:
     from django.contrib import databrowse
     from packages.views import TemplatesDebugView 
     from packages.models import EbuildModel, PackageModel, UseFlagModel, \
-                                LicensModel, CategoryModel, Keyword, \
+                                LicenseModel, CategoryModel, Keyword, \
                                 ArchesModel, HomepageModel, HerdsModel, \
                                 MaintainerModel, UseFlagDescriptionModel, \
                                 RepositoryModel, VirtualPackageModel 
 
     databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, 
-                             LicensModel, CategoryModel, Keyword, ArchesModel, 
+                             LicenseModel, CategoryModel, Keyword, ArchesModel, 
                              HomepageModel, HerdsModel, MaintainerModel, 
                              UseFlagDescriptionModel, RepositoryModel, 
                              VirtualPackageModel)

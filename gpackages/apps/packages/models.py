@@ -228,7 +228,7 @@ class UseFlagDescriptionModel(models.Model):
     class Meta:
         unique_together = ('use_flag', 'package')
 
-class LicensModel(models.Model):
+class LicenseModel(models.Model):
     name = models.CharField(unique = True, max_length = 60)
     #description = TextField()
     
@@ -241,7 +241,7 @@ class EbuildModel(AbstractDateTimeModel):
     version = models.CharField(max_length = 26)
     revision = models.CharField(max_length = 12)
     use_flags = models.ManyToManyField(UseFlagModel)
-    licenses = models.ManyToManyField(LicensModel)
+    licenses = models.ManyToManyField(LicenseModel)
     license = models.CharField(max_length = 254, blank = True )
     ebuild_hash = models.CharField(max_length = 128)
     ebuild_mtime = models.DateTimeField(blank = True, null = True)
@@ -290,7 +290,7 @@ class EbuildModel(AbstractDateTimeModel):
         self.save()
         l = []
         for license in ebuild.licenses:
-            k, created = LicensModel.objects.get_or_create(name = license)
+            k, created = LicenseModel.objects.get_or_create(name = license)
             if created:
                 k.save()
             l.append(k)

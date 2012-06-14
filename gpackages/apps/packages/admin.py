@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count
-from models import EbuildModel, PackageModel, LicensModel, CategoryModel, \
+from models import EbuildModel, PackageModel, LicenseModel, CategoryModel, \
                    UseFlagModel,  RepositoryModel, HomepageModel, MaintainerModel, \
                    Keyword, ArchesModel, UseFlagDescriptionModel, HerdsModel, \
                    VirtualPackageModel
@@ -68,7 +68,7 @@ class HomepageAdmin(admin.ModelAdmin):
     list_display = ('url',)
     search_fields = ('url',)
 
-class LicensAdmin(EbuildsCountAdmin, admin.ModelAdmin):
+class LicenseAdmin(EbuildsCountAdmin, admin.ModelAdmin):
     list_display = ('name', 'ebuilds_count')
     search_fields = ('name',)
 
@@ -76,7 +76,7 @@ class LicensAdmin(EbuildsCountAdmin, admin.ModelAdmin):
 admin.site.register(EbuildModel, EbuildAdmin)
 admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
 admin.site.register(PackageModel, PackageAdmin)
-admin.site.register(LicensModel, LicensAdmin)
+admin.site.register(LicenseModel, LicenseAdmin)
 admin.site.register(CategoryModel)
 admin.site.register(UseFlagModel, UseFlagAdmin)
 admin.site.register(UseFlagDescriptionModel, UseFlagDescriptionAdmin)
