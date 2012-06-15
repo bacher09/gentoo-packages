@@ -119,12 +119,12 @@ Text
                         <div class="well">
                         <ul class="nav nav-list">
                             <li class="nav-header">Navigation</li>
-                            <li><a href="{% url 'categories' %}">Categories</a></li>
-                            <li><a href="#">Ebuilds</a></li>
-                            <li><a href="#">Packages</a></li>
-                            <li><a href="{% url 'maintainers' %}">Maintainers</a></li>
-                            <li><a href="{% url 'herds' %}">Herds</a></li>
-                            <li><a href="{% url 'repositories' %}">Repositories</a></li>
+                            <li {% if nav_name == 'categories' %}class="active"{% endif %}><a href="{% url 'categories' %}">Categories</a></li>
+                            <li {% if nav_name == 'ebuilds' %}class="active"{% endif %}><a href="#">Ebuilds</a></li>
+                            <li {% if nav_name == 'packages' %}class="active"{% endif %}><a href="#">Packages</a></li>
+                            <li {% if nav_name == 'maintainers' %}class="active"{% endif %}><a href="{% url 'maintainers' %}">Maintainers</a></li>
+                            <li {% if nav_name == 'herds' %}class="active"{% endif %}><a href="{% url 'herds' %}">Herds</a></li>
+                            <li {% if nav_name == 'repositories' %}class="active"{% endif %}><a href="{% url 'repositories' %}">Repositories</a></li>
                         </ul>
                        </div>
             </div> <!-- span3 --><!--}}}-->
