@@ -3,7 +3,7 @@ from django.template.loader import get_template
 from django.template import TemplateDoesNotExist
 from django.http import Http404
 
-from models import CategoryModel, HerdsModel, MaintainerModel
+from models import CategoryModel, HerdsModel, MaintainerModel, RepositoryModel
 
 class ContextListView(ListView):
     extra_context = {}
@@ -30,6 +30,12 @@ class MaintainersListView(ContextListView):
     template_name = 'maintainers.html'
     queryset = MaintainerModel.objects.only('name', 'email' ).all()
     context_object_name = 'maintainers'
+
+class RepositoriesListView(ContextListView):
+    extra_context = {'page_name': 'Repsitories'}
+    template_name = 'repositories.html'
+    queryset = RepositoryModel.objects.only('name', 'description' ).all()
+    context_object_name = 'repositories'
 
 class TemplatesDebugView(TemplateView):
 
