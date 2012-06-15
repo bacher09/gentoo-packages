@@ -1,3 +1,4 @@
+{% load url from future %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -116,9 +117,11 @@ Text
                         <div class="well">
                         <ul class="nav nav-list">
                             <li class="nav-header">Navigation</li>
-                            <li><a href="#">Categories</a></li>
+                            <li><a href="{% url 'categories' %}">Categories</a></li>
                             <li><a href="#">Ebuilds</a></li>
                             <li><a href="#">Packages</a></li>
+                            <li><a href="{% url 'maintainers' %}">Maintainers</a></li>
+                            <li><a href="{% url 'herds' %}">Herds</a></li>
                         </ul>
                        </div>
             </div> <!-- span3 --><!--}}}-->
@@ -127,7 +130,7 @@ Text
                 <div class="span12">
                     <hr>
                                 <footer class="footer">
-                                <p class="pull-right">Copyright 2007-2012 Gentoo Foundation, Inc.</p>
+                                <p class="pull-right">Copyright 2007-{% now "Y" %} Gentoo Foundation, Inc.</p>
                               </footer>
                 </div>
         </div><!--}}}-->
