@@ -28,10 +28,9 @@ class ArchesModel(models.Model):
     def __unicode__(self):
         return self.name
 
-class RepositoryModel(models.Model):
+class RepositoryModel(AbstractDateTimeModel):
     name = models.CharField(unique = True, max_length = 60)
     description = models.TextField(blank = True, null = True)
-    # And other fields
 
     def __unicode__(self):
         return self.name

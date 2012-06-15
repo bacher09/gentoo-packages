@@ -1,4 +1,5 @@
 {% load url from future %}
+{% load packages %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -102,7 +103,8 @@ Text
                     <div class="well">
                                                         <div id="rightcontent">
                                                         <div>
-                                                            <span class="label label-info" style="display: block"> Last update</span>11 Jun 2012<br/> 10:47 UTC 
+                                                            <span class="label label-info" style="display: block"> Last update</span> 
+                                                            {% last_updated %}
                                                         </div><br/>
                                                       <div>
                                                           <span class="left-legend label label-info" style="display: block;">Legend</span>

@@ -312,6 +312,10 @@ class Scanner(object):
         repo_obj, repo_created = models.RepositoryModel \
             .objects.get_or_create(name = repo.name)
 
+        if not repo_created:
+            #Update modification time
+            repo_obj.save(force_update = True)
+
         self.scanpackages(repo, repo_obj, **kwargs)
         
 
