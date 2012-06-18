@@ -91,7 +91,7 @@ class RepositoryModel(AbstractDateTimeModel):
         RepositorySourceModel.objects.bulk_create(ret)
 
     def clear_related_sources(self):
-        self.repositorysourcemodel_set.clear()
+        RepositorySourceModel.objects.filter(repository = self).delete()
 
     def update_related_sources(self, repo):
         self.clear_related_sources()
@@ -100,6 +100,14 @@ class RepositoryModel(AbstractDateTimeModel):
     def add_related(self, repo):
         self.add_related_feeds(repo)
         self.add_related_sources(repo)
+
+    def clear_related(self):
+        self.clear_related_feeds()
+        self.clear_related_sources()
+
+    def update_related(self, repo):
+        self.clear_related()
+        self.add_related(repo)
 
     def __unicode__(self):
         return self.name

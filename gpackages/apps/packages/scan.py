@@ -125,6 +125,7 @@ class Scanner(object):
         self.is_show_time = bool(kwargs.get('show_time', True))
         self.is_scan_herds = bool(kwargs.get('scan_herds', True))
         self.force_update = bool(kwargs.get('force_update', False))
+        self.update_repo = bool(kwargs.get('update_repo', False))
         self.delete = bool(kwargs.get('delete', True))
         self.scan_repos_name = tuple(kwargs.get('repos',[]))
         self.scan_global_use_descr = bool(kwargs.get('scan_global_use', False))
@@ -141,11 +142,13 @@ class Scanner(object):
 
         if self.s_all:
             self.scan_all_repos(force_update = self.force_update,
-                                delete = self.delete)
+                                delete = self.delete,
+                                update_repo = self.update_repo)
         elif len(self.scan_repos_name) > 0:
             self.scan_repos_by_name(self.scan_repos_name,
                                     force_update = self.force_update,
-                                    delete = self.delete)
+                                    delete = self.delete,
+                                    update_repo = self.update_repo)
 
         if self.scan_global_use_descr:
             self.update_all_globals_uses_descriptions()
@@ -306,13 +309,16 @@ class Scanner(object):
         else:
             self.scan_repo(repo, **kwargs)
 
-    def scan_repo(self, repo, **kwargs):
+    def scan_repo(self, repo, update_repo = False, **kwargs):
         self.output("Scaning repository '%s'\n", repo.name, 3)
 
         repo_obj, repo_created = models.RepositoryModel \
             .objects.get_or_create(repo = repo)
 
         if not repo_created:
+            if update_repo:
+                repo_obj.update_metadata(repo)
+                repo_obj.update_related(repo)
             #Update modification time
             repo_obj.save(force_update = True)
         else:
