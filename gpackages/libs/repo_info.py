@@ -1,9 +1,12 @@
+from functools import total_ordering
 # Layman API
 from layman.api import LaymanAPI
 layman_api = LaymanAPI()
 
 # Validators
 from validators import validate_url, validate_email, ValidationError
+
+from generic import ToStrMixin, cached_property
 
 __all__ = ('TreeMetadata',)
 
@@ -12,6 +15,61 @@ def _gen_funct(name):
     func.__name__ = name
     return func
 
+class Enum(object):
+
+    def __init__(self, lst):
+        dct = {}
+        dct2 = {}
+        self.list = lst
+        for num, item in enumerate(lst):
+            dct[item] = num
+            dct2[num] = item
+
+        self.repo_dict = dct
+        self.num_dict = dct2
+
+    def get_as_tuple(self):
+       return tuple([(num, item) for num, item in enumerate(self.list)])
+            
+
+REPO_TYPE = (  'git', 
+               'g-common',
+               'cvs' ,
+               'subversion',
+               'rsync',
+               'tar',
+               'bzr',
+               'mercurial',
+               'darcs',
+             )
+
+REPOS_TYPE = Enum(REPO_TYPE)
+
+
+@total_ordering
+class SourcesObject(ToStrMixin):
+
+    def __init__(self, source_tuple):
+        self.source_url = source_tuple[0].lower()
+        self.source_type = REPOS_TYPE.repo_dict[source_tuple[1].lower()]
+        self.source_subpath = source_tuple[2]
+
+    def __hash__(self):
+        return hash(self.source_url)
+
+    def __eq__(self, other):
+        return self.source_url == other.source_url
+
+    def __lt__(self, other):
+        return self.source_url < other.source_url
+
+    @property
+    def type(self):
+        return REPOS_TYPE.num_dict[self.source_type]
+
+    def __unicode__(self):
+        return self.source_url
+
 class TreeMetadataMetaclass(type):
     
     def __init__(cls, name, bases, dct):
@@ -19,7 +77,7 @@ class TreeMetadataMetaclass(type):
         for v in cls.simple_attrs:
             setattr(cls, v, property(_gen_funct(v)))
 
-class TreeMetadata(object):
+class TreeMetadata(ToStrMixin):
     __metaclass__ = TreeMetadataMetaclass
 
     simple_attrs = ( 'name', 'description', 'supported', 'owner_name',
@@ -29,6 +87,8 @@ class TreeMetadata(object):
     qualities = {'stable': 0 , 'testing': 1, 'experimental': 2}
 
     def __init__(self, repo_name, dct = None):
+        self.repo_name = repo_name
+
         if dct is None:
             dct = self._get_info(repo_name)
 
@@ -49,13 +109,14 @@ class TreeMetadata(object):
                     'quality': 'stable',
                     'status': 'official',
                     'feeds': [],
+                    'sources': [],
                    }
 
     @property
     def int_status(self):
         return self.statuses.get(self._dct['status'], 1)
 
-    @property
+    @cached_property
     def homepage(self):
         homepage = self._dct.get('homepage')
         try:
@@ -65,7 +126,7 @@ class TreeMetadata(object):
         else:
             return homepage
 
-    @property
+    @cached_property
     def owner_email(self):
         email = self._dct.get('owner_email')
         try:
@@ -75,19 +136,29 @@ class TreeMetadata(object):
         else:
             return email
 
-    @property
+    @cached_property
     def feeds(self):
-        ret = []
+        ret = set()
         for feed in self._dct.get('feeds', ()):
             try:
                 validate_url(feed)
             except ValidationError:
                 pass
             else:
-                ret.append(feed)
-        return ret
+                ret.add(feed)
+        return list(ret)
+
+    @cached_property
+    def sources(self):
+        ret = set() 
+        for source in self._dct['sources']:
+            ret.add(SourcesObject(source))
+        return list(ret)
 
     @property
     def int_quality(self):
         return self.qualities.get(self._dct['quality'], 2)
+
+    def __unicode__(self):
+        return self.repo_name
 

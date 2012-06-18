@@ -302,7 +302,7 @@ class Scanner(object):
         try:
             repo = portage.get_tree_by_name(repo_name)
         except ValueError:
-            self.output("Bad repository name '%s'", repo.name, 1)
+            self.output("Bad repository name '%s'\n", repo_name, 1)
         else:
             self.scan_repo(repo, **kwargs)
 
@@ -315,6 +315,8 @@ class Scanner(object):
         if not repo_created:
             #Update modification time
             repo_obj.save(force_update = True)
+        else:
+            repo_obj.add_related(repo)
 
         self.scanpackages(repo, repo_obj, **kwargs)
         

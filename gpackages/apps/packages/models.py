@@ -3,6 +3,7 @@ from django.db import models
 from porttree import Category, Package, Ebuild
 import managers
 from generic import get_from_kwargs_and_del
+from repo_info import REPOS_TYPE
 
 from django.core.validators import URLValidator, validate_email 
 from django.core.exceptions import ValidationError
@@ -65,8 +66,64 @@ class RepositoryModel(AbstractDateTimeModel):
         self.official = repo.metadata.official
         self.quality = repo.metadata.int_quality
 
+    def add_related_feeds(self, repo):
+        ret = []
+        for feed in repo.metadata.feeds:
+            ret.append(RepositoryFeedModel(repository = self, feed = feed))
+
+        RepositoryFeedModel.objects.bulk_create(ret)
+
+    def clear_related_feeds(self):
+        RepositoryFeedModel.objects.filter(repository = self).delete()
+
+    def update_related_feeds(self, repo):
+        self.clear_related_feeds()
+        self.add_related_feeds(repo)
+
+    def add_related_sources(self, repo):
+        ret = []
+        for source in repo.metadata.sources:
+            ret.append(RepositorySourceModel(repo_type = source.source_type,
+                                             url = source.source_url,
+                                             subpath = source.source_subpath,
+                                             repository = self))
+
+        RepositorySourceModel.objects.bulk_create(ret)
+
+    def clear_related_sources(self):
+        self.repositorysourcemodel_set.clear()
+
+    def update_related_sources(self, repo):
+        self.clear_related_sources()
+        self.add_related_sources(repo)
+
+    def add_related(self, repo):
+        self.add_related_feeds(repo)
+        self.add_related_sources(repo)
+
     def __unicode__(self):
         return self.name
+
+class RepositoryFeedModel(models.Model):
+    repository = models.ForeignKey(RepositoryModel)
+    feed = models.URLField()
+
+    def __unicode__(self):
+        return self.feed
+
+    class Meta:
+        unique_together = ('repository', 'feed')
+
+class RepositorySourceModel(models.Model):
+    REPO_TYPE = REPOS_TYPE.get_as_tuple()
+
+    repo_type = models.PositiveSmallIntegerField(choices = REPO_TYPE)
+    url = models.CharField(max_length = 255)
+    subpath = models.CharField(max_length = 100, blank = True, null = True)
+    repository = models.ForeignKey(RepositoryModel)
+
+    def __unicode__(self):
+        return self.url
 
 class CategoryModel(models.Model):
     def __init__(self, *args, **kwargs):
