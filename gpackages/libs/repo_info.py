@@ -87,6 +87,7 @@ class TreeMetadata(ToStrMixin):
     qualities = {'stable': 0 , 'testing': 1, 'experimental': 2}
 
     def __init__(self, repo_name, dct = None):
+        repo_name = self._find_real_repo_name(repo_name)
         self.repo_name = repo_name
 
         if dct is None:
@@ -94,10 +95,24 @@ class TreeMetadata(ToStrMixin):
 
         self._dct = dct
 
+    def _find_real_repo_name(self, repo_name):
+        gen_str = 'gentoo-'
+
+        if repo_name == 'gentoo':
+            return repo_name
+        elif layman_api.is_repo(repo_name):
+            return repo_name
+        elif layman_api.is_repo(gen_str + repo_name):
+            return gen_str + repo_name
+        elif repo_name.startswith(gen_str) and \
+            layman_api.is_repo(repo_name[len(gen_str):]):
+
+            return repo_name[len(gen_str):]
+
+        return None
+
     def _get_info(self, repo_name):
-        if repo_name != 'gentoo':
-            return layman_api.get_all_info(repo_name)[repo_name]
-        else:
+        if repo_name == 'gentoo':
             return {'name': 'gentoo',
                     'description': 'Gentoo main repository',
                     'supported': True,
@@ -111,6 +126,12 @@ class TreeMetadata(ToStrMixin):
                     'feeds': [],
                     'sources': [],
                    }
+        elif repo_name is None:
+            return {'name': 'none',
+                    'description': None,
+                   }
+        else:
+            return layman_api.get_all_info(repo_name)[repo_name]
 
     @property
     def int_status(self):
