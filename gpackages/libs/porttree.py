@@ -18,10 +18,7 @@ import os
 from my_etree import etree
 
 # Validators
-from django.core.validators import URLValidator, validate_email 
-from django.core.exceptions import ValidationError
-
-validate_url = URLValidator()
+from validators import validate_url, validate_url, ValidationError
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
