@@ -310,7 +310,7 @@ class Scanner(object):
         self.output("Scaning repository '%s'\n", repo.name, 3)
 
         repo_obj, repo_created = models.RepositoryModel \
-            .objects.get_or_create(name = repo.name)
+            .objects.get_or_create(repo = repo)
 
         if not repo_created:
             #Update modification time

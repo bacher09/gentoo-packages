@@ -29,8 +29,41 @@ class ArchesModel(models.Model):
         return self.name
 
 class RepositoryModel(AbstractDateTimeModel):
+    QUALITY_CHOICES = ( (0, 'stable'),
+                        (1, 'testing'),
+                        (2, 'experimental'),
+                      )
+
+    def __init__(self, *args, **kwargs):
+        repo = get_from_kwargs_and_del('repo', kwargs)
+        super(RepositoryModel, self).__init__(*args, **kwargs)
+
+        if repo is not None:
+            self.init_by_repo(repo)
+
     name = models.CharField(unique = True, max_length = 60)
+
+    # Additional info
     description = models.TextField(blank = True, null = True)
+    owner_name = models.CharField(max_length = 65 , blank = True, null = True)
+    owner_email = models.EmailField(blank = True, null = True)
+    homepage = models.URLField(blank = True, null = True)
+    official = models.BooleanField(default = False)
+    quality = models.PositiveSmallIntegerField(choices = QUALITY_CHOICES)
+
+    objects = managers.RepositoryManager()
+
+    def init_by_repo(self, repo):
+        self.name = repo.name
+        self.update_metadata(repo)
+
+    def update_metadata(self, repo):
+        self.description = repo.metadata.description
+        self.owner_name = repo.metadata.owner_name
+        self.owner_email = repo.metadata.owner_email
+        self.homepage = repo.metadata.homepage
+        self.official = repo.metadata.official
+        self.quality = repo.metadata.int_quality
 
     def __unicode__(self):
         return self.name

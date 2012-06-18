@@ -112,7 +112,15 @@ class VirtualPackageMixin(object):
 
         return super(VirtualPackageMixin, self).filter(*args, **kwargs)
 
+class RepositoryMixin(object):
+    def filter(self, *args, **kwargs):
+        repo = get_from_kwargs_and_del('repo', kwargs)
+        if repo is not None:
+            kwargs['name'] = repo.name
+        return super(RepositoryMixin, self).filter(*args, **kwargs)
+
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
                            PackageMixin, KeywordMixin, EbuildMixin, HerdsMixin,
-                           MaintainerMixin, VirtualPackageMixin)
+                           MaintainerMixin, VirtualPackageMixin,
+                           RepositoryMixin)

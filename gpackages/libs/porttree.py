@@ -20,6 +20,9 @@ from my_etree import etree
 # Validators
 from validators import validate_url, validate_url, ValidationError
 
+# Repo info
+from repo_info import TreeMetadata
+
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
 BINDB = portage.db[portage.root]["bintree"].dbapi
@@ -255,6 +258,10 @@ class PortTree(ToStrMixin):
     def porttree_path(self):
         "Full path to portage tree"
         return self.porttree
+
+    @cached_property
+    def metadata(self):
+        return TreeMetadata(self.name)
 
     @cached_property
     def use_desc(self):
