@@ -49,5 +49,4 @@ class Command(BaseCommand):
     args = '<repository names ...>'
     help = 'Will scan package tree and update info about it in database'
     def handle(self, *args, **options):
-        verbosity = int(options['verbosity'])
-        Scanner(repos = args, **options).scan()
+        Scanner(repos = args, packages = True, **options).scan()

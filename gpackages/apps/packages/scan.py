@@ -122,6 +122,8 @@ class Scanner(object):
         self.verbosity = toint(kwargs.get('verbosity',1),1)
         self.traceback = bool(kwargs.get('traceback',False))
         self.s_all = bool(kwargs.get('scan_all', False))
+        self.s_packages = bool(kwargs.get('packages', False))
+        self.s_only_repo_info = bool(kwargs.get('only_repo_info', False))
         self.is_show_time = bool(kwargs.get('show_time', True))
         self.is_scan_herds = bool(kwargs.get('scan_herds', True))
         self.force_update = bool(kwargs.get('force_update', False))
@@ -140,15 +142,19 @@ class Scanner(object):
         if self.is_scan_herds:
             self.scan_herds()
 
-        if self.s_all:
+        if self.s_all and self.s_packages:
             self.scan_all_repos(force_update = self.force_update,
                                 delete = self.delete,
                                 update_repo = self.update_repo)
-        elif len(self.scan_repos_name) > 0:
+        elif len(self.scan_repos_name) > 0 and self.s_packages:
             self.scan_repos_by_name(self.scan_repos_name,
                                     force_update = self.force_update,
                                     delete = self.delete,
                                     update_repo = self.update_repo)
+        elif self.s_only_repo_info and self.s_all:
+            self.scan_all_repo_info(delete = self.delete)
+        elif self.s_only_repo_info and len(self.scan_repos_name) > 0:
+            self.scan_repo_info_by_names(self.scan_repos_name)
 
         if self.scan_global_use_descr:
             self.update_all_globals_uses_descriptions()
@@ -301,17 +307,25 @@ class Scanner(object):
         for repo_name in repo_names:
             self.scan_repo_by_name(repo_name, **kwargs)
 
-    def scan_repo_by_name(self, repo_name, **kwargs):
+    def get_repo_by_name(self, repo_name, quiet = False, trace = False):
         try:
             repo = portage.get_tree_by_name(repo_name)
         except ValueError:
-            self.output("Bad repository name '%s'\n", repo_name, 1)
+            if not quiet:
+                self.output("Bad repository name '%s'\n", repo_name, 1)
+            if trace:
+                raise
+            return None
         else:
+            return repo
+
+    def scan_repo_by_name(self, repo_name, **kwargs):
+        repo = self.get_repo_by_name(repo_name)
+
+        if repo is not None:
             self.scan_repo(repo, **kwargs)
 
-    def scan_repo(self, repo, update_repo = False, **kwargs):
-        self.output("Scaning repository '%s'\n", repo.name, 3)
-
+    def get_repo_obj(self, repo, update_repo = False):
         repo_obj, repo_created = models.RepositoryModel \
             .objects.get_or_create(repo = repo)
 
@@ -324,6 +338,29 @@ class Scanner(object):
         else:
             repo_obj.add_related(repo)
 
+        return repo_obj
+
+    def scan_all_repo_info(self, delete = False):
+        ex_pk = []
+        for repo in portage.iter_trees():
+            repo_obj = self.get_repo_obj(repo, update_repo = True)
+            self.output("Scaned [%s]\n", repo.name)
+            ex_pk.append(repo_obj.pk)
+
+        if delete:
+            models.RepositoryModel.objects.exclude(pk__in = ex_pk).delete()
+
+    def scan_repo_info_by_names(self, repo_list):
+        for repo_name in repo_list:
+            repo = self.get_repo_by_name(repo_name)
+            if repo is not None:
+                self.get_repo_obj(repo, update_repo = True)
+                self.output("Scaned [%s]\n", repo.name)
+
+    def scan_repo(self, repo, update_repo = False, **kwargs):
+        self.output("Scaning repository '%s'\n", repo.name, 3)
+
+        repo_obj = self.get_repo_obj(repo, update_repo = update_repo)
         self.scanpackages(repo, repo_obj, **kwargs)
         
 
