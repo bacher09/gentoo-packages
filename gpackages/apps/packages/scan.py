@@ -119,19 +119,21 @@ class Scanner(object):
         self.start_time = datetime.now()
 
     def update_options(self, **kwargs):
+        bool_get = lambda x,y: bool(kwargs.get(x, y))
+
         self.verbosity = toint(kwargs.get('verbosity',1),1)
-        self.traceback = bool(kwargs.get('traceback',False))
-        self.s_all = bool(kwargs.get('scan_all', False))
-        self.s_packages = bool(kwargs.get('packages', False))
-        self.s_only_repo_info = bool(kwargs.get('only_repo_info', False))
-        self.is_show_time = bool(kwargs.get('show_time', True))
-        self.is_scan_herds = bool(kwargs.get('scan_herds', True))
-        self.force_update = bool(kwargs.get('force_update', False))
-        self.update_repo = bool(kwargs.get('update_repo', False))
-        self.delete = bool(kwargs.get('delete', True))
+        self.traceback = bool_get('traceback',False)
+        self.s_all = bool_get('scan_all', False)
+        self.s_packages = bool_get('packages', False)
+        self.s_only_repo_info = bool_get('only_repo_info', False)
+        self.is_show_time = bool_get('show_time', True)
+        self.is_scan_herds = bool_get('scan_herds', True)
+        self.force_update = bool_get('force_update', False)
+        self.update_repo = bool_get('update_repo', False)
+        self.delete = bool_get('delete', True)
         self.scan_repos_name = tuple(kwargs.get('repos',[]))
-        self.scan_global_use_descr = bool(kwargs.get('scan_global_use', False))
-        self.scan_local_use_descr = bool(kwargs.get('scan_local_use', False))
+        self.scan_global_use_descr = bool_get('scan_global_use', False)
+        self.scan_local_use_descr = bool_get('scan_local_use', False)
 
     def show_time(self):
         end = datetime.now()
