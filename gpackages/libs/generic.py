@@ -3,9 +3,13 @@ import hashlib
 import types
 from datetime import datetime
 
-__all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1', \
-           'file_mtime', 'cached_property' )
+__all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1',\
+           'file_mtime', 'cached_property', 'iter_over_gen', 'lofstr_to_ig')
 
+def iter_over_gen(iterat, name):
+    for obj in iterat:
+        for item in getattr(obj, name)():
+            yield item
 def del_from_dict(what_list, dict_todel):
     for item in what_list:
         if item in dict_todel:

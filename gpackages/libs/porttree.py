@@ -10,7 +10,9 @@ from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from gentoolkit import errors
 from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
-                    file_get_content, StrThatIgnoreCase, lofstr_to_ig
+                    file_get_content, StrThatIgnoreCase, lofstr_to_ig, \
+                    iter_over_gen
+
 from use_info import get_uses_info, get_local_uses_info
 import os
 
@@ -166,7 +168,27 @@ def _gen_all_use(func, iterator):
             func(use_all_dict, use_dict)
     return use_all_dict
 
-class Portage(object):
+
+def gen_generator_over_gen(gen_name, name):
+    return lambda self: iter_over_gen(getattr(self, gen_name)(), name)
+
+class IteratorAddMetaclass(type):
+    
+    def __init__(cls, name, bases, dct):
+        super(IteratorAddMetaclass, cls).__init__(name, bases, dct)
+        for name in cls.generator_names:
+            setattr(cls, name, gen_generator_over_gen(cls.main_iterator, name))
+
+class AutoGeneratorMixin(object):
+
+    __metaclass__ = IteratorAddMetaclass
+    generator_names = ()
+    #main_iterator = 'generator_name'
+
+class Portage(ToStrMixin, AutoGeneratorMixin):
+
+    generator_names = ('iter_categories', 'iter_packages', 'iter_ebuilds')
+    main_iterator = 'iter_trees'
 
     def __init__(self):
         self.treemap = PORTDB.repositories.treemap
@@ -183,21 +205,6 @@ class Portage(object):
         for tree_name in self.tree_order:
             yield PortTree(tree_dict[tree_name], tree_name)
 
-    def iter_categories(self):
-        for tree in self.iter_trees():
-            for category in tree.iter_categories():
-                yield category
-
-    def iter_packages(self):
-        for tree in self.iter_trees():
-            for package in tree.iter_packages():
-                yield package
-
-    def iter_ebuilds(self):
-        for tree in self.iter_trees():
-            for ebuild in tree.iter_ebuilds():
-                yield ebuild
-    
     def iter_use_desc(self):
         for tree in self.iter_trees():
             yield tree.use_desc
@@ -224,9 +231,15 @@ class Portage(object):
     def dict_repos(self):
         return self.treemap
 
+    def __unicode__(self):
+        return u'portage'
 
-class PortTree(ToStrMixin):
+
+class PortTree(ToStrMixin, AutoGeneratorMixin):
     "Represent portage tree as object"
+
+    main_iterator = 'iter_categories'
+    generator_names = ('iter_packages', 'iter_ebuilds')
     
     def __init__(self, tree_path = '/usr/portage', name = 'main'):
         """Args:
@@ -240,16 +253,6 @@ class PortTree(ToStrMixin):
         for category in sorted(PORTDB.settings.categories):
             if os.path.isdir(os.path.join(self.porttree_path, category)):
                     yield Category(self, category)
-
-    def iter_packages(self):
-        for category in self.iter_categories():
-            for package in category.iter_packages():
-                yield package
-    
-    def iter_ebuilds(self):
-        for package in self.iter_packages():
-            for ebuild in package.iter_ebuilds():
-                yield ebuild
 
     def __unicode__(self):
         return self.name
@@ -304,10 +307,13 @@ class CategoryMetadata(ToStrMixin):
         return unicode(self._metadata_path)
 
 
-class Category(ToStrMixin):
+class Category(ToStrMixin, AutoGeneratorMixin):
     "Represent category of portage tree as object"
 
     __slots__ = ('porttree', 'category', '_cache')
+
+    main_iterator = 'iter_packages'
+    generator_names = ('iter_ebuilds', )
     
     def __init__(self, porttree, category):
         """Args:
