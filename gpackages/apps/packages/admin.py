@@ -43,6 +43,7 @@ class EbuildAdmin(admin.ModelAdmin):
 class VirtualPackageAdmin(admin.ModelAdmin):
     list_display = ('__unicode__',)
     search_fields = ('name','category__category')
+    list_select_related = True
 
 class PackageAdmin(EbuildsCountAdmin, admin.ModelAdmin):
     list_display = ('__unicode__', 'ebuilds_count')
