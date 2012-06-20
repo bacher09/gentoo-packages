@@ -342,7 +342,7 @@ class Category(ToStrMixin, AutoGeneratorMixin):
     @property
     def category_path(self):
         "Full path to category"
-        return os.path.join(self.porttree.porttree_path, self.category)
+        return os.path.join(self.porttree_path, self.category)
 
     @property
     def metadata_path(self):
@@ -380,7 +380,7 @@ class Package(ToStrMixin):
                 yield ebuild_obj
 
     def __unicode__(self):
-        return '%s' % self.package
+        return unicode(self.cp)
 
     @property
     def package_path(self):
