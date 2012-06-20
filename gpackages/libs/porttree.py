@@ -1,5 +1,3 @@
-from functools import total_ordering
-from collections import defaultdict
 import portage
 from portage.util.listdir import listdir
 from portage.dep import Atom
@@ -9,21 +7,21 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from gentoolkit import errors
-from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
-                    file_get_content, StrThatIgnoreCase, lofstr_to_ig, \
-                    iter_over_gen
+from generic import cached_property, lofstr_to_ig 
 
-from use_info import get_uses_info, get_local_uses_info
-import os
+import os.path
 
-#XML
-from my_etree import etree
+#Generic objects
+from generic_objects import Use, Keyword, KeywordsSet
+
+#Mixins
+from mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
+                   EbuildMixin
 
 # Validators
 from validators import validate_url, validate_url, ValidationError
 
-# Repo info
-from repo_info import TreeMetadata
+from category_metadata import CategoryMetadata, FakeMetaData
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -37,16 +35,6 @@ _license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
                                      x.endswith('?') or x.startswith(')') \
                                   else True
 
-def _file_path(file_name):
-    return lambda self: os.path.join(self.package_path, file_name)
-
-
-def _file_hash(attr):
-    return lambda self: file_sha1(getattr(self, attr))
-
-def _file_mtime(attr):
-    return lambda self: file_mtime(getattr(self, attr))
-
 def _ebuild_environment(name):
     return lambda self: self.package_object.environment(name)
 
@@ -58,108 +46,6 @@ def _get_info_by_func(func, path1, path2):
         except IOError:
             return None
 
-class FakeMetaData(ToStrMixin):
-
-    def herds(self):
-        return []
-
-    def maintainers(self):
-        return []
-
-    def descriptions(self):
-        return []
-    
-    def __unicode__(self):
-        return 'fake'
-
-
-class Use(ToStrMixin):
-    "Represend Use flag as object"
-    __slots__ = ('name',)
-
-    def __init__(self, name):
-        """Args:
-            name -- name of use flag, may start with + or -
-        """
-        if name.startswith('+') or name.startswith('-'):
-            name = name[1:]
-        self.name = StrThatIgnoreCase(name)
-
-    def __unicode__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return self.name == other.name
-
-    def __ne__(self, other):
-        return self.name != other.name
-
-    def __hash__(self):
-        return hash(self.name)
-        
-@total_ordering
-class Keyword(ToStrMixin):
-    "Represend ebuild Keyword as object"
-    __slots__ = ('name', 'status')
-    status_repr = ['','~','-']
-    
-    def __init__(self, name, status = 0):
-        """Args:
-            name -- name of keyword, it may start with ~ or -, if so than 
-                    status will be auto seting.
-            status -- status of keyword: 0 - stable, 
-                                         1 - utested '~',
-                                         2 - unstable '-'
-                    Also may get by name parameter.
-        """
-        if name.startswith('~'):
-            name = name[1:]
-            status = 1
-        elif name.startswith('-'):
-            name = name[1:]
-            status = 2
-        self.name = name
-        self.status = status
-
-    def __unicode__(self):
-        return self.status_repr[self.status] + self.name
-
-    def __hash__(self):
-        return hash((self.name, self.status))
-
-    def is_same(self, other):
-        return self.name == other.name
-
-    def is_higer(self, other):
-        return self.status < other.status
-
-    def is_lower(self, other):
-        return self.status > other.status
-
-    def __eq__(self, other):
-        return (self.arch, self.status) == (other.arch, other.status)
-
-    def __lt__(self, other):
-        return (self.status, self.arch) > (other.status, other.arch)
-
-    @property
-    def arch(self):
-        "Return arch name"
-        return self.name
-
-class KeywordsSet(set):
-    def __init__(self, init_list):
-        start = defaultdict(list)
-        for item in init_list:
-            start[item.arch].append(item)
-
-        to_create = []
-        for item in start.itervalues():
-            item.sort(reverse = True)
-            if len(item)>=1:
-                to_create.append(item[0])
-        super(KeywordsSet, self).__init__(to_create)
-
 def _gen_all_use(func, iterator):
     use_g = iterator
     use_all_dict = next(use_g)
@@ -168,27 +54,7 @@ def _gen_all_use(func, iterator):
             func(use_all_dict, use_dict)
     return use_all_dict
 
-
-def gen_generator_over_gen(gen_name, name):
-    return lambda self: iter_over_gen(getattr(self, gen_name)(), name)
-
-class IteratorAddMetaclass(type):
-    
-    def __init__(cls, name, bases, dct):
-        super(IteratorAddMetaclass, cls).__init__(name, bases, dct)
-        for name in cls.generator_names:
-            setattr(cls, name, gen_generator_over_gen(cls.main_iterator, name))
-
-class AutoGeneratorMixin(object):
-
-    __metaclass__ = IteratorAddMetaclass
-    generator_names = ()
-    #main_iterator = 'generator_name'
-
-class Portage(ToStrMixin, AutoGeneratorMixin):
-
-    generator_names = ('iter_categories', 'iter_packages', 'iter_ebuilds')
-    main_iterator = 'iter_trees'
+class Portage(PortageMixin):
 
     def __init__(self):
         self.treemap = PORTDB.repositories.treemap
@@ -205,24 +71,6 @@ class Portage(ToStrMixin, AutoGeneratorMixin):
         for tree_name in self.tree_order:
             yield PortTree(tree_dict[tree_name], tree_name)
 
-    def iter_use_desc(self):
-        for tree in self.iter_trees():
-            yield tree.use_desc
-
-    def iter_use_local_desc(self):
-        for tree in self.iter_trees():
-            yield tree.use_local_desc
-
-    def get_all_use_desc(self):
-        return _gen_all_use(lambda x,y: x.update(y), self.iter_use_desc())
-
-    def get_all_use_local_desc(self):
-        def action(all_dict, use_dict):
-            for key, value in use_dict.iteritems():
-                all_dict[key].update(value)
-
-        return _gen_all_use(action, self.iter_use_local_desc())
-
     @property
     def list_repos(self):
         return self.tree_order
@@ -231,16 +79,9 @@ class Portage(ToStrMixin, AutoGeneratorMixin):
     def dict_repos(self):
         return self.treemap
 
-    def __unicode__(self):
-        return u'portage'
-
-
-class PortTree(ToStrMixin, AutoGeneratorMixin):
+class PortTree(PortTreeMixin):
     "Represent portage tree as object"
 
-    main_iterator = 'iter_categories'
-    generator_names = ('iter_packages', 'iter_ebuilds')
-    
     def __init__(self, tree_path = '/usr/portage', name = 'main'):
         """Args:
             tree_path -- full path to portage tree as str
@@ -253,115 +94,48 @@ class PortTree(ToStrMixin, AutoGeneratorMixin):
         for category in sorted(PORTDB.settings.categories):
             if os.path.isdir(os.path.join(self.porttree_path, category)):
                     yield Category(self, category)
-
-    def __unicode__(self):
-        return self.name
     
     @property
     def porttree_path(self):
         "Full path to portage tree"
         return self.porttree
 
-    @cached_property
-    def metadata(self):
-        return TreeMetadata(self.name)
-
-    @cached_property
-    def use_desc(self):
-        return _get_info_by_func(get_uses_info,
-                                 self.porttree_path,
-                                 'profiles/use.desc')
-
-    @cached_property
-    def use_local_desc(self):
-        return _get_info_by_func(get_local_uses_info,
-                                 self.porttree_path,
-                                 'profiles/use.local.desc')
-
-class CategoryMetadata(ToStrMixin):
-
-    def __init__(self, metadata_path):
-        self._metadata_path = metadata_path
-        self._descrs = {}
-        try:
-            self._metadata_xml = etree.parse(metadata_path)
-        except IOError:
-            pass
-        else:
-            self._parse_descrs()
-
-    def _parse_descrs(self):
-        for descr_xml in self._metadata_xml.iterfind('longdescription'):
-            lang = descr_xml.attrib.get('lang', 'en')
-            self._descrs[lang] = descr_xml.text
-
-    @property
-    def descrs(self):
-        return self._descrs
-
-    @property
-    def default_descr(self):
-        return self._descrs.get('en')
-
-    def __unicode__(self):
-        return unicode(self._metadata_path)
-
-
-class Category(ToStrMixin, AutoGeneratorMixin):
+class Category(CategoryMixin):
     "Represent category of portage tree as object"
 
     __slots__ = ('porttree', 'category', '_cache')
 
-    main_iterator = 'iter_packages'
-    generator_names = ('iter_ebuilds', )
-    
     def __init__(self, porttree, category):
         """Args:
             porttree -- PortTree object
             category -- category name as str
         """
         self.porttree = porttree
-        self.category = category
+        self.name = category
         self._cache = {}
     
     def iter_packages(self):
-        packages = listdir(self.porttree.porttree + '/'+ self.category,
+        packages = listdir(self.porttree.porttree + '/'+ self.name,
                            EmptyOnError=1, ignorecvs=1, dirsonly=1) 
         for package in packages:
             try:
-                atom = Atom(self.category + '/' + package)
+                atom = Atom(self.name + '/' + package)
             except InvalidAtom:
                 continue
             if atom != atom.cp:
                 continue
             yield Package(self, atom)
 
-    def __unicode__(self):
-        return self.category
-    
     @property
     def category_path(self):
         "Full path to category"
-        return os.path.join(self.porttree_path, self.category)
-
-    @property
-    def metadata_path(self):
-        return os.path.join(self.category_path, 'metadata.xml')
-
-    @cached_property
-    def metadata_sha1(self):
-        return file_sha1(self.metadata_path)
-
-    @cached_property
-    def metadata(self):
-        return CategoryMetadata(self.metadata_path)
+        return os.path.join(self.porttree_path, self.name)
 
     @property
     def porttree_path(self):
         return self.porttree.porttree
 
-
-class Package(ToStrMixin):
+class Package(PackageMixin):
     "Represent package as object"
 
     __slots__ = ('category', 'package', '_cache')
@@ -379,66 +153,20 @@ class Package(ToStrMixin):
             if ebuild_obj.is_valid:
                 yield ebuild_obj
 
-    def __unicode__(self):
-        return unicode(self.cp)
-
     @property
     def package_path(self):
         return os.path.join(self.category.porttree.porttree_path, self.package)
-
-    @cached_property
-    def metadata(self):
-        "Return `MetaData` object that represent package metadata.xml file"
-        try:
-            return MetaData( self.metadata_path)
-        except IOError:
-            return FakeMetaData()
 
     @property
     def cp(self):
         return self.package
 
-    mtime = property(_file_mtime("package_path"))
-
     @property
     def name(self):
         return self.package.split('/')[1]
 
-    manifest_path = property(_file_path('Manifest'))
-    changelog_path = property(_file_path('ChangeLog'))
-    metadata_path = property(_file_path('metadata.xml'))
 
-    #Hashes
-    manifest_sha1 = cached_property(_file_hash('manifest_path'),
-                                    name = 'manifest_sha1')
-    changelog_sha1 = cached_property(_file_hash('changelog_path'),
-                                     name = 'changelog_sha1')
-    metadata_sha1 = cached_property(_file_hash('metadata_path'),
-                                    name = 'metadata_sha1')
-    # Modify times
-    manifest_mtime = property(_file_mtime("manifest_path"))
-    changelog_mtime = property(_file_mtime("changelog_path"))
-    metadata_mtime = property(_file_mtime("metadata_path"))
-
-    @cached_property
-    def descriptions(self):
-        return self.metadata.descriptions()
-
-    @property
-    def description(self):
-        "Return first description in package metadata.xml"
-        if len(self.descriptions)>0:
-            return self.descriptions[0]
-        else:
-            return None
-
-    @cached_property
-    def changelog(self):
-        "Return ChangeLog content"
-        return file_get_content(self.changelog_path)
-
-
-class Ebuild(ToStrMixin):
+class Ebuild(EbuildMixin):
     "Represent ebuild as object"
 
     __slots__ = ('package', 'ebuild', 'package_object', '_cache')
@@ -572,9 +300,6 @@ class Ebuild(ToStrMixin):
     def licenses(self):
         return tuple(set(lofstr_to_ig(self._licenses)))
 
-    sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
-    mtime = cached_property(_file_mtime("ebuild_path"), name = 'mtime')
-
-    def __unicode__(self):
-        return self.ebuild
-    
+    @property
+    def cpv(self):
+        return self.package
