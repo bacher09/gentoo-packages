@@ -3,7 +3,8 @@ from django.db.models import Count
 from models import EbuildModel, PackageModel, LicenseModel, CategoryModel, \
                    UseFlagModel,  RepositoryModel, HomepageModel, MaintainerModel, \
                    Keyword, ArchesModel, UseFlagDescriptionModel, HerdsModel, \
-                   VirtualPackageModel
+                   VirtualPackageModel, RepositoryFeedModel, \
+                   RepositorySourceModel
 
 class AbstractAnnotateAdmin(object):
     annotate_dict = {}
@@ -72,6 +73,24 @@ class LicenseAdmin(EbuildsCountAdmin, admin.ModelAdmin):
     list_display = ('name', 'ebuilds_count')
     search_fields = ('name',)
 
+class RepositoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'updated_datetime', 'official', 'homepage', 'quality')
+    search_fields = ('name', 'description', 'owner_name', 'owner_email')
+    list_filter = ('created_datetime', 'updated_datetime', 'official', 'quality')
+    date_hierarchy = 'updated_datetime'
+
+class RepositoryFeedAdmin(admin.ModelAdmin):
+    list_display = ('repository', 'feed')
+    search_fields = ('repository__name', 'feed')
+    list_filter = ('repository', )
+    list_select_related = True
+
+class RepositorySourceAdmin(admin.ModelAdmin):
+    list_display = ('repository', 'repo_type', 'url', 'subpath')
+    search_fields = ('repository__name', 'url')
+    list_filter = ('repo_type', )
+    list_select_related = True
+
 
 admin.site.register(EbuildModel, EbuildAdmin)
 admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
@@ -80,7 +99,9 @@ admin.site.register(LicenseModel, LicenseAdmin)
 admin.site.register(CategoryModel)
 admin.site.register(UseFlagModel, UseFlagAdmin)
 admin.site.register(UseFlagDescriptionModel, UseFlagDescriptionAdmin)
-admin.site.register(RepositoryModel)
+admin.site.register(RepositoryModel, RepositoryAdmin)
+admin.site.register(RepositoryFeedModel, RepositoryFeedAdmin)
+admin.site.register(RepositorySourceModel, RepositorySourceAdmin)
 admin.site.register(HomepageModel, HomepageAdmin)
 admin.site.register(HerdsModel, HerdsAdmin)
 admin.site.register(MaintainerModel, MaintainerAdmin)
