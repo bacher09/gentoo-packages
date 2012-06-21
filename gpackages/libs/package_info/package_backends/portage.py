@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import portage
 from portage.util.listdir import listdir
 from portage.dep import Atom
@@ -7,21 +8,21 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit.metadata import MetaData
 from gentoolkit import errors
-from generic import cached_property, lofstr_to_ig 
+from package_info.generic import cached_property, lofstr_to_ig 
 
 import os.path
 
 #Generic objects
-from generic_objects import Use, Keyword, KeywordsSet
+from ..generic_objects import Use, Keyword, KeywordsSet
 
 #Mixins
-from mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
+from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
                    EbuildMixin
 
 # Validators
-from validators import validate_url, validate_url, ValidationError
+from ..validators import validate_url, validate_url, ValidationError
 
-from category_metadata import CategoryMetadata, FakeMetaData
+from ..category_metadata import CategoryMetadata, FakeMetaData
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -281,7 +282,6 @@ class Ebuild(EbuildMixin):
                 ret.append(homepage)
         return ret
         
-
     @cached_property
     def homepages(self):
         "Tuple of homepages"

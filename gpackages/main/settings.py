@@ -162,6 +162,8 @@ LOGGING = {
     }
 }
 
+PACKAGE_INFO_BACKEND = 'portage'
+
 try:
     from local_settings import *
 except ImportError:

@@ -3,17 +3,13 @@ from pkgcore.ebuild.repository import UnconfiguredTree, SlavedTree
 from pkgcore.util.repo_utils import get_raw_repos, get_virtual_repos
 from pkgcore.ebuild.atom import atom
 
-from generic import ToStrMixin
-
-from porttree import AutoGeneratorMixin
-
+#Mixins
+from mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
+                   EbuildMixin
 import os.path
 
 
-class Portage(AutoGeneratorMixin):
-
-    generator_names = ('iter_categories', 'iter_packages', 'iter_ebuilds')
-    main_iterator = 'iter_trees'
+class Portage(PortageMixin):
 
     def __init__(self):
         self._config = load_config()
@@ -52,10 +48,7 @@ class Portage(AutoGeneratorMixin):
         else:
             raise ValueError
         
-class PortTree(ToStrMixin, AutoGeneratorMixin):
-
-    generator_names = ('iter_packages', 'iter_ebuilds')
-    main_iterator = 'iter_categories'
+class PortTree(PortTreeMixin):
 
     def __init__(self, repo_obj):
         self._repo_obj = repo_obj
@@ -71,9 +64,6 @@ class PortTree(ToStrMixin, AutoGeneratorMixin):
         "Full path to portage tree"
         return self._repo_obj.location
 
-    def __unicode__(self):
-        return self.name
-
     @property
     def _packages(self):
         return self._repo_obj.packages
@@ -85,10 +75,7 @@ class PortTree(ToStrMixin, AutoGeneratorMixin):
     def _versions(self):
         return self._repo_obj.versions
 
-class Category(ToStrMixin, AutoGeneratorMixin):
-
-    generator_names = ('iter_ebuilds', )
-    main_iterator = 'iter_packages'
+class Category(CategoryMixin):
     
     def __init__(self, category_name, repo_obj):
         self._repo_obj = repo_obj
@@ -109,10 +96,7 @@ class Category(ToStrMixin, AutoGeneratorMixin):
     def _get_ebuilds_names_by_name(self, package_name):
         return self._repo_obj._versions[(self.name, package_name)]
 
-    def __unicode__(self):
-        return self.name
-
-class Package(ToStrMixin):
+class Package(PackageMixin):
     
     def __init__(self, package_name, category_obj):
         self.name = package_name
@@ -122,9 +106,6 @@ class Package(ToStrMixin):
         for ebuild in self.category_obj._repo_obj._itermatch(atom(self.cp)):
             yield Ebuild(ebuild, self)
 
-    def __unicode__(self):
-        return self.cp
-
     def _get_ebuilds_versions(self):
         return self.category_obj._get_ebuilds_names_by_name(self.name)
 
@@ -133,14 +114,11 @@ class Package(ToStrMixin):
         return '%s/%s' % (self.category_obj.name, self.name)
 
 
-class Ebuild(ToStrMixin):
+class Ebuild(EbuildMixin):
     
     def __init__(self, ebuild, package_obj):
         self._ebuild = ebuild
         self.package_obj = package_obj
-
-    def __unicode__(self):
-        return self.cpv
 
     @property
     def cpv(self):

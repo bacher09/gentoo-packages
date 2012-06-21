@@ -1,7 +1,7 @@
 from django.db import models, connections, router, transaction, IntegrityError
-from porttree import Category, Package, Ebuild, Keyword
+from package_info.package_backends.portage import Category, Package, Ebuild, Keyword
 import packages.models
-from generic import get_from_kwargs_and_del
+from package_info.generic import get_from_kwargs_and_del
 
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
     QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})

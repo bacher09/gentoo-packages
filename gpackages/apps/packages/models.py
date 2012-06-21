@@ -1,9 +1,9 @@
 from django.db import models
 
-from porttree import Category, Package, Ebuild
+from package_info.package_backends.portage import Category, Package, Ebuild
 import managers
-from generic import get_from_kwargs_and_del
-from repo_info import REPOS_TYPE
+from package_info.generic import get_from_kwargs_and_del
+from package_info.repo_info import REPOS_TYPE
 
 from django.core.validators import URLValidator, validate_email 
 from django.core.exceptions import ValidationError
