@@ -90,6 +90,7 @@ class cached_property(object):
             name = func.__name__
         self.__name__ = name
         self.__module__ = func.__module__
+        self.__doc__ = func.__doc__
 
     def __get__(self, inst, owner):
         try:

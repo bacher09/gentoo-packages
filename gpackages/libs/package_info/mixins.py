@@ -62,6 +62,7 @@ class PortageHerdsMixin(object):
     
     @cached_property
     def herds(self):
+        "Return new `Herds` object"
         return Herds()
 
 class PortTreeBaseMixin(ToStrMixin):
