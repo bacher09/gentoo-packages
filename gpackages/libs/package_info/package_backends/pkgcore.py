@@ -144,7 +144,22 @@ class Ebuild(EbuildMixin):
 
     slot = ebuild_prop('slot')
 
-    # Maybe homepage_val ?
-    homepage = ebuild_prop('homepage')
+    iuse = ebuild_prop('iuse')
+
+    @property
+    def iuse_env(self):
+        return ' '.join(self.iuse)
+
+    homepage_env = ebuild_prop('homepage')
+
+    @property
+    def keywords_env(self):
+        return ' '.join(self.keywords)
+
+    keywords = ebuild_prop('keywords')
+    
+    @property
+    def license(self):
+        return unicode(self._ebuild.license)
 
     cpv = ebuild_prop('cpvstr')

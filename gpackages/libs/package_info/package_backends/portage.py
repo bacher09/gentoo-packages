@@ -7,19 +7,14 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
 
 from gentoolkit.package import Package as PackageInfo
 from gentoolkit import errors
-from ..generic import cached_property, lofstr_to_ig 
-
+from ..generic import cached_property 
 import os.path
 
-#Generic objects
+# Not need
 from ..generic_objects import Use, Keyword, KeywordsSet
-
 #Mixins
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
                      EbuildMixin
-
-# Validators
-from ..validators import validate_url, validate_url, ValidationError
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -29,28 +24,8 @@ VARDB = portage.db[portage.root]["vartree"].dbapi
 
 ARCHES = PORTDB.settings["PORTAGE_ARCHLIST"].split()
 
-_license_filter = lambda x: False if x.startswith('|') or x.startswith('(') or \
-                                     x.endswith('?') or x.startswith(')') \
-                                  else True
-
 def _ebuild_environment(name):
     return lambda self: self.package_object.environment(name)
-
-
-def _get_info_by_func(func, path1, path2):
-        path = os.path.join(path1, path2)
-        try:
-            return func(path)
-        except IOError:
-            return None
-
-def _gen_all_use(func, iterator):
-    use_g = iterator
-    use_all_dict = next(use_g)
-    for use_dict in use_g:
-        if use_dict is not None:
-            func(use_all_dict, use_dict)
-    return use_all_dict
 
 class Portage(PortageMixin):
 
@@ -186,49 +161,11 @@ class Ebuild(EbuildMixin):
     def is_valid(self):
         "Check if ebuild is valid"
         try:
-            self.package_object.environment("EAPI")
+            self.eapi
         except errors.GentoolkitFatalError:
             return False
         else:
             return True
-
-
-    @property
-    def keywords(self):
-        return list(set(self.keywords_env.split()))
-    
-    def iter_keywords(self):
-        "Iterate over keywords, yields Keyword object"
-        keywords = self.keywords
-        for keyword in keywords:
-            yield Keyword(keyword)
-        
-    def get_keywords(self):
-        l = []
-        for keyword in self.iter_keywords():
-            l.append(keyword)
-        return l
-
-    def get_uniq_keywords(self):
-        return KeywordsSet(self.get_keywords())
-
-    def get_uses_names(self):
-        return self.package_object.environment("IUSE").split()
-    
-
-    def iter_uses(self):
-        "Iterator over all uses, yiels `Use` object"
-        for use in self.get_uses_names():
-            yield Use(use)
-
-    def get_uses(self):
-        l = [] # Bad code, it repeats
-        for use in self.iter_uses():
-            l.append(use)
-        return l
-
-    def get_uniq_uses(self):
-        return frozenset(self.get_uses())
 
     #Could be faster
     @cached_property
@@ -255,8 +192,8 @@ class Ebuild(EbuildMixin):
         "Full path to ebuild"
         return self.package_object.ebuild_path()
 
-    homepage_val = cached_property(_ebuild_environment('HOMEPAGE'),
-                                   name = 'homepage_val')
+    homepage_env = cached_property(_ebuild_environment('HOMEPAGE'),
+                                   name = 'homepage_env')
     license = cached_property(_ebuild_environment('LICENSE'),
                               name = 'license')
     description = cached_property(_ebuild_environment('DESCRIPTION'),
@@ -266,39 +203,8 @@ class Ebuild(EbuildMixin):
     slot = cached_property(_ebuild_environment('SLOT'),
                            name = 'slot')
 
-    @cached_property
-    def homepages_splited(self):
-        return self.homepage_val.split()
-
-    @cached_property
-    def homepages_validated(self):
-        ret = []
-        for homepage in self.homepages_splited:
-            try:
-                validate_url(homepage)
-            except ValidationError:
-                pass
-            else:
-                ret.append(homepage)
-        return ret
-        
-    @cached_property
-    def homepages(self):
-        "Tuple of homepages"
-        return tuple(set(lofstr_to_ig(self.homepages_validated)))
-
-    @cached_property
-    def homepage(self):
-        "First homepage in list"
-        return self.homepages_validated[0] if len(self.homepages)>=1 else ''
-
-    @cached_property
-    def _licenses(self):
-        return filter(_license_filter, self.license.split())
-
-    @cached_property
-    def licenses(self):
-        return tuple(set(lofstr_to_ig(self._licenses)))
+    iuse_env = cached_property(_ebuild_environment('IUSE'),
+                           name = 'iuse')
 
     @property
     def cpv(self):
