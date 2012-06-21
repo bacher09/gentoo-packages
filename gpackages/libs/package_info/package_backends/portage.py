@@ -6,9 +6,8 @@ from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
 from gentoolkit.package import Package as PackageInfo
-from gentoolkit.metadata import MetaData
 from gentoolkit import errors
-from package_info.generic import cached_property, lofstr_to_ig 
+from ..generic import cached_property, lofstr_to_ig 
 
 import os.path
 
@@ -17,12 +16,10 @@ from ..generic_objects import Use, Keyword, KeywordsSet
 
 #Mixins
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
-                   EbuildMixin
+                     EbuildMixin
 
 # Validators
 from ..validators import validate_url, validate_url, ValidationError
-
-from ..category_metadata import CategoryMetadata, FakeMetaData
 
 __all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
@@ -79,6 +76,9 @@ class Portage(PortageMixin):
     @property
     def dict_repos(self):
         return self.treemap
+
+    def __unicode__(self):
+        return u'portage'
 
 class PortTree(PortTreeMixin):
     "Represent portage tree as object"

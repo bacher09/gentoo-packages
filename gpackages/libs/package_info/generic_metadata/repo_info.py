@@ -1,12 +1,13 @@
+from __future__ import absolute_import
 from functools import total_ordering
 # Layman API
 from layman.api import LaymanAPI
 layman_api = LaymanAPI()
 
 # Validators
-from validators import validate_url, validate_email, ValidationError
+from ..validators import validate_url, validate_email, ValidationError
 
-from generic import ToStrMixin, cached_property
+from ..generic import ToStrMixin, cached_property
 
 __all__ = ('TreeMetadata',)
 

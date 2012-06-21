@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from collections import defaultdict
-from generic import ToStrMixin
-from my_etree import etree
+from .my_etree import etree
+from ..generic import ToStrMixin
 
 def _gen_func(name):
     return lambda self: getattr(self, name)

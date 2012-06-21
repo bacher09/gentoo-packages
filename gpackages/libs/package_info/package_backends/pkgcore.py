@@ -1,12 +1,13 @@
+from __future__ import absolute_import
+import os.path
 from pkgcore.config import load_config
 from pkgcore.ebuild.repository import UnconfiguredTree, SlavedTree
 from pkgcore.util.repo_utils import get_raw_repos, get_virtual_repos
 from pkgcore.ebuild.atom import atom
 
 #Mixins
-from mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
-                   EbuildMixin
-import os.path
+from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
+                     EbuildMixin
 
 
 class Portage(PortageMixin):
@@ -47,6 +48,9 @@ class Portage(PortageMixin):
             return PortTree(self.tree_dict[tree_name])
         else:
             raise ValueError
+
+    def __unicode__(self):
+        return u'pkgcore'
         
 class PortTree(PortTreeMixin):
 

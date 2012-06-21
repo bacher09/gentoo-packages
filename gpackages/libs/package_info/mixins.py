@@ -1,9 +1,12 @@
-from generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
+from __future__ import absolute_import
+from .generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
                     file_get_content, iter_over_gen
 
-from use_info import get_uses_info, get_local_uses_info
+from .generic_metadata.use_info import get_uses_info, get_local_uses_info
 # Repo info
-from repo_info import TreeMetadata
+from .generic_metadata.repo_info import TreeMetadata
+# Herds
+from .generic_metadata.herds import Herds
 import os.path
 
 def _file_path(file_name):
@@ -32,7 +35,6 @@ class AutoGeneratorMixin(object):
     generator_names = ()
     #main_iterator = 'generator_name'
 
-
 class PortageBaseMixin(ToStrMixin):
     def iter_use_desc(self):
         for tree in self.iter_trees():
@@ -52,12 +54,15 @@ class PortageBaseMixin(ToStrMixin):
 
         return _gen_all_use(action, self.iter_use_local_desc())
 
-    def __unicode__(self):
-        return u'portage'
-
 class PortageIteratorMixin(AutoGeneratorMixin):
     main_iterator = 'iter_trees'
     generator_names = ('iter_categories', 'iter_packages', 'iter_ebuilds')
+
+class PortageHerdsMixin(object):
+    
+    @cached_property
+    def herds(self):
+        return Herds()
 
 class PortTreeBaseMixin(ToStrMixin):
 
@@ -178,7 +183,7 @@ class EbuildBaseMixin(ToStrMixin):
         return unicode(self.cpv)
 
 #Main mixins
-class PortageMixin(PortageBaseMixin, PortageIteratorMixin):
+class PortageMixin(PortageBaseMixin, PortageHerdsMixin, PortageIteratorMixin):
     pass
 
 class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin):
