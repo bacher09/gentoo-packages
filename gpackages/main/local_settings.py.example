@@ -33,3 +33,6 @@ ADMINS = (
 
 # Please uncoment this line, and enter random string in it !!
 #SECRET_KEY = ''
+#
+# Select package info backend
+#PACKAGE_INFO_BACKEND = 'portage'
