@@ -81,6 +81,8 @@ class PortTree(PortTreeMixin):
 
 class Category(CategoryMixin):
     
+    __slots__ = ('_repo_obj', 'name')
+    
     def __init__(self, category_name, repo_obj):
         self._repo_obj = repo_obj
         self.name = category_name
@@ -101,6 +103,8 @@ class Category(CategoryMixin):
         return self._repo_obj._versions[(self.name, package_name)]
 
 class Package(PackageMixin):
+
+    __slots__ = ('name', 'category_obj')
     
     def __init__(self, package_name, category_obj):
         self.name = package_name
@@ -118,12 +122,29 @@ class Package(PackageMixin):
         return '%s/%s' % (self.category_obj.name, self.name)
 
 
+ebuild_prop = lambda var: property(lambda self: getattr(self._ebuild, var))
+
 class Ebuild(EbuildMixin):
     
+    __slots__ = ('_ebuild', 'package_obj')
+
     def __init__(self, ebuild, package_obj):
         self._ebuild = ebuild
         self.package_obj = package_obj
 
-    @property
-    def cpv(self):
-        return self._ebuild.cpvstr
+    ebuild_path = ebuild_prop('path')
+
+    version = ebuild_prop('version')
+
+    revision = ebuild_prop('revision')
+
+    fullversion = ebuild_prop('fullver')
+
+    eapi = ebuild_prop('eapi')
+
+    slot = ebuild_prop('slot')
+
+    # Maybe homepage_val ?
+    homepage = ebuild_prop('homepage')
+
+    cpv = ebuild_prop('cpvstr')
