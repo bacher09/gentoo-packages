@@ -1,10 +1,11 @@
-from generic import StrThatIgnoreCase, ToStrMixin
+from .generic import StrThatIgnoreCase, ToStrMixin
 from functools import total_ordering
 from collections import defaultdict
+from .abstract import AbstractKeywords, AbstractUse
 
 __all__ = ('Use', 'Keyword', 'KeywordsSet')
 
-class Use(ToStrMixin):
+class Use(ToStrMixin, AbstractUse):
     "Represend Use flag as object"
     __slots__ = ('name',)
 
@@ -29,7 +30,7 @@ class Use(ToStrMixin):
         return hash(self.name)
         
 @total_ordering
-class Keyword(ToStrMixin):
+class Keyword(ToStrMixin, AbstractKeywords):
     "Represend ebuild Keyword as object"
     __slots__ = ('name', 'status')
     status_repr = ['','~','-']

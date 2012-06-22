@@ -9,9 +9,6 @@ from gentoolkit.package import Package as PackageInfo
 from gentoolkit import errors
 from ..generic import cached_property 
 import os.path
-
-# Not need
-from ..generic_objects import Use, Keyword, KeywordsSet
 #Mixins
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
                      EbuildMixin

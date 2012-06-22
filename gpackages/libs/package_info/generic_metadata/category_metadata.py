@@ -1,6 +1,7 @@
-from generic import ToStrMixin
+from __future__ import absolute_import
+from ..generic import ToStrMixin
 #XML
-from my_etree import etree
+from .my_etree import etree
 
 __all__ = ('CategoryMetadata', )
 
@@ -31,19 +32,4 @@ class CategoryMetadata(ToStrMixin):
 
     def __unicode__(self):
         return unicode(self._metadata_path)
-
-
-class FakeMetaData(ToStrMixin):
-
-    def herds(self):
-        return []
-
-    def maintainers(self):
-        return []
-
-    def descriptions(self):
-        return []
-    
-    def __unicode__(self):
-        return 'fake'
 

@@ -1,6 +1,7 @@
 from django.db import models
 
-from package_info.package_backends.portage import Category, Package, Ebuild
+from package_info.abstract import AbstractCategory, AbstarctPackage, \
+                                  AbstractEbuild
 import managers
 from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
@@ -138,7 +139,7 @@ class CategoryModel(models.Model):
         super(CategoryModel, self).__init__(*args, **kwargs)
 
         category = kwargs.get('category')
-        if isinstance(category, Category):  
+        if isinstance(category, AbstractCategory):  
             self.update_by_category(category)
 
     def update_by_category(self, category):
@@ -238,7 +239,7 @@ class PackageModel(AbstractDateTimeModel):
             get_from_kwargs_and_del(('package','category' ), kwargs)
         
         super(PackageModel, self).__init__(*args, **kwargs)
-        if isinstance(package_object, Package):
+        if isinstance(package_object, AbstarctPackage):
             self.init_by_package(package_object, category = category)
             
         
@@ -357,7 +358,7 @@ class EbuildModel(AbstractDateTimeModel):
     def __init__(self, *args, **kwargs ):
         ebuild = get_from_kwargs_and_del('ebuild', kwargs)
         super(EbuildModel, self).__init__(*args, **kwargs)
-        if isinstance(ebuild, Ebuild):
+        if isinstance(ebuild, AbstractEbuild):
             self.init_by_ebuild(ebuild)
     
     def __unicode__(self):

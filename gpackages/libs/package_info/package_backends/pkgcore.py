@@ -9,6 +9,7 @@ from pkgcore.ebuild.atom import atom
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
                      EbuildMixin
 
+__all__ = ('Portage','PortTree', 'Category', 'Package', 'Ebuild')
 
 class Portage(PortageMixin):
 
@@ -45,7 +46,7 @@ class Portage(PortageMixin):
 
     def get_tree_by_name(self, tree_name):
         if tree_name in self.repo_dict:
-            return PortTree(self.tree_dict[tree_name])
+            return PortTree(self.repo_dict[tree_name])
         else:
             raise ValueError
 
@@ -94,7 +95,7 @@ class Category(CategoryMixin):
     @property
     def category_path(self):
         "Full path to category"
-        return os.path.join(self.porttree_path, self.category)
+        return os.path.join(self._repo_obj.porttree_path, self.name)
 
     def _get_packages_names(self):
         return self._repo_obj._packages[self.name]
@@ -121,6 +122,10 @@ class Package(PackageMixin):
     def cp(self):
         return '%s/%s' % (self.category_obj.name, self.name)
 
+    @property
+    def package_path(self):
+        return os.path.join(self.category_obj.category_path, self.name)
+
 
 ebuild_prop = lambda var: property(lambda self: getattr(self._ebuild, var))
 
@@ -136,7 +141,13 @@ class Ebuild(EbuildMixin):
 
     version = ebuild_prop('version')
 
-    revision = ebuild_prop('revision')
+    #revision = ebuild_prop('revision')
+    @property
+    def revision(self):
+        if self._ebuild.revision is None:
+            return ''
+        else:
+            return self._ebuild.revision
 
     fullversion = ebuild_prop('fullver')
 
@@ -145,6 +156,8 @@ class Ebuild(EbuildMixin):
     slot = ebuild_prop('slot')
 
     iuse = ebuild_prop('iuse')
+
+    description = ebuild_prop('description')
 
     @property
     def iuse_env(self):
@@ -163,3 +176,8 @@ class Ebuild(EbuildMixin):
         return unicode(self._ebuild.license)
 
     cpv = ebuild_prop('cpvstr')
+
+    # Need changes !!!
+    @property
+    def is_masked(self):
+        return False

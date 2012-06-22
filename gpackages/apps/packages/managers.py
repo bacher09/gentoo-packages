@@ -1,5 +1,6 @@
 from django.db import models, connections, router, transaction, IntegrityError
-from package_info.package_backends.portage import Category, Package, Ebuild, Keyword
+from package_info.abstract import AbstarctPackage, AbstractEbuild, \
+                                  AbstractKeywords 
 import packages.models
 from package_info.generic import get_from_kwargs_and_del
 
@@ -24,7 +25,7 @@ def _gen_all_query_and_manager(mixin_name, name_for_query, name_for_manager, *ar
 
 class PackageMixin(object):
     def get(self, package = None, *args, **kwargs):
-        if package is not None and isinstance(package, Package):
+        if package is not None and isinstance(package, AbstarctPackage):
             if 'category' not in kwargs:
                 kwargs.update({'category' : package.category})
             name = package.name
@@ -56,7 +57,7 @@ class PackageMixin(object):
 class KeywordMixin(object):#{{{
     def get_or_create(self, keyword=None,  **kwargs):
         if keyword is not None:
-            if isinstance(keyword, Keyword):
+            if isinstance(keyword, AbstractKeywords):
                 arch, created = packages.models.ArchesModel.objects \
                     .get_or_create(name = keyword.name)
                 kwargs.update({'arch': arch, 'status': keyword.status})
@@ -68,8 +69,8 @@ class KeywordMixin(object):#{{{
 
 class EbuildMixin(object):#{{{
     
-    def get(self, ebuild=None,package = None, *args, **kwargs):
-        if ebuild is not None and isinstance(ebuild, Ebuild):
+    def get(self, ebuild=None, package = None, *args, **kwargs):
+        if ebuild is not None and isinstance(ebuild, AbstractEbuild):
             if package is None:
                 kwargs.update({
                         'package__category__category': ebuild.package.category,

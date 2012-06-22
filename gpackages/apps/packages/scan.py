@@ -3,13 +3,12 @@ from packages import models
 import sys
 from django.db import IntegrityError
 from collections import defaultdict
-from generic import StrThatIgnoreCase
-import porttree
-import herds
+from package_info.generic import StrThatIgnoreCase
+from package_info.porttree import porttree
 
 import anydbm
 
-portage = porttree.Portage()
+portage = porttree
 
 def _get_from_cache(cache, what):
     save_to = []
@@ -108,7 +107,7 @@ class Scanner(object):
         self.homepages_cache = {}    
         self.herds_cache = {}
         self.maintainers_cache = {}
-        self.herds_object = herds.Herds()
+        self.herds_object = portage.herds
 
         self.arches_cache = {}
 

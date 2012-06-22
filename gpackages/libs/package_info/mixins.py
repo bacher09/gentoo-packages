@@ -7,10 +7,17 @@ from .generic_metadata.use_info import get_uses_info, get_local_uses_info
 from .generic_metadata.repo_info import TreeMetadata
 # Herds
 from .generic_metadata.herds import Herds
+# Category metadata
+from .generic_metadata.category_metadata import CategoryMetadata
+#Package metadata
+from .generic_metadata.package_metadata import PackageMetaData
 # Validators
 from .validators import validate_url, validate_email, ValidationError
 #Generic objects
 from .generic_objects import Use, Keyword, KeywordsSet
+# Abstract classes
+from .abstract import AbstractPortage, AbstractPortTree, AbstractCategory, \
+                      AbstarctPackage, AbstractEbuild
 
 import os.path
 
@@ -110,12 +117,6 @@ class PortTreeIteratorMixin(AutoGeneratorMixin):
     main_iterator = 'iter_categories'
     generator_names = ('iter_packages', 'iter_ebuilds')
     
-class MetaDataPath(object):
-
-    @property
-    def metadata_path(self):
-        raise NotImplementedError
-
 class CategoryBaseMixin(ToStrMixin):
 
     @property
@@ -137,15 +138,12 @@ class CategoryIteratorMixin(AutoGeneratorMixin):
     main_iterator = 'iter_packages'
     generator_names = ('iter_ebuilds', )
 
-class PackageBaseMixin(ToStrMixin, MetaDataPath):
+class PackageBaseMixin(ToStrMixin):
 
     @cached_property
     def metadata(self):
         "Return `MetaData` object that represent package metadata.xml file"
-        try:
-            return MetaData( self.metadata_path)
-        except IOError:
-            return FakeMetaData()
+        return PackageMetaData(self.metadata_path)
 
     @cached_property
     def descriptions(self):
@@ -297,17 +295,17 @@ class EbuildGenericProp(EbuildHomepageMixin, EbuildLicenseMixin, \
 
 
 #Main mixins
-class PortageMixin(PortageBaseMixin, PortageHerdsMixin, PortageIteratorMixin):
+class PortageMixin(PortageBaseMixin, PortageHerdsMixin, PortageIteratorMixin, AbstractPortage):
     pass
 
-class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin):
+class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, AbstractPortTree):
     pass
 
-class CategoryMixin(CategoryBaseMixin, CategoryIteratorMixin):
+class CategoryMixin(CategoryBaseMixin, CategoryIteratorMixin, AbstractCategory):
     pass
 
-class PackageMixin(PackageBaseMixin, PackageFilesMixin):
+class PackageMixin(PackageBaseMixin, PackageFilesMixin, AbstarctPackage):
     pass
 
-class EbuildMixin(EbuildBaseMixin, EbuildGenericProp):
+class EbuildMixin(EbuildBaseMixin, EbuildGenericProp, AbstractEbuild):
     pass
