@@ -35,7 +35,7 @@ class Maintainer(AbstractXmlObject, ToStrMixin):
         - email -- maintainer email
         - role -- maintainer role
     """
-    attrs = ('name', 'email', 'role')
+    attrs = ('name', 'email', 'role', 'description')
 
     def __init__(self, *args, **kwargs):
         super(Maintainer, self).__init__(*args, **kwargs)
@@ -116,7 +116,7 @@ class Herds(ToStrMixin):
             defaultdict(list) with maintainer object as key, and list of herds
             as value.
         Example:
-            {'<Maintainers example@gentoo.org>': ['mozilla','base'], ...}
+            {'<Maintainer example@gentoo.org>': ['mozilla','base'], ...}
         """
         if self._maintainers_dict is not None:
             return self._maintainers_dict

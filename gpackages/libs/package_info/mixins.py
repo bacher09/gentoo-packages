@@ -149,13 +149,15 @@ class PackageBaseMixin(ToStrMixin):
     def descriptions(self):
         return self.metadata.descriptions()
 
-    @property
+    @cached_property
     def description(self):
         "Return first description in package metadata.xml"
-        if len(self.descriptions)>0:
-            return self.descriptions[0]
-        else:
-            return None
+        return self.metadata.description
+
+    @cached_property
+    def descriptions_dict(self):
+        return self.metadata.descriptions_dict()
+
     @property
     def cp(self):
         raise NotImplementedError
