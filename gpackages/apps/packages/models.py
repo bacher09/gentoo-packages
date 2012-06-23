@@ -25,7 +25,7 @@ class HomepageModel(models.Model):
         return self.url
 
 class ArchesModel(models.Model):
-    name = models.CharField(unique = True, max_length = 22)
+    name = models.CharField(unique = True, max_length = 22, db_index = True)
     
     def __unicode__(self):
         return self.name
@@ -43,7 +43,7 @@ class RepositoryModel(AbstractDateTimeModel):
         if repo is not None:
             self.init_by_repo(repo)
 
-    name = models.CharField(unique = True, max_length = 60)
+    name = models.CharField(unique = True, max_length = 60, db_index = True)
 
     # Additional info
     description = models.TextField(blank = True, null = True)
@@ -114,7 +114,7 @@ class RepositoryModel(AbstractDateTimeModel):
         return self.name
 
 class RepositoryFeedModel(models.Model):
-    repository = models.ForeignKey(RepositoryModel)
+    repository = models.ForeignKey(RepositoryModel, db_index = True)
     feed = models.URLField()
 
     def __unicode__(self):
@@ -129,7 +129,7 @@ class RepositorySourceModel(models.Model):
     repo_type = models.PositiveSmallIntegerField(choices = REPO_TYPE)
     url = models.CharField(max_length = 255)
     subpath = models.CharField(max_length = 100, blank = True, null = True)
-    repository = models.ForeignKey(RepositoryModel)
+    repository = models.ForeignKey(RepositoryModel, db_index = True)
 
     def __unicode__(self):
         return self.url
@@ -149,7 +149,7 @@ class CategoryModel(models.Model):
     def check_or_need_update(self, category):
         return self.metadata_hash == category.metadata_sha1
 
-    category = models.CharField(unique = True, max_length = 70)
+    category = models.CharField(unique = True, max_length = 70, db_index = True)
     description = models.TextField(blank = True, null = True)
     metadata_hash = models.CharField(max_length = 128, null = True)
     
@@ -165,7 +165,7 @@ class MaintainerModel(AbstractDateTimeModel):
             self.init_by_maintainer(maintainer)
         
     name = models.CharField(max_length = 255, blank = True, null = True)
-    email = models.EmailField(unique = True, validators = [validate_email])
+    email = models.EmailField(unique = True, validators = [validate_email], db_index = True)
 
     objects = managers.MaintainerManager()
 
@@ -191,7 +191,7 @@ class HerdsModel(AbstractDateTimeModel):
         if herd is not None:
             self.init_by_herd(herd)
 
-    name = models.CharField(unique = True, max_length = 150)
+    name = models.CharField(unique = True, max_length = 150, db_index = True)
     email = models.EmailField(validators = [validate_email])
     description = models.TextField(blank = True, null = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
@@ -218,7 +218,7 @@ class HerdsModel(AbstractDateTimeModel):
         ordering = ('name',)
 
 class VirtualPackageModel(models.Model):
-    name = models.CharField(max_length = 254)
+    name = models.CharField(max_length = 254, db_index = True)
     category = models.ForeignKey(CategoryModel)
 
     objects = managers.VirtualPackageManager()
@@ -243,7 +243,7 @@ class PackageModel(AbstractDateTimeModel):
             self.init_by_package(package_object, category = category)
             
         
-    virtual_package = models.ForeignKey(VirtualPackageModel)
+    virtual_package = models.ForeignKey(VirtualPackageModel, db_index = True)
     changelog = models.TextField(blank = True, null = True)
     changelog_hash = models.CharField(max_length = 128)
     manifest_hash = models.CharField(max_length = 128)
@@ -256,7 +256,7 @@ class PackageModel(AbstractDateTimeModel):
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
 
     description = models.TextField(blank = True, null = True)
-    repository = models.ForeignKey(RepositoryModel)
+    repository = models.ForeignKey(RepositoryModel, db_index = True)
     # Different versions can have different licenses, or homepages.
     
     objects = managers.PackageManager()
@@ -306,14 +306,14 @@ class PackageModel(AbstractDateTimeModel):
         unique_together = ('virtual_package', 'repository')
 
 class UseFlagModel(models.Model):
-    name = models.CharField(unique = True, max_length = 60)
+    name = models.CharField(unique = True, max_length = 60, db_index = True)
     description = models.TextField(blank = True)
     
     def __unicode__(self):
         return self.name
 
 class UseFlagDescriptionModel(models.Model):
-    use_flag = models.ForeignKey(UseFlagModel)
+    use_flag = models.ForeignKey(UseFlagModel, db_index = True)
     package = models.ForeignKey(VirtualPackageModel)
     description = models.TextField()
 
@@ -327,7 +327,7 @@ class UseFlagDescriptionModel(models.Model):
         unique_together = ('use_flag', 'package')
 
 class LicenseModel(models.Model):
-    name = models.CharField(unique = True, max_length = 60)
+    name = models.CharField(unique = True, max_length = 60, db_index = True)
     #description = TextField()
     
     def __unicode__(self):
@@ -335,9 +335,9 @@ class LicenseModel(models.Model):
 
 
 class EbuildModel(AbstractDateTimeModel):
-    package = models.ForeignKey(PackageModel)
-    version = models.CharField(max_length = 26)
-    revision = models.CharField(max_length = 12)
+    package = models.ForeignKey(PackageModel, db_index = True)
+    version = models.CharField(max_length = 26, db_index = True)
+    revision = models.CharField(max_length = 12, db_index = True)
     use_flags = models.ManyToManyField(UseFlagModel)
     licenses = models.ManyToManyField(LicenseModel)
     license = models.CharField(max_length = 254, blank = True )
