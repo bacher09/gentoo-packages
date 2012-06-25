@@ -17,8 +17,7 @@
         {% for license_group in license_groups %}
             <tr>
                 <td class="nowrap"><a href="#">{{ license_group.name }}</a></td>
-                <td>{% for license in license_group.licenses.all %}<a href="#">{{ license }}</a>, {% endfor %}</td>
-                <td>{{ herd.description|default_if_none:"" }}</td>
+                <td>{% for license in license_group.licenses.all %}<a href="#">{{ license }}</a>{% if not forloop.last %},{% endif %} {% endfor %}</td>
             </tr>
         {% endfor %}
     </tbody>
