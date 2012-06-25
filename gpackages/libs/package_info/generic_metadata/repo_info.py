@@ -32,7 +32,6 @@ class Enum(object):
     def get_as_tuple(self):
        return tuple([(num, item) for num, item in enumerate(self.list)])
             
-
 REPO_TYPE = (  'git', 
                'g-common',
                'cvs' ,
@@ -45,7 +44,6 @@ REPO_TYPE = (  'git',
              )
 
 REPOS_TYPE = Enum(REPO_TYPE)
-
 
 @total_ordering
 class SourcesObject(ToStrMixin):
@@ -130,6 +128,10 @@ class TreeMetadata(ToStrMixin):
         elif repo_name is None:
             return {'name': 'none',
                     'description': None,
+                    'quality': 'experimental',
+                    'official': False,
+                    'feeds': [],
+                    'sources': [],
                    }
         else:
             return layman_api.get_all_info(repo_name)[repo_name]
