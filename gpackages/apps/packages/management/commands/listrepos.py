@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
-import porttree
+from package_info.porttree import porttree as portage
 
 
 class Command(BaseCommand):
@@ -15,7 +15,7 @@ class Command(BaseCommand):
     args = ''
     help = 'Will names of all available repos'
     def handle(self, *args, **options):
-        self.portage = porttree.Portage()
+        self.portage = portage
 
         simple = options.get('simple',False)
         if simple:

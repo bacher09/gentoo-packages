@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 from packages import models
 from django.db.models import Count
-import porttree
 
 
 class Command(BaseCommand):
