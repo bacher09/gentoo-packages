@@ -23,14 +23,15 @@ if DEBUG:
                                 ArchesModel, HomepageModel, HerdsModel, \
                                 MaintainerModel, UseFlagDescriptionModel, \
                                 RepositoryModel, VirtualPackageModel, \
-                                RepositoryFeedModel, RepositorySourceModel
+                                RepositoryFeedModel, RepositorySourceModel, \
+                                LicenseGroupModel
 
     databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, 
-                             LicenseModel, CategoryModel, Keyword, ArchesModel, 
-                             HomepageModel, HerdsModel, MaintainerModel, 
-                             UseFlagDescriptionModel, RepositoryModel, 
-                             VirtualPackageModel, RepositoryFeedModel,
-                             RepositorySourceModel)
+                             LicenseModel, LicenseGroupModel, CategoryModel,
+                             Keyword, ArchesModel, HomepageModel, HerdsModel,
+                             MaintainerModel, UseFlagDescriptionModel, 
+                             RepositoryModel, VirtualPackageModel, 
+                             RepositoryFeedModel, RepositorySourceModel )
     urlpatterns += (
         url(r'^data/(.*)', databrowse.site.root),
         url(r'^templateview/(?P<templatename>.*)/?$', TemplatesDebugView.as_view()),

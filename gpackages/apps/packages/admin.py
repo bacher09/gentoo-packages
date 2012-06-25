@@ -4,7 +4,7 @@ from models import EbuildModel, PackageModel, LicenseModel, CategoryModel, \
                    UseFlagModel,  RepositoryModel, HomepageModel, MaintainerModel, \
                    Keyword, ArchesModel, UseFlagDescriptionModel, HerdsModel, \
                    VirtualPackageModel, RepositoryFeedModel, \
-                   RepositorySourceModel
+                   RepositorySourceModel, LicenseGroupModel
 
 class AbstractAnnotateAdmin(object):
     annotate_dict = {}
@@ -97,6 +97,7 @@ admin.site.register(EbuildModel, EbuildAdmin)
 admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
 admin.site.register(PackageModel, PackageAdmin)
 admin.site.register(LicenseModel, LicenseAdmin)
+admin.site.register(LicenseGroupModel)
 admin.site.register(CategoryModel)
 admin.site.register(UseFlagModel, UseFlagAdmin)
 admin.site.register(UseFlagDescriptionModel, UseFlagDescriptionAdmin)

@@ -211,7 +211,7 @@ class Ebuild(EbuildMixin):
     def mask_reason(self):
         reas, in_file = self.package_object.get_mask_reason()
         if in_file is None:
-            return None:
+            return None
         elif in_file.startswith('/etc/portage/'):
             return None
         else:

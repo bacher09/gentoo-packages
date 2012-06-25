@@ -333,6 +333,12 @@ class LicenseModel(models.Model):
     def __unicode__(self):
         return self.name
 
+class LicenseGroupModel(models.Model):
+    name = models.CharField(unique = True, max_length = 60, db_index = True)
+    licenses = models.ManyToManyField(LicenseModel)
+
+    def __unicode__(self):
+        return self.name
 
 class EbuildModel(AbstractDateTimeModel):
     package = models.ForeignKey(PackageModel, db_index = True)
