@@ -17,8 +17,11 @@ def _gen_funct(name):
     return func
 
 class Enum(object):
+    "Enum object"
 
     def __init__(self, lst):
+        """Args:
+        lst -- list of strings"""
         dct = {}
         dct2 = {}
         self.list = lst
@@ -30,6 +33,7 @@ class Enum(object):
         self.num_dict = dct2
 
     def get_as_tuple(self):
+        "Return tuple to use as choices in django model"
        return tuple([(num, item) for num, item in enumerate(self.list)])
             
 REPO_TYPE = (  'git', 
@@ -47,8 +51,12 @@ REPOS_TYPE = Enum(REPO_TYPE)
 
 @total_ordering
 class SourcesObject(ToStrMixin):
+    "Represent source of repository"
 
     def __init__(self, source_tuple):
+        """Args:
+            source_tuple -- tuple (source_url, source_type, source_subpath)
+        """
         self.source_url = source_tuple[0].lower()
         self.source_type = REPOS_TYPE.repo_dict[source_tuple[1].lower()]
         self.source_subpath = source_tuple[2]
@@ -70,6 +78,8 @@ class SourcesObject(ToStrMixin):
         return self.source_url
 
 class TreeMetadataMetaclass(type):
+    """Dynamicaly add properties by `simple_attrs` tuple
+    It gets this name from `_dct` dict in object"""
     
     def __init__(cls, name, bases, dct):
         super(TreeMetadataMetaclass, cls).__init__(name, bases, dct)
@@ -77,6 +87,7 @@ class TreeMetadataMetaclass(type):
             setattr(cls, v, property(_gen_funct(v)))
 
 class TreeMetadata(ToStrMixin):
+    "Represent metadata information about portage tree (overlay)"
     __metaclass__ = TreeMetadataMetaclass
 
     simple_attrs = ( 'name', 'description', 'supported', 'owner_name',
@@ -86,6 +97,10 @@ class TreeMetadata(ToStrMixin):
     qualities = {'stable': 0 , 'testing': 1, 'experimental': 2}
 
     def __init__(self, repo_name, dct = None):
+        """Args:
+            repo_name -- repository name
+            dct -- dict of params, could be None that it will be calculated 
+        """
         repo_name = self._find_real_repo_name(repo_name)
         self.repo_name = repo_name
 
@@ -138,10 +153,12 @@ class TreeMetadata(ToStrMixin):
 
     @property
     def int_status(self):
+        "Return repostory status as int, int values a keys in `statuses`"
         return self.statuses.get(self._dct['status'], 1)
 
     @cached_property
     def homepage(self):
+        "Return valid str homepage"
         homepage = self._dct.get('homepage')
         try:
             validate_url(homepage)
@@ -152,6 +169,7 @@ class TreeMetadata(ToStrMixin):
 
     @cached_property
     def owner_email(self):
+        "Return valid str owner email"
         email = self._dct.get('owner_email')
         try:
             validate_email(email)
@@ -162,6 +180,7 @@ class TreeMetadata(ToStrMixin):
 
     @cached_property
     def feeds(self):
+        "Return validated list of feeds"
         ret = set()
         for feed in self._dct.get('feeds', ()):
             try:
@@ -174,6 +193,7 @@ class TreeMetadata(ToStrMixin):
 
     @cached_property
     def sources(self):
+        "Return list of `SourcesObject`s"
         ret = set() 
         for source in self._dct['sources']:
             ret.add(SourcesObject(source))
@@ -181,6 +201,7 @@ class TreeMetadata(ToStrMixin):
 
     @property
     def int_quality(self):
+        "Return repostory quality as int, int values a keys in `qualities`"
         return self.qualities.get(self._dct['quality'], 2)
 
     def __unicode__(self):
