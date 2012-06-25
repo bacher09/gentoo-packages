@@ -133,6 +133,7 @@ class Scanner(object):
         self.scan_repos_name = tuple(kwargs.get('repos',[]))
         self.scan_global_use_descr = bool_get('scan_global_use', False)
         self.scan_local_use_descr = bool_get('scan_local_use', False)
+        self.is_scan_license_groups = bool_get('scan_license_groups', False)
 
     def show_time(self):
         end = datetime.now()
@@ -162,6 +163,9 @@ class Scanner(object):
 
         if self.scan_local_use_descr:
             self.scan_all_uses_description()
+
+        if self.is_scan_license_groups:
+            self.scan_license_groups()
 
         if self.is_show_time:
             self.show_time()
@@ -232,8 +236,19 @@ class Scanner(object):
 
         self.maintainers_cache = mo_dict
         self.maitainers_cache_loaded = True
-            
 
+    def scan_license_groups(self):
+        self.write('Scaning license groups\n', 3)
+        for group, licenses in portage.license_groups.groups_dict.iteritems():
+            licenses_obj = self.get_licenses_objects(licenses)
+            group_obj, created = models.LicenseGroupModel.objects. \
+                get_or_create(name = group)
+
+            group_obj.licenses.clear()
+            group_obj.licenses.add(*licenses_obj)
+
+            self.output("update license group '%s'\n", group, 2)
+            
     def scan_herds(self):
         self.write('Scaning herds\n', 3)
         existent_herds = self.get_existent_herds()
@@ -365,8 +380,7 @@ class Scanner(object):
         self.scanpackages(repo, repo_obj, **kwargs)
         
 
-    def get_licenses_objects(self, ebuild):
-        licenses = ebuild.licenses
+    def get_licenses_objects(self, licenses):
         return _get_items(licenses, models.LicenseModel, 'name', self.licenses_cache)
 
     def get_uses_objects(self, ebuild):
@@ -424,7 +438,7 @@ class Scanner(object):
 
     def add_related_to_ebuild(self, ebuild, ebuild_object):
         # Add licenses
-        ebuild_object.licenses.add(*self.get_licenses_objects(ebuild))
+        ebuild_object.licenses.add(*self.get_licenses_objects(ebuild.licenses))
         ebuild_object.use_flags.add(*self.get_uses_objects(ebuild))
         ebuild_object.homepages.add(*self.get_homepages_objects(ebuild))
         self.create_keywords_objects(ebuild, ebuild_object)

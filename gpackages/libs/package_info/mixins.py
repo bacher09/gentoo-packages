@@ -11,6 +11,8 @@ from .generic_metadata.herds import Herds
 from .generic_metadata.category_metadata import CategoryMetadata
 #Package metadata
 from .generic_metadata.package_metadata import PackageMetaData
+#License group metadata
+from .generic_metadata.license_groups import LicenseGroups
 # Validators
 from .validators import validate_url, validate_email, ValidationError
 #Generic objects
@@ -84,6 +86,11 @@ class PortageHerdsMixin(object):
     def herds(self):
         "Return new `Herds` object"
         return Herds()
+
+    @cached_property
+    def license_groups(self):
+        "Return new `LicenseGroups` object"
+        return LicenseGroups()
 
 def _get_info_by_func(func, path1, path2):
         path = os.path.join(path1, path2)

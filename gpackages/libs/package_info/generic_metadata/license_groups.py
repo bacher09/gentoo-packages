@@ -1,5 +1,6 @@
 from collections import defaultdict
-from ..generic import file_get_content, StrThatIgnoreCase, ToStrMixin
+from ..generic import file_get_content, StrThatIgnoreCase, ToStrMixin, \
+                      file_sha1
 
 DEFAULT_FILE_PATH = '/usr/portage/profiles/license_groups'
 
@@ -100,6 +101,8 @@ class LicenseGroups(ToStrMixin):
         """
         return self.reverse_group_dict[license_name]
 
+    def sha1(self):
+        return file_sha1(self.groups_path)
 
     def __unicode__(self):
         return unicode(self.groups_path)
