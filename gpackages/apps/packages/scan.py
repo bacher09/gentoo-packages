@@ -93,6 +93,7 @@ def toint(val, defval):
 
 
 class Scanner(object):
+    "General class for scan and collect data from portage"
     def __init__(self, **kwargs):
         # maintainers_cache: maintainer.email as key, and maintainer object as
         # value
@@ -136,11 +137,14 @@ class Scanner(object):
         self.is_scan_license_groups = bool_get('scan_license_groups', False)
 
     def show_time(self):
+        "Prints scan time"
         end = datetime.now()
         t_time = end - self.start_time
         self.output("Scanning time is: %s secconds.\n", t_time.total_seconds())
 
     def scan(self):
+        """General method for scan and collect data
+        It check object properties and scan only what property require"""
         if self.is_scan_herds:
             self.scan_herds()
 
@@ -171,10 +175,23 @@ class Scanner(object):
             self.show_time()
 
     def write(self, what, verbosity = 1):
+        """If object vervosity level are greate or equal to
+        method property verbosity prints param what
+        Args:
+            what -- string to print
+            vervosity -- level of verbosity that require for print string
+        """
         if verbosity <= self.verbosity:
             sys.stdout.write(what)
 
     def output(self, format_str, whats, verbosity = 1):
+        """If object vervosity level are greate or equal to
+        method property verbosity prints param whats formated by param format_str
+        Args:
+            format_str -- formating string
+            what -- vals to print
+            vervosity -- level of verbosity that require for print string
+        """
         # Maybe implement lazy format string ?
         if verbosity <= self.verbosity:
             sys.stdout.write(format_str % whats)
@@ -238,6 +255,7 @@ class Scanner(object):
         self.maitainers_cache_loaded = True
 
     def scan_license_groups(self):
+        "Scan license groups"
         self.write('Scaning license groups\n', 3)
         for group, licenses in portage.license_groups.groups_dict.iteritems():
             licenses_obj = self.get_licenses_objects(licenses)
@@ -250,6 +268,7 @@ class Scanner(object):
             self.output("update license group '%s'\n", group, 2)
             
     def scan_herds(self):
+        "Scan herds and maintainers in herds.xml"
         self.write('Scaning herds\n', 3)
         existent_herds = self.get_existent_herds()
         herds_dict = self.herds_object.get_herds_indict()
@@ -313,6 +332,7 @@ class Scanner(object):
         return self.maintainers_cache
 
     def scan_all_repos(self, **kwargs):
+        "Scan packages in all available trees"
         #cache_dict = anydbm.open('cache.db','c')
 
         for repo in portage.iter_trees():
@@ -336,6 +356,10 @@ class Scanner(object):
             return repo
 
     def scan_repo_by_name(self, repo_name, **kwargs):
+        """Scan repository by name, available repository names could be se 
+        with manage.py listrepos command
+        Args:
+            repo_name -- repository name"""
         repo = self.get_repo_by_name(repo_name)
 
         if repo is not None:
@@ -357,6 +381,10 @@ class Scanner(object):
         return repo_obj
 
     def scan_all_repo_info(self, delete = False):
+        """Scan all info (metada) of all available repositories
+        Args:
+            delete -- if this true that repository will delete
+                      if portage would be not available"""
         ex_pk = []
         for repo in portage.iter_trees():
             repo_obj = self.get_repo_obj(repo, update_repo = True)
@@ -514,6 +542,13 @@ class Scanner(object):
 
     def scanpackages(self, porttree, porttree_obj, delete = True,
                      force_update = False, update_cache = True, use_cache = True):
+        """Scan packages (and ebuilds) in porttree
+        Args:
+            porttree -- `PortTree` object from packages_info
+            porttree_obj -- `RepositoryModel` object
+            delete -- if True will delete unavailable packages and ebuilds
+            force_update -- update packages and ebuilds even if manifest not changed
+        """
 
         existend_categorys = []
         for category in porttree.iter_categories():
