@@ -340,6 +340,9 @@ class LicenseGroupModel(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 class EbuildModel(AbstractDateTimeModel):
     package = models.ForeignKey(PackageModel, db_index = True)
     version = models.CharField(max_length = 26, db_index = True)

@@ -3,7 +3,8 @@ from django.template.loader import get_template
 from django.template import TemplateDoesNotExist
 from django.http import Http404
 
-from models import CategoryModel, HerdsModel, MaintainerModel, RepositoryModel
+from models import CategoryModel, HerdsModel, MaintainerModel, \
+                   RepositoryModel, LicenseGroupModel
 
 class ContextListView(ListView):
     extra_context = {}
@@ -36,6 +37,12 @@ class RepositoriesListView(ContextListView):
     template_name = 'repositories.html'
     queryset = RepositoryModel.objects.only('name', 'description' ).all()
     context_object_name = 'repositories'
+
+class LicenseGroupsView(ContextListView):
+    extra_context = {'page_name': 'License Groups', 'nav_name': 'license_groups'}
+    queryset = LicenseGroupModel.objects.all().prefetch_related('licenses')
+    template_name = 'license_groups.html'
+    context_object_name = 'license_groups'
 
 class TemplatesDebugView(TemplateView):
 
