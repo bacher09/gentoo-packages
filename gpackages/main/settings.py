@@ -93,6 +93,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
@@ -116,12 +117,14 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'django.contrib.flatpages',
+    # 'django.contrib.admindocs',
     #
     'packages',
     'generic',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
 )
+
+FIXTURE_DIRS = (os.path.join(PROJECT_ROOT, 'fixtures'),)
 
 if DEBUG:
     INSTALLED_APPS += ('django.contrib.databrowse', 'debug_toolbar') 

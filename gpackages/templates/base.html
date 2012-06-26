@@ -1,11 +1,12 @@
 {% load url from future %}
 {% load i18n %}
+{% load flatpages %}
 {% load packages %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8"><!--{{{-->
-    <title>Gentoo Packages</title>
+    <title>{% block title %}Gentoo Packages{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -57,8 +58,9 @@
           <a class="brand" href="#">Gentoo Packages</a>
           <div class="nav-collapse">
             <ul class="nav">
+              {% get_flatpages '/about/' as about_pages %}
               <li class="active"><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
+              {% for about in about_pages %}<li><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
               <li><a href="#contact">Contact</a></li>
             </ul>
             <ul class="nav pull-right">
@@ -90,7 +92,9 @@
     {% block container %}
                             <div class="row"> <!-- Page type --><!--{{{-->
                                                         <ul class="breadcrumb">
-                                                        <li class="active">{{ page_name }}</li>
+                                                        {% block page_name %}
+                                                            <li class="active">{{ page_name }}</li>
+                                                        {% endblock page_name %}
                                                       </ul>
                             </div> <!-- end page type --><!--}}}-->
         <div class="row">
