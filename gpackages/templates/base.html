@@ -60,7 +60,7 @@
           <div class="nav-collapse">
             <ul class="nav">
               {% get_flatpages '/about/' as about_pages %}
-              <li class="{% active_str '/' %}"><a href="#">Home</a></li>
+              <li class="{% active_str '/' %}"><a href="/">Home</a></li>
               {% for about in about_pages %}<li class="{% active_str about.url %}"><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
               <li><a href="#contact">Contact</a></li>
             </ul>
@@ -71,9 +71,9 @@
                           <b class="caret"></b>
                         </a>
                         <ul class="dropdown-menu">
-                          <li><a href="#">English</a></li>
-                          <li><a href="#">Russian</a></li>
-                          <li><a href="#">Ukranian</a></li>
+                          <li><a class="language" lang="en" href="{% url 'setlang' %}">English</a></li>
+                          <li><a class="language" lang="ru" href="{% url 'setlang' %}">Russian</a></li>
+                          <li><a class="language" lang="uk" href="{% url 'setlang' %}">Ukranian</a></li>
                         </ul>
                       </li>
              <li>
@@ -152,6 +152,8 @@ Text
     ================================================== -->
     <script src="{{ STATIC_URL }}js/jquery.js"></script>
     <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
+    <script src="{{ STATIC_URL }}js/csrf.js"></script>
+    <script src="{{ STATIC_URL }}js/language.js"></script>
 {% endblock body %}
   </body>
 </html>
