@@ -103,7 +103,7 @@ class PortTreeBaseMixin(ToStrMixin):
 
     @cached_property
     def metadata(self):
-        return TreeMetadata(self.name)
+        return TreeMetadata(self.name, repo_location = self.porttree_path)
 
     @cached_property
     def use_desc(self):

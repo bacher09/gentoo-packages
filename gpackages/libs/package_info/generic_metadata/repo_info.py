@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from functools import total_ordering
+import os.path
 # Layman API
 from layman.api import LaymanAPI
 layman_api = LaymanAPI()
@@ -33,7 +34,7 @@ class Enum(object):
         self.num_dict = dct2
 
     def get_as_tuple(self):
-        "Return tuple to use as choices in django model"
+       "Return tuple to use as choices in django model"
        return tuple([(num, item) for num, item in enumerate(self.list)])
             
 REPO_TYPE = (  'git', 
@@ -96,12 +97,16 @@ class TreeMetadata(ToStrMixin):
     statuses = {'official': 0, 'unofficial': 1}
     qualities = {'stable': 0 , 'testing': 1, 'experimental': 2}
 
-    def __init__(self, repo_name, dct = None):
+    storage_path = os.path.join(layman_api.config['storage'], '')
+    installed = frozenset(layman_api.get_installed())
+    available = frozenset(layman_api.get_available())
+
+    def __init__(self, repo_name, repo_location = None, dct = None):
         """Args:
             repo_name -- repository name
             dct -- dict of params, could be None that it will be calculated 
         """
-        repo_name = self._find_real_repo_name(repo_name)
+        repo_name = self._find_real_repo_name(repo_name, repo_location)
         self.repo_name = repo_name
 
         if dct is None:
@@ -109,17 +114,30 @@ class TreeMetadata(ToStrMixin):
 
         self._dct = dct
 
-    def _find_real_repo_name(self, repo_name):
+    def _find_name_by_path(self, repo_name, repo_location):
+        try_name = repo_location.replace(self.storage_path, '')
+        if try_name in self.installed:
+            return try_name
+        else:
+            return None
+        
+    def _find_real_repo_name(self, repo_name, repo_location = None):
         gen_str = 'gentoo-'
+
+        try_name = None
+        if repo_location is not None:
+            try_name = self._find_name_by_path(repo_name, repo_location)
 
         if repo_name == 'gentoo':
             return repo_name
-        elif layman_api.is_repo(repo_name):
+        elif try_name is not None:
+            return try_name
+        elif repo_name in self.available:
             return repo_name
-        elif layman_api.is_repo(gen_str + repo_name):
+        elif (gen_str + repo_name) in self.available:
             return gen_str + repo_name
         elif repo_name.startswith(gen_str) and \
-            layman_api.is_repo(repo_name[len(gen_str):]):
+            (repo_name[len(gen_str):]) in self.available:
 
             return repo_name[len(gen_str):]
 
