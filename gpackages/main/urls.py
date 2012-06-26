@@ -5,13 +5,8 @@ from main.settings import DEBUG
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'gpackages.views.home', name='home'),
-    # url(r'^gpackages/', include('gpackages.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^i18n/' , include('django.conf.urls.i18n')),
     url(r'', include('packages.urls')),
 )
 
