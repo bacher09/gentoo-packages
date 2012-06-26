@@ -40,6 +40,11 @@ class IteratorAddMetaclass(type):
     
     def __init__(cls, name, bases, dct):
         super(IteratorAddMetaclass, cls).__init__(name, bases, dct)
+        # Add __iter__ method for main_iterator
+        if not hasattr(cls, '__iter__') and hasattr(cls, 'main_iterator'):
+            if hasattr(cls, cls.main_iterator):
+                cls.__iter__ = getattr(cls, cls.main_iterator) 
+
         for name in cls.generator_names:
             setattr(cls, name, gen_generator_over_gen(cls.main_iterator, name))
 
@@ -198,6 +203,9 @@ class PackageFilesMixin(object):
         "Return ChangeLog content"
         return file_get_content(self.changelog_path)
 
+class PackageIteratorMixin(AutoGeneratorMixin):
+    main_iterator = 'iter_ebuilds'
+
 class EbuildBaseMixin(ToStrMixin):
 
     sha1 = cached_property(_file_hash("ebuild_path"), name = 'sha1')
@@ -297,14 +305,18 @@ class EbuildUseMixin(object):
     def get_uniq_uses(self):
         return frozenset(self.get_uses())
 
-
 class EbuildGenericProp(EbuildHomepageMixin, EbuildLicenseMixin, \
                         EbuildKeywordsMixin, EbuildUseMixin):
     pass
 
+class PortageGenericMixin(PortageBaseMixin, PortageHerdsMixin):
+    pass
+
+class PackageGenericMixin(PackageBaseMixin, PackageFilesMixin):
+    pass
 
 #Main mixins
-class PortageMixin(PortageBaseMixin, PortageHerdsMixin, PortageIteratorMixin, AbstractPortage):
+class PortageMixin(PortageGenericMixin, PortageIteratorMixin, AbstractPortage):
     pass
 
 class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, AbstractPortTree):
@@ -313,7 +325,7 @@ class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, AbstractPortTree):
 class CategoryMixin(CategoryBaseMixin, CategoryIteratorMixin, AbstractCategory):
     pass
 
-class PackageMixin(PackageBaseMixin, PackageFilesMixin, AbstarctPackage):
+class PackageMixin(PackageGenericMixin , PackageIteratorMixin, AbstarctPackage):
     pass
 
 class EbuildMixin(EbuildBaseMixin, EbuildGenericProp, AbstractEbuild):
