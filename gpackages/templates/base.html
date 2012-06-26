@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load flatpages %}
 {% load packages %}
+{% load active_link %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -59,8 +60,8 @@
           <div class="nav-collapse">
             <ul class="nav">
               {% get_flatpages '/about/' as about_pages %}
-              <li class="active"><a href="#">Home</a></li>
-              {% for about in about_pages %}<li><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
+              <li class="{% active_str '/' %}"><a href="#">Home</a></li>
+              {% for about in about_pages %}<li class="{% active_str about.url %}"><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
               <li><a href="#contact">Contact</a></li>
             </ul>
             <ul class="nav pull-right">
@@ -124,13 +125,13 @@ Text
                         <div class="well">
                         <ul class="nav nav-list">
                             <li class="nav-header">Navigation</li>
-                            <li {% if nav_name == 'categories' %}class="active"{% endif %}><a href="{% url 'categories' %}">Categories</a></li>
-                            <li {% if nav_name == 'ebuilds' %}class="active"{% endif %}><a href="#">Ebuilds</a></li>
-                            <li {% if nav_name == 'packages' %}class="active"{% endif %}><a href="#">Packages</a></li>
-                            <li {% if nav_name == 'maintainers' %}class="active"{% endif %}><a href="{% url 'maintainers' %}">Maintainers</a></li>
-                            <li {% if nav_name == 'herds' %}class="active"{% endif %}><a href="{% url 'herds' %}">Herds</a></li>
-                            <li {% if nav_name == 'repositories' %}class="active"{% endif %}><a href="{% url 'repositories' %}">Repositories</a></li>
-                            <li {% if nav_name == 'license_groups' %}class="active"{% endif %}><a href="{% url 'license_groups' %}">License Groups</a></li>
+                            {% active_link 'categories' 'Categories' %}
+                            {% active_link 'ebuilds' 'Ebuilds' %}
+                            {% active_link 'packages' 'Packages' %}
+                            {% active_link 'maintainers' 'Maintainers' %}
+                            {% active_link 'herds' 'Herds' %}
+                            {% active_link 'repositories' 'Repositories' %}
+                            {% active_link 'license_groups' 'License Groups' %}
                         </ul>
                        </div>
             </div> <!-- span3 --><!--}}}-->
