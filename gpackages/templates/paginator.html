@@ -1,0 +1,17 @@
+{% if is_paginated %}
+<div class="pagination pagination-centered">
+    <ul>
+        {% if page_obj.has_previous %}
+        <li>
+            <a href="?page={{ page_obj.previous_page_number }}">&larr; Prev</a>
+        </li>
+        {% endif %}
+        <li class="active"> <a href="#">{{ page_obj.number }}</a></li>
+        {% if page_obj.has_next %}
+        <li>
+            <a href="?page={{ page_obj.next_page_number }}">Next &rarr;</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
