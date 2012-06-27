@@ -1,0 +1,27 @@
+<table class="keywords table table-bordered table-condensed">
+    <colgroup>
+        <col class="span2">
+        {% for arch in arches %}
+            <col class="span1">
+        {% endfor %}
+
+    </colgroup>
+    <thead>
+        <tr class="">
+            <th class=""></th>
+            {% for arch in arches %}
+                <th class="">{{ arch }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for ebuild in ebuilds %}
+        <tr>
+            <td class="ebuild">{{ ebuild.fullversion }}</td>
+            {% for keyword in ebuild.keywords %}
+            <td class="{{ keyword.status_class }}">{{ keyword.status_repr }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody> 
+</table>

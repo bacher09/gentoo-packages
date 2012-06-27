@@ -1,10 +1,11 @@
 from django.db import models
-
 from package_info.abstract import AbstractCategory, AbstarctPackage, \
                                   AbstractEbuild
 import managers
 from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
+# relative
+from .keywords import KeywordRepr
 
 from django.core.validators import URLValidator, validate_email 
 from django.core.exceptions import ValidationError
@@ -305,6 +306,13 @@ class PackageModel(AbstractDateTimeModel):
         self.metadata_hash = package.metadata_sha1
         self.description = package.description
 
+    def get_ebuilds_and_keywords(self, arch_list):
+        l = []
+        for ebuild in self.ebuildmodel_set.order_by('-version', '-revision'):
+            l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
+        return l
+            
+
     class Meta:
         unique_together = ('virtual_package', 'repository')
         ordering = ('-updated_datetime',)
@@ -437,6 +445,39 @@ class EbuildModel(AbstractDateTimeModel):
     @property
     def fullversion(self):
         return '%s%s' %  (self.version, ('-'+ self.revision if self.revision else ''))
+
+    def get_keywords(self, arch_list):
+        keywords_dict = self.get_keywords_dict(arch_list)
+        return (KeywordRepr(arch, keywords_dict[arch]) for arch in arch_list)
+
+    def get_keywords_dict(self, arch_list):
+        arch_set = set(arch_list)
+        keywords_list = self.load_keywords(arch_set)
+        keywords_cache_dict = {}
+        for keyword in keywords_list:
+            keywords_cache_dict[keyword.arch.name] = keyword
+
+        keywords_dict = {}
+        keyword_wild = keywords_cache_dict.get('*')
+        for arch in arch_list:
+            keyword_obj = keywords_cache_dict.get(arch)
+            status = -1
+            if keyword_obj is not None:
+                status = keyword_obj.status
+            elif keyword_wild is not None:
+                status = keyword_wild.status
+            keywords_dict[arch] = status
+
+        return keywords_dict
+
+    def load_keywords(self, arch_set):
+        arch_set.add('*')
+        return self.keyword_set.filter(arch__name__in = arch_set).select_related('arch')
+
+    def get_ebuilds_and_keywords(self, arch_list):
+        # Maybe copy object ? !!
+        self.keywords = self.get_keywords(arch_list)
+        return (self, )
 
     class Meta:
         unique_together = ('package', 'version', 'revision')
