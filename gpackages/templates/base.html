@@ -71,9 +71,10 @@
                           <b class="caret"></b>
                         </a>
                         <ul class="dropdown-menu">
-                          <li><a class="language" lang="en" href="{% url 'setlang' %}">English</a></li>
-                          <li><a class="language" lang="ru" href="{% url 'setlang' %}">Russian</a></li>
-                          <li><a class="language" lang="uk" href="{% url 'setlang' %}">Ukranian</a></li>
+                          {% get_language_info_list for LANGUAGES as languages %}
+                          {% for language in languages %}
+                            <li><a class="language" lang="{{ language.code }}" href="{% url 'setlang' %}">{{ language.name_local }} ({{ language.code }})</a></li>
+                          {% endfor %}
                         </ul>
                       </li>
              <li>
