@@ -1,6 +1,6 @@
 from generic.views import ContextListView, ContextTemplateView
 from models import CategoryModel, HerdsModel, MaintainerModel, \
-                   RepositoryModel, LicenseGroupModel
+                   RepositoryModel, LicenseGroupModel, EbuildModel
 
 class CategoriesListView(ContextListView):
     extra_context = {'page_name': 'Categories',}
@@ -33,3 +33,12 @@ class LicenseGroupsView(ContextListView):
     template_name = 'license_groups.html'
     context_object_name = 'license_groups'
 
+class EbuildsListView(ContextListView):
+    paginate_by = 40
+    extra_context = {'page_name': 'Ebuilds',}
+    template_name = 'ebuilds.html'
+    context_object_name = 'ebuilds'
+    queryset = EbuildModel.objects.all(). \
+        select_related('package',
+                       'package__virtual_package',
+                       'package__virtual_package__category')
