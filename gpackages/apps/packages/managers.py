@@ -81,6 +81,9 @@ class EbuildMixin(object):#{{{
                             'revision': ebuild.revision })
         return super(EbuildMixin, self).get(*args, **kwargs)#}}}
 
+    def all_by_numbers(self):
+        return super(EbuildMixin, self).order_by('version', 'revision')
+
 
 class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):

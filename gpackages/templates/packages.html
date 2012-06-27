@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% for package in packages %}
+    <div class="well package-well">
+        <div class="package-name">
+            <span>{{ package.cp }}</span>
+            <span class="package_update_datetime">{{ package.updated_datetime }}</span>
+        </div>
+        {% if package.description %}
+        <div style="padding-bottom: 10px; margin 10px;">{{ package.description }}</div>
+        {% endif %}
+        <table class="keywords table table-bordered table-condensed">
+            <colgroup>
+                <col class="span2">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+                <col class="span1">
+            </colgroup>
+            <thead>
+                <tr class="">
+                    <th class=""></th>
+                    <th class="">alpha</th>
+                    <th class="">amd64</th>
+                    <th class="">arm</th>
+                    <th class="">hppa</th>
+                    <th class="">ia64</th>
+                    <th class="">ppc</th>
+                    <th class="">ppc64</th>
+                    <th class="">sparc</th>
+                    <th class="">x86</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ebuild in package.ebuildmodel_set.all_by_numbers %}
+                    <tr>
+                        <td class="ebuild">{{ ebuild.fullversion }}</td>
+                        <td class="blank"></td>
+                        <td class="unstable">~</td>
+                        <td class="blank"></td>
+                        <td class="blank"></td>
+                        <td class="blank"></td>
+                        <td class="blank"></td>
+                        <td class="blank"></td>
+                        <td class="blank"></td>
+                        <td class="unstable">~</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
+{% include 'paginator.html' %}
+{% endblock content %}

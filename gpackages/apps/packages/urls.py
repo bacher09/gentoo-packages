@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, include, url
 from views import CategoriesListView, HerdsListView, MaintainersListView, \
-                  RepositoriesListView, LicenseGroupsView , EbuildsListView
+                  RepositoriesListView, LicenseGroupsView , EbuildsListView, \
+                  PackagesListsView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -9,4 +10,5 @@ urlpatterns = patterns('',
     url(r'^repositories/$', RepositoriesListView.as_view(), name = 'repositories'),
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
     url(r'^$', EbuildsListView.as_view(), name = 'ebuilds'),
+    url(r'^packages/$', PackagesListsView.as_view(), name = 'packages'),
 )

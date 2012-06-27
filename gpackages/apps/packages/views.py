@@ -1,6 +1,7 @@
 from generic.views import ContextListView, ContextTemplateView
 from models import CategoryModel, HerdsModel, MaintainerModel, \
-                   RepositoryModel, LicenseGroupModel, EbuildModel
+                   RepositoryModel, LicenseGroupModel, EbuildModel, \
+                   PackageModel
 
 class CategoriesListView(ContextListView):
     extra_context = {'page_name': 'Categories',}
@@ -42,3 +43,12 @@ class EbuildsListView(ContextListView):
         select_related('package',
                        'package__virtual_package',
                        'package__virtual_package__category')
+
+class PackagesListsView(ContextListView):
+    paginate_by = 40
+    extra_context = {'page_name': 'Packages',}
+    template_name = 'packages.html'
+    context_object_name = 'packages'
+    queryset = PackageModel.objects.all(). \
+        select_related('virtual_package', 'virtual_package__category')
+        #prefetch_related('ebuildmodel_set')
