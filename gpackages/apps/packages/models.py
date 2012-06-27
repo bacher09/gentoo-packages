@@ -183,6 +183,9 @@ class MaintainerModel(AbstractDateTimeModel):
     def __unicode__(self):
         return ':'.join((unicode(self.name), self.email))
 
+    class Meta:
+        ordering = ('name',)
+
 class HerdsModel(AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
@@ -304,6 +307,7 @@ class PackageModel(AbstractDateTimeModel):
 
     class Meta:
         unique_together = ('virtual_package', 'repository')
+        ordering = ('-updated_datetime',)
 
 class UseFlagModel(models.Model):
     name = models.CharField(unique = True, max_length = 60, db_index = True)
@@ -436,6 +440,9 @@ class EbuildModel(AbstractDateTimeModel):
 
     class Meta:
         unique_together = ('package', 'version', 'revision')
+        ordering = ('-updated_datetime',)
+        #ordering = ('-updated_datetime', 'package__virtual_package__name',
+        #'-version', '-revision')
         
             
 class Keyword(models.Model):
