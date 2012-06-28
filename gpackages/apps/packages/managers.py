@@ -4,6 +4,8 @@ from package_info.abstract import AbstarctPackage, AbstractEbuild, \
 import packages.models
 from package_info.generic import get_from_kwargs_and_del
 from collections import defaultdict
+from prefetch import PrefetchManagerMixin, PrefetchManager, PrefetchQuerySet, \
+                     Prefetcher, P
 
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
     QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})
@@ -23,6 +25,19 @@ def _gen_all_query_and_manager(mixin_name, name_for_query, name_for_manager, *ar
         q, m = _gen_query_and_manager(arg, q_name, m_name)
         globals()[q_name], globals()[m_name] = q, m
         
+class EbuildsWithKeywrods(Prefetcher):
+    def __init__(self, keywords):
+        self.keywords = keywords
+
+    def filter(self, ids):
+        return packages.models.EbuildModel.objects.filter(package__in = ids).order_by('-version', '-revision').prefetch_with_keywords(self.keywords)
+
+    def reverse_mapper(self, ebuild):
+        return [ebuild.package_id]
+
+    def decorator(self, package, ebuilds = ()):
+        setattr(package, 'ebuilds', ebuilds)
+
 
 class PackageMixin(object):
     def get(self, package = None, *args, **kwargs):
@@ -54,6 +69,16 @@ class PackageMixin(object):
 
         return super(PackageMixin, self).filter(**kwargs)
 
+class PackageQuerySet(PackageMixin, PrefetchQuerySet):
+    def prefetch_keywords(self, arch_list):
+        return self.prefetch(P('ebuilds', keywords = arch_list))
+
+class PackageManager(PackageMixin, PrefetchManagerMixin):
+    @classmethod
+    def get_query_set_class(cls):
+        return PackageQuerySet
+
+    prefetch_definitions = {'ebuilds': EbuildsWithKeywrods}
 
 class KeywordMixin(object):#{{{
     def get_or_create(self, keyword=None,  **kwargs):
@@ -68,7 +93,7 @@ class KeywordMixin(object):#{{{
         return super(KeywordMixin, self).get_or_create(**kwargs)#}}}
 
 
-class EbuildMixin(object):#{{{
+class EbuildMixin(object):
 
     def get(self, ebuild=None, package = None, *args, **kwargs):
         if ebuild is not None and isinstance(ebuild, AbstractEbuild):
@@ -80,13 +105,15 @@ class EbuildMixin(object):#{{{
                 kwargs.update({'package': package})
             kwargs.update({ 'version': ebuild.version,
                             'revision': ebuild.revision })
-        return super(EbuildMixin, self).get(*args, **kwargs)#}}}
+        return super(EbuildMixin, self).get(*args, **kwargs)
 
     def all_by_numbers(self):
         return super(EbuildMixin, self).order_by('version', 'revision')
 
+class EbuildQuerySet(EbuildMixin, models.query.QuerySet):
+
     def __init__(self, *args, **kwargs):
-        super(EbuildMixin, self).__init__(*args, **kwargs)
+        super(EbuildQuerySet, self).__init__(*args, **kwargs)
         self._arches_set = None
         self._cache_keywords = None
     
@@ -98,18 +125,19 @@ class EbuildMixin(object):#{{{
         return self
 
     def __old_iter__(self):
-        return super(EbuildMixin, self).__iter__()
+        return super(EbuildQuerySet, self).__iter__()
 
     def _clone(self, *args, **kwargs):
-        c = super(EbuildMixin, self)._clone(*args, **kwargs)
+        c = super(EbuildQuerySet, self)._clone(*args, **kwargs)
         c._arches_set = self._arches_set
         return c
 
     def _prefetch_keywords(self):
         arch_set = self._arches_set
         pk_keys = [ebuild.pk for ebuild in self.__old_iter__()]
-        query = packages.models.Keyword.objects.filter(ebuild__in = pk_keys,
-                                                       arch__name__in = arch_set).select_related('arch')
+        query = packages.models.Keyword.objects.\
+            filter(ebuild__in = pk_keys, arch__name__in = arch_set). \
+            select_related('arch')
 
         cache_query = defaultdict(list)
         for keyword in query:
@@ -132,7 +160,9 @@ class EbuildMixin(object):#{{{
                 ebuild._prefetched_keywords = cache_query[ebuild.pk]
                 yield ebuild
 
-            
+class EbuildManager(EbuildMixin, models.Manager):
+    def get_query_set(self):
+        return EbuildQuerySet(self.model, using = self._db)
 
 class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):
@@ -174,6 +204,6 @@ class RepositoryMixin(object):
 
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
-                           PackageMixin, KeywordMixin, EbuildMixin, HerdsMixin,
+                           KeywordMixin, HerdsMixin,
                            MaintainerMixin, VirtualPackageMixin,
                            RepositoryMixin)

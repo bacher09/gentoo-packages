@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 
 validate_url = URLValidator()
 
+
 class AbstractDateTimeModel(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
     updated_datetime = models.DateTimeField(auto_now = True)
@@ -308,8 +309,12 @@ class PackageModel(AbstractDateTimeModel):
 
     def get_ebuilds_and_keywords(self, arch_list):
         l = []
-        for ebuild in self.ebuildmodel_set.order_by('-version', '-revision'):
-            l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
+        if not hasattr(self, 'ebuilds'):
+            for ebuild in self.ebuildmodel_set.order_by('-version', '-revision'):
+                l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
+        else:
+            for ebuild in self.ebuilds:
+                l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
         return l
             
     class Meta:

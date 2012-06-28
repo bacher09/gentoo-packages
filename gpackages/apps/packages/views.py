@@ -52,5 +52,5 @@ class PackagesListsView(ContextListView):
     template_name = 'packages.html'
     context_object_name = 'packages'
     queryset = PackageModel.objects.all(). \
-        select_related('virtual_package', 'virtual_package__category')
-        #prefetch_related('ebuildmodel_set')
+        select_related('virtual_package', 'virtual_package__category'). \
+        prefetch_keywords(arches)
