@@ -316,6 +316,19 @@ class PackageModel(AbstractDateTimeModel):
             for ebuild in self.ebuilds:
                 l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
         return l
+
+    @models.permalink
+    def get_absolute_url_by_pk(self):
+        return ('package',(), {'pk': self.pk})
+
+    @models.permalink
+    def get_absolute_url(self):
+        # It coold been in many repositories
+        kwargs = { 'category': self.virtual_package.category.category,
+                   'name': self.virtual_package.name }
+        if self.repository.name != 'gentoo':
+            kwargs['repository'] = self.repository.name
+        return ('package',(), kwargs )
             
     class Meta:
         unique_together = ('virtual_package', 'repository')

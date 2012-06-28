@@ -1,7 +1,10 @@
-from generic.views import ContextListView, ContextTemplateView
+from django.views.generic import DetailView
+from generic.views import ContextListView, ContextTemplateView, ContextView
 from models import CategoryModel, HerdsModel, MaintainerModel, \
                    RepositoryModel, LicenseGroupModel, EbuildModel, \
                    PackageModel
+
+from django.shortcuts import get_object_or_404
 
 class CategoriesListView(ContextListView):
     extra_context = {'page_name': 'Categories',}
@@ -52,5 +55,48 @@ class PackagesListsView(ContextListView):
     template_name = 'packages.html'
     context_object_name = 'packages'
     queryset = PackageModel.objects.all(). \
-        select_related('virtual_package', 'virtual_package__category'). \
+        select_related('virtual_package',
+                       'virtual_package__category',
+                       'repository'). \
+        defer('repository__description',
+              'repository__owner_name',
+              'repository__owner_email',
+              'repository__homepage',
+              'repository__official',
+              'repository__quality',
+              'changelog'). \
         prefetch_keywords(arches)
+
+class PackageDetailView(ContextView, DetailView):
+    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
+    template_name = 'package.html'
+    extra_context = {'page_name': 'Package', 'arches': arches}
+    context_object_name = 'package'
+    queryset = PackageModel.objects.all(). \
+        select_related('virtual_package',
+                       'virtual_package__category',
+                       'repository'). \
+        defer('repository__description',
+              'repository__owner_name',
+              'repository__owner_email',
+              'repository__homepage',
+              'repository__official',
+              'repository__quality',
+              'changelog'). \
+        prefetch_keywords(arches)
+
+    def get_object(self, queryset = None):
+        pk = self.kwargs.get('pk')
+        if pk is not None:
+            return super(PackageDetailView, self).get_object(queryset)
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        name, category = self.kwargs.get('name'), self.kwargs.get('category')
+        repository = self.kwargs.get('repository')
+        if repository is None:
+            repository = 'gentoo'
+        obj = get_object_or_404(queryset, name = name,
+                                          category = category,
+                                          repository__name = repository)
+        return obj
