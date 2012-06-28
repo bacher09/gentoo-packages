@@ -312,7 +312,6 @@ class PackageModel(AbstractDateTimeModel):
             l.extend(ebuild.get_ebuilds_and_keywords(arch_list))
         return l
             
-
     class Meta:
         unique_together = ('virtual_package', 'repository')
         ordering = ('-updated_datetime',)
@@ -381,6 +380,7 @@ class EbuildModel(AbstractDateTimeModel):
         super(EbuildModel, self).__init__(*args, **kwargs)
         if isinstance(ebuild, AbstractEbuild):
             self.init_by_ebuild(ebuild)
+        self._prefetched_keywords = None
     
     def __unicode__(self):
         return self.cpv
@@ -470,9 +470,12 @@ class EbuildModel(AbstractDateTimeModel):
 
         return keywords_dict
 
-    def load_keywords(self, arch_set):
-        arch_set.add('*')
-        return self.keyword_set.filter(arch__name__in = arch_set).select_related('arch')
+    def load_keywords(self, arch_set, flush_cache = False):
+        if self._prefetched_keywords is None or flush_cache:
+            arch_set.add('*')
+            self._prefetched_keywords = self.keyword_set. \
+                filter(arch__name__in = arch_set).select_related('arch')
+        return self._prefetched_keywords
 
     def get_ebuilds_and_keywords(self, arch_list):
         # Maybe copy object ? !!

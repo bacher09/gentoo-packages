@@ -9,7 +9,7 @@
             <span class="package_update_datetime">{{ ebuild.updated_datetime }}</span>
         </div>
         <div style="padding-bottom: 10px; margin 10px;">{{ ebuild.description }}</div>
-        {% render_keywords_table ebuild 'alpha' 'amd64' 'arm' 'hppa' 'ia64' 'ppc' 'ppc64' 'sparc' 'x86' %}
+        {% render_keywords_table ebuild arches %}
     </div>
 {% endfor %}
 {% include 'paginator.html' %}

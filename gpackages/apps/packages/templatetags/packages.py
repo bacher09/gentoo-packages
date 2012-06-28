@@ -11,7 +11,7 @@ def last_updated():
     return {'last_updated': l.updated_datetime}
 
 @register.inclusion_tag('keywords_table.html')
-def render_keywords_table(obj, *arch_list):
+def render_keywords_table(obj, arch_list):
     ebuilds = obj.get_ebuilds_and_keywords(arch_list)
     return {'arches': arch_list, 'ebuilds' : ebuilds}
 

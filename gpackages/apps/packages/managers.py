@@ -3,6 +3,7 @@ from package_info.abstract import AbstarctPackage, AbstractEbuild, \
                                   AbstractKeywords 
 import packages.models
 from package_info.generic import get_from_kwargs_and_del
+from collections import defaultdict
 
 def _gen_query_and_manager(MixinClass, QueryClassName, ManagerClassName):
     QueryClass = type(QueryClassName, (MixinClass, models.query.QuerySet), {})
@@ -68,7 +69,7 @@ class KeywordMixin(object):#{{{
 
 
 class EbuildMixin(object):#{{{
-    
+
     def get(self, ebuild=None, package = None, *args, **kwargs):
         if ebuild is not None and isinstance(ebuild, AbstractEbuild):
             if package is None:
@@ -84,6 +85,54 @@ class EbuildMixin(object):#{{{
     def all_by_numbers(self):
         return super(EbuildMixin, self).order_by('version', 'revision')
 
+    def __init__(self, *args, **kwargs):
+        super(EbuildMixin, self).__init__(*args, **kwargs)
+        self._arches_set = None
+        self._cache_keywords = None
+    
+    # Maybe use https://github.com/ionelmc/django-prefetch ?
+    def prefetch_with_keywords(self, arch_list):
+        arch_set = set(arch_list)
+        arch_set.add('*')
+        self._arches_set = arch_set
+        return self
+
+    def __old_iter__(self):
+        return super(EbuildMixin, self).__iter__()
+
+    def _clone(self, *args, **kwargs):
+        c = super(EbuildMixin, self)._clone(*args, **kwargs)
+        c._arches_set = self._arches_set
+        return c
+
+    def _prefetch_keywords(self):
+        arch_set = self._arches_set
+        pk_keys = [ebuild.pk for ebuild in self.__old_iter__()]
+        query = packages.models.Keyword.objects.filter(ebuild__in = pk_keys,
+                                                       arch__name__in = arch_set).select_related('arch')
+
+        cache_query = defaultdict(list)
+        for keyword in query:
+            cache_query[keyword.ebuild_id].append(keyword)
+
+        self._cache_keywords = cache_query
+
+    def __iter__(self):
+        arch_set = self._arches_set
+        if arch_set is None:
+            for ebuild in self.__old_iter__():
+                yield ebuild
+        else:
+            if self._cache_keywords is None:
+                self._prefetch_keywords()
+
+            cache_query = self._cache_keywords
+                
+            for ebuild in self.__old_iter__():
+                ebuild._prefetched_keywords = cache_query[ebuild.pk]
+                yield ebuild
+
+            
 
 class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):

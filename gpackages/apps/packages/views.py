@@ -35,18 +35,20 @@ class LicenseGroupsView(ContextListView):
     context_object_name = 'license_groups'
 
 class EbuildsListView(ContextListView):
+    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
     paginate_by = 40
-    extra_context = {'page_name': 'Ebuilds',}
+    extra_context = {'page_name': 'Ebuilds', 'arches' : arches}
     template_name = 'ebuilds.html'
     context_object_name = 'ebuilds'
     queryset = EbuildModel.objects.all(). \
         select_related('package',
                        'package__virtual_package',
-                       'package__virtual_package__category')
+                       'package__virtual_package__category').prefetch_with_keywords(arches)
 
 class PackagesListsView(ContextListView):
+    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
     paginate_by = 40
-    extra_context = {'page_name': 'Packages',}
+    extra_context = {'page_name': 'Packages', 'arches': arches}
     template_name = 'packages.html'
     context_object_name = 'packages'
     queryset = PackageModel.objects.all(). \
