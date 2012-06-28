@@ -30,13 +30,30 @@ class EbuildsWithKeywrods(Prefetcher):
         self.keywords = keywords
 
     def filter(self, ids):
-        return packages.models.EbuildModel.objects.filter(package__in = ids).order_by('-version', '-revision').prefetch_with_keywords(self.keywords)
+        return packages.models.EbuildModel.objects. \
+            filter(package__in = ids).order_by('-version', '-revision'). \
+            prefetch_keywords(self.keywords)
 
     def reverse_mapper(self, ebuild):
         return [ebuild.package_id]
 
     def decorator(self, package, ebuilds = ()):
         setattr(package, 'ebuilds', ebuilds)
+
+class KeywordsPrefetch(Prefetcher):
+    def __init__(self, arches):
+        self.arches = arches
+
+    def filter(self, ids):
+        return packages.models.Keyword.objects. \
+            filter(ebuild__in = ids, arch__name__in = self.arches). \
+            select_related('arch')
+
+    def reverse_mapper(self, keyword):
+        return [keyword.ebuild_id]
+
+    def decorator(self, ebuild, keywords = ()):
+        setattr(ebuild, '_prefetched_keywords', keywords)
 
 
 class PackageMixin(object):
@@ -110,59 +127,17 @@ class EbuildMixin(object):
     def all_by_numbers(self):
         return super(EbuildMixin, self).order_by('version', 'revision')
 
-class EbuildQuerySet(EbuildMixin, models.query.QuerySet):
+class EbuildQuerySet(EbuildMixin, PrefetchQuerySet):
 
-    def __init__(self, *args, **kwargs):
-        super(EbuildQuerySet, self).__init__(*args, **kwargs)
-        self._arches_set = None
-        self._cache_keywords = None
-    
-    # Maybe use https://github.com/ionelmc/django-prefetch ?
-    def prefetch_with_keywords(self, arch_list):
-        arch_set = set(arch_list)
-        arch_set.add('*')
-        self._arches_set = arch_set
-        return self
+    def prefetch_keywords(self, arch_list):
+        return self.prefetch(P('keywords', arches = arch_list))
 
-    def __old_iter__(self):
-        return super(EbuildQuerySet, self).__iter__()
+class EbuildManager(EbuildMixin, PrefetchManagerMixin):
+    prefetch_definitions = {'keywords': KeywordsPrefetch}
 
-    def _clone(self, *args, **kwargs):
-        c = super(EbuildQuerySet, self)._clone(*args, **kwargs)
-        c._arches_set = self._arches_set
-        return c
-
-    def _prefetch_keywords(self):
-        arch_set = self._arches_set
-        pk_keys = [ebuild.pk for ebuild in self.__old_iter__()]
-        query = packages.models.Keyword.objects.\
-            filter(ebuild__in = pk_keys, arch__name__in = arch_set). \
-            select_related('arch')
-
-        cache_query = defaultdict(list)
-        for keyword in query:
-            cache_query[keyword.ebuild_id].append(keyword)
-
-        self._cache_keywords = cache_query
-
-    def __iter__(self):
-        arch_set = self._arches_set
-        if arch_set is None:
-            for ebuild in self.__old_iter__():
-                yield ebuild
-        else:
-            if self._cache_keywords is None:
-                self._prefetch_keywords()
-
-            cache_query = self._cache_keywords
-                
-            for ebuild in self.__old_iter__():
-                ebuild._prefetched_keywords = cache_query[ebuild.pk]
-                yield ebuild
-
-class EbuildManager(EbuildMixin, models.Manager):
-    def get_query_set(self):
-        return EbuildQuerySet(self.model, using = self._db)
+    @classmethod
+    def get_query_set_class(cls):
+        return EbuildQuerySet
 
 class HerdsMixin(object):#{{{
     def filter(self, *args, **kwargs):

@@ -43,7 +43,7 @@ class EbuildsListView(ContextListView):
     queryset = EbuildModel.objects.all(). \
         select_related('package',
                        'package__virtual_package',
-                       'package__virtual_package__category').prefetch_with_keywords(arches)
+                       'package__virtual_package__category').prefetch_keywords(arches)
 
 class PackagesListsView(ContextListView):
     arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
