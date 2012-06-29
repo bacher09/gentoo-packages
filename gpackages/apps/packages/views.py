@@ -56,15 +56,8 @@ class PackagesListsView(ContextListView):
     context_object_name = 'packages'
     queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
-                       'virtual_package__category',
-                       'repository'). \
-        defer('repository__description',
-              'repository__owner_name',
-              'repository__owner_email',
-              'repository__homepage',
-              'repository__official',
-              'repository__quality',
-              'changelog'). \
+                       'virtual_package__category'). \
+        prefetch_related('repository'). \
         prefetch_keywords(arches)
 
 class PackageDetailView(ContextView, DetailView):
@@ -74,15 +67,8 @@ class PackageDetailView(ContextView, DetailView):
     context_object_name = 'package'
     queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
-                       'virtual_package__category',
-                       'repository'). \
-        defer('repository__description',
-              'repository__owner_name',
-              'repository__owner_email',
-              'repository__homepage',
-              'repository__official',
-              'repository__quality',
-              'changelog'). \
+                       'virtual_package__category'). \
+        prefetch_related('repository'). \
         prefetch_keywords(arches)
 
     def get_object(self, queryset = None):
