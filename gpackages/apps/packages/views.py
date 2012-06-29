@@ -54,6 +54,14 @@ class PackagesListsView(ContextListView):
     extra_context = {'page_name': 'Packages', 'arches': arches}
     template_name = 'packages.html'
     context_object_name = 'packages'
+    # Faster query !!
+    #SELECT t.id, t.virtual_package_id, t.description, t.repository_id, vp.id
+    #as virtual_package__name FROM 
+    #(SELECT * FROM packages_packagemodel 
+    #ORDER BY updated_datetime DESC LIMIT 3 ) as t 
+    #INNER JOIN packages_virtualpackagemodel vp 
+    #ON( `vp`.id = t.virtual_package_id) INNER JOIN `packages_categorymodel` cp
+    #ON (vp.category_id = cp.id);
     queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
                        'virtual_package__category'). \

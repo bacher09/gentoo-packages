@@ -15,5 +15,6 @@ urlpatterns = patterns('',
     # In Future I will write my onw URL Resolver !!!
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<pk>\d+)/$', PackageDetailView.as_view(), name = 'package'),
-    url(r'^package/(?P<category>[^/]+)/(?P<name>[^/:]+)(::(?P<repository>[^/]+))?/$', PackageDetailView.as_view(), name = 'package'),
+    url(r'^package/(?P<category>[^/]+)/(?P<name>[^/:]+)/$', PackageDetailView.as_view(), name = 'package'),
+    url(r'^package/(?P<category>[^/]+)/(?P<name>[^/:]+)::(?P<repository>[^/]+)/$', PackageDetailView.as_view(), name = 'package'),
 )
