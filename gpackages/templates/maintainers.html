@@ -18,7 +18,7 @@
     <tbody>
         {% for maintainer in maintainers %}
             <tr>
-                <td class="nowrap"><a href="{% url 'packages' maintainer_pk=maintainer.pk %}">{{ maintainer.name|default:"Not represented" }}</a></td>
+                <td class="nowrap"><a href="{% url 'packages' maintainer=maintainer.pk %}">{{ maintainer.name|default:"Not represented" }}</a></td>
                 <!-- email should be obfuscated -->
                 <td class="nowrap"><a href="{{ 'mailto:'|add:maintainer.email|obfuscate }}">{{ maintainer.email|obfuscate }}</a></td>
             </tr>
