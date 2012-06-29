@@ -7,6 +7,8 @@ from models import CategoryModel, HerdsModel, MaintainerModel, \
 
 from django.shortcuts import get_object_or_404
 
+arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
+
 class CategoriesListView(ContextListView):
     extra_context = {'page_name': 'Categories',}
     template_name = 'categories.html'
@@ -39,7 +41,6 @@ class LicenseGroupsView(ContextListView):
     context_object_name = 'license_groups'
 
 class EbuildsListView(ContextListView):
-    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
     paginate_by = 40
     extra_context = {'page_name': 'Ebuilds', 'arches' : arches}
     template_name = 'ebuilds.html'
@@ -47,22 +48,24 @@ class EbuildsListView(ContextListView):
     queryset = EbuildModel.objects.all(). \
         select_related('package',
                        'package__virtual_package',
-                       'package__virtual_package__category').prefetch_keywords(arches)
+                       'package__virtual_package__category'). \
+                       prefetch_keywords(arches)
 
 class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
     allowed_filter = { 'category':'virtual_package__category__category',
                        'repo':'repository__name',
                        'herd':'herds__name',
                        'maintainer': 'maintainers__pk',
-                       'license': 'licenses__name'
+                       'license': 'ebuildmodel__licenses__name'
                     }
+
+    m2m_filter = ['herd', 'maintainer', 'ebuildmodel' ]
 
     allowed_order = { 'create': 'created_datetime',
                       'update': 'updated_datetime',
                       'rand':'?', # it slow
                       None: '-updated_datetime'
                     }
-    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
     paginate_by = 40
     extra_context = {'page_name': 'Packages', 'arches': arches}
     template_name = 'packages.html'
@@ -82,7 +85,6 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
         prefetch_keywords(arches)
 
 class PackageDetailView(ContextView, DetailView):
-    arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
     template_name = 'package.html'
     extra_context = {'page_name': 'Package', 'arches': arches}
     context_object_name = 'package'

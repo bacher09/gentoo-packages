@@ -57,8 +57,14 @@ def dynamic_order(args_list, allowed_list, reverse = None):
 class MultipleFilterListViewMixin(object):
     allowed_filter = {}
     allowed_order = {}
+    m2m_filter = ()
 
     base_queryset = None # should be queryset
+
+    def __init__(self, *args, **kwargs):
+        super(MultipleFilterListViewMixin, self).__init__(*args, **kwargs)
+        l = (x for x in self.allowed_filter.itervalues())
+        self.m2m_set = frozenset(l)
 
     def get_queryset(self):
         qs = dynamic_filter(exclude_blank(self.request.GET),
@@ -78,7 +84,14 @@ class MultipleFilterListViewMixin(object):
             if self.kwargs.get('order') not in self.allowed_order:
                 raise Http404('no such order')
 
-        return self.base_queryset.filter(**qs).order_by(order)
+        queryset = self.base_queryset.filter(**qs).order_by(order)
+
+        for q in qs.iterkeys():
+            if q in self.m2m_set:
+                queryset = queryset.distinct()
+                break
+
+        return queryset
 
     @classmethod
     def get_url_part(cls):
