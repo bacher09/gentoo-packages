@@ -81,7 +81,7 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
     base_queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
                        'virtual_package__category'). \
-        prefetch_related('repository'). \
+        prefetch_related('repository', 'herds', 'maintainers'). \
         prefetch_keywords(arches)
 
 class PackageDetailView(ContextView, DetailView):
