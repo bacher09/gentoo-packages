@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load packages %}
-
+{% load url from future %}
 {% block content %}
 
 <table class='table table-striped table-hover'>
@@ -19,7 +19,7 @@
     <tbody>
         {% for herd in herds %}
             <tr>
-                <td class="nowrap"><a href="#">{{ herd.name }}</a></td>
+                <td class="nowrap"><a href="{% url 'packages' herd=herd.name %}">{{ herd.name }}</a></td>
                 <!-- email should be obfuscated -->
                 <td class="nowrap"><a href="{{ 'mailto:'|add:herd.email|obfuscate }}">{{ herd.email|obfuscate }}</a></td>
                 <td>{{ herd.description|default_if_none:"" }}</td>

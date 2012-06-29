@@ -10,7 +10,8 @@ urlpatterns = patterns('',
     url(r'^repositories/$', RepositoriesListView.as_view(), name = 'repositories'),
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
     url(r'^$', EbuildsListView.as_view(), name = 'ebuilds'),
-    url(r'^packages/$', PackagesListsView.as_view(), name = 'packages'),
+    url(r'^packages/(?:category/(?P<category>[^/]+)/)?(?:repo/(?P<repo>[^/]*)/)?(?:herd/(?P<herd>[^/]+)/)?(?:maintainer/(?P<maintainer_pk>[^/]+)/)?(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?$',
+    PackagesListsView.as_view(), name = 'packages'),
 
     # In Future I will write my onw URL Resolver !!!
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),

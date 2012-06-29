@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url from future %}
 
 {% block content %}
 
@@ -16,7 +17,7 @@
     <tbody>
         {% for category in categories %}
             <tr>
-                <td class="nowrap"><a href="#">{{ category.category }}</a></td>
+                <td class="nowrap"><a href="{% url 'packages' category=category.category %}">{{ category.category }}</a></td>
                 <td>{{ category.description|default_if_none:"" }}</td>
             </tr>
         {% endfor %}
