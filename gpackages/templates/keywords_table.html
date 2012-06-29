@@ -1,3 +1,4 @@
+{% load url from future %}
 <table class="keywords table table-bordered table-condensed">
     <colgroup>
         <col class="span2">
@@ -17,7 +18,7 @@
     <tbody>
         {% for ebuild in ebuilds %}
         <tr>
-            <td class="ebuild">{{ ebuild.fullversion }}</td>
+            <td class="ebuild"><a href="{% url 'ebuild' pk=ebuild.pk %}">{{ ebuild.fullversion }}</a></td>
             {% for keyword in ebuild.keywords %}
             <td class="{{ keyword.status_class }}">{{ keyword.status_repr }}</td>
             {% endfor %}

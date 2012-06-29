@@ -51,6 +51,16 @@ class EbuildsListView(ContextListView):
                        'package__virtual_package__category'). \
                        prefetch_keywords(arches)
 
+class EbuildDetailView(ContextView, DetailView):
+    template_name = 'ebuild.html'
+    extra_context = {'page_name': 'Ebuild', 'arches': arches}
+    context_object_name = 'ebuild'
+    queryset = EbuildModel.objects.all(). \
+        select_related('package',
+                       'package__virtual_package',
+                       'package__virtual_package__category'). \
+                       prefetch_keywords(arches)
+
 class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
     allowed_filter = { 'category':'virtual_package__category__category',
                        'repo':'repository__name',

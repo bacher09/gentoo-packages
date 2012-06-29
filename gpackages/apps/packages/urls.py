@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   RepositoriesListView, LicenseGroupsView , EbuildsListView, \
-                  PackagesListsView, PackageDetailView
+                  PackagesListsView, PackageDetailView, EbuildDetailView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^repositories/$', RepositoriesListView.as_view(), name = 'repositories'),
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
     url(r'^$', EbuildsListView.as_view(), name = 'ebuilds'),
+    url(r'^ebuild/(?P<pk>\d+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^packages/{0}$'.format(PackagesListsView.get_url_part()), PackagesListsView.as_view(), name = 'packages'),
 
     # In Future I will write my onw URL Resolver !!!
