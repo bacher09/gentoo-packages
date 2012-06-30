@@ -341,6 +341,9 @@ class UseFlagModel(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ('name',)
+
 class UseFlagDescriptionModel(models.Model):
     use_flag = models.ForeignKey(UseFlagModel, db_index = True)
     package = models.ForeignKey(VirtualPackageModel)

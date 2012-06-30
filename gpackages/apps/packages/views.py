@@ -3,7 +3,7 @@ from generic.views import ContextListView, ContextTemplateView, ContextView, \
                           MultipleFilterListViewMixin
 from models import CategoryModel, HerdsModel, MaintainerModel, \
                    RepositoryModel, LicenseGroupModel, EbuildModel, \
-                   PackageModel
+                   PackageModel, UseFlagModel
 
 from django.shortcuts import get_object_or_404
 
@@ -119,3 +119,9 @@ class PackageDetailView(ContextView, DetailView):
                                           category = category,
                                           repository__name = repository)
         return obj
+
+class GlobalUseListView(ContextListView):
+    extra_context = {'page_name': 'Global Use', }
+    template_name = 'global_use.html'
+    context_object_name = 'uses'
+    queryset = UseFlagModel.objects.exclude(description = '') 

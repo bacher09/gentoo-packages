@@ -1,11 +1,13 @@
 from django.conf.urls import patterns, include, url
 from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   RepositoriesListView, LicenseGroupsView , EbuildsListView, \
-                  PackagesListsView, PackageDetailView, EbuildDetailView
+                  PackagesListsView, PackageDetailView, EbuildDetailView, \
+                  GlobalUseListView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
     url(r'^herds/$', HerdsListView.as_view(), name = 'herds'),
+    url(r'^use/$', GlobalUseListView.as_view(), name = 'global_uses'),
     url(r'^maintainers/$', MaintainersListView.as_view(), name = 'maintainers'),
     url(r'^repositories/$', RepositoriesListView.as_view(), name = 'repositories'),
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
