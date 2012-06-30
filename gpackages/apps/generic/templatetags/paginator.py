@@ -61,6 +61,7 @@ def get_r_range(m_end, num_pages, num):
 def paginator(page, num_middle, num_first, n_a_p = True, all_num = 0):
     paginator = page.paginator
     num_pages = paginator.num_pages
+    is_paginated = True if num_pages > 1 else False
     if all_num >= num_pages:
         m_start, m_end = 1, num_pages
         first, last = (), ()
@@ -74,7 +75,7 @@ def paginator(page, num_middle, num_first, n_a_p = True, all_num = 0):
     middle = get_pages_in_range(m_start, m_end, page.number)
 
     return {'page_obj': page,
-            'is_paginated': bool(page),
+            'is_paginated': is_paginated,
             'paginator': paginator,
             'middle_pages': middle,
             'first_pages': first,
