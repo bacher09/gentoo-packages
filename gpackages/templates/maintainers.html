@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-{% load packages %}
 {% load url from future %}
+{% load packages %}
+{% load paginator %}
 
 {% block content %}
 
@@ -25,5 +26,5 @@
         {% endfor %}
     </tbody>
 </table>
-{% include 'paginator.html' %}
+{% paginator page_obj 3 2 %}
 {% endblock content %}

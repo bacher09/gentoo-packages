@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% load packages %}
+{% load paginator %}
 
 {% block content %}
 {% for ebuild in ebuilds %}
     {% include 'ebuild_object.html' %}
 {% endfor %}
-{% include 'paginator.html' %}
+{% paginator page_obj 3 2 %}
 {% endblock content %}
