@@ -69,7 +69,7 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
                        'license': 'ebuildmodel__licenses__name'
                     }
 
-    m2m_filter = ['herd', 'maintainer', 'ebuildmodel' ]
+    m2m_filter = set(['herd', 'maintainer', 'license'])
 
     allowed_order = { 'create': 'created_datetime',
                       'update': 'updated_datetime',

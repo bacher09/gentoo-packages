@@ -63,7 +63,10 @@ class MultipleFilterListViewMixin(object):
 
     def __init__(self, *args, **kwargs):
         super(MultipleFilterListViewMixin, self).__init__(*args, **kwargs)
-        l = (x for x in self.allowed_filter.itervalues())
+        l =  []
+        for key, val in self.allowed_filter.iteritems():
+            if key in self.m2m_filter:
+                l.append(val)
         self.m2m_set = frozenset(l)
 
     def get_queryset(self):
