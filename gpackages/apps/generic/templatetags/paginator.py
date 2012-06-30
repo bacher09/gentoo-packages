@@ -58,7 +58,7 @@ def get_r_range(m_end, num_pages, num):
     return r_start, num_pages, r_gap
 
 @register.inclusion_tag('paginator.html')
-def paginator(page, num_middle, num_first, all_num = 0):
+def paginator(page, num_middle, num_first, n_a_p = True, all_num = 0):
     paginator = page.paginator
     num_pages = paginator.num_pages
     if all_num >= num_pages:
@@ -80,4 +80,5 @@ def paginator(page, num_middle, num_first, all_num = 0):
             'first_pages': first,
             'last_pages': last,
             'left_gap': l_gap,
-            'right_gap': r_gap}
+            'right_gap': r_gap,
+            'next_and_prev': bool(n_a_p)}

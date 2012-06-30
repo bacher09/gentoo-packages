@@ -2,7 +2,7 @@
 {% if is_paginated %}
 <div class="pagination pagination-centered" id="paginator">
     <ul>
-        {% if page_obj.has_previous %}
+        {% if page_obj.has_previous and next_and_prev %}
         <li>
             <a href="?page={{ page_obj.previous_page_number }}">&larr; Prev</a>
         </li>
@@ -22,7 +22,7 @@
         {% for page in last_pages %}
         <li class="{{ page.active }}"><a href="{{ page.link }}">{{ page.num }}</a></li>
         {% endfor %}
-        {% if page_obj.has_next %}
+        {% if page_obj.has_next and next_and_prev %}
         <li>
             <a href="?page={{ page_obj.next_page_number }}">Next &rarr;</a>
         </li>
