@@ -17,7 +17,7 @@
     <tbody>
         {% for use in uses %}
             <tr>
-                <td class="nowrap"><a href="#">{{ use.name }}</a></td>
+                <td class="nowrap"><a href="{% url 'packages' use=use.name %}">{{ use.name }}</a></td>
                 <td>{{ use.description }}</td>
             </tr>
         {% endfor %}
