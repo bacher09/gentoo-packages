@@ -4,7 +4,8 @@ import types
 from datetime import datetime
 
 __all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1',\
-           'file_mtime', 'cached_property', 'iter_over_gen', 'lofstr_to_ig')
+           'file_mtime', 'cached_property', 'iter_over_gen', 'lofstr_to_ig', \
+           'toint')
 
 def iter_over_gen(iterat, name):
     for obj in iterat:
@@ -32,6 +33,12 @@ def get_from_kwargs_and_del(list_what, kwargs):
     else:
         return ret_list
             
+def toint(val, defval):
+    try:
+        return int(val)
+    except ValueError:
+        return defval
+
 class StrThatIgnoreCase(unicode):
     __slots__ = ('_forcmp',)
 

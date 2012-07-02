@@ -123,7 +123,7 @@ class EbuildMixin(object):
             else:
                 kwargs.update({'package': package})
             kwargs.update({ 'version': ebuild.version,
-                            'revision': ebuild.revision })
+                            'revision': ebuild.revision_as_int })
         return super(EbuildMixin, self).get(*args, **kwargs)
 
     def all_by_numbers(self):

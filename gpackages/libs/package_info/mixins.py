@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from .generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
-                    file_get_content, iter_over_gen, lofstr_to_ig
+                    file_get_content, iter_over_gen, lofstr_to_ig, toint
 
 from .generic_metadata.use_info import get_uses_info, get_local_uses_info
 # Repo info
@@ -22,6 +22,7 @@ from .abstract import AbstractPortage, AbstractPortTree, AbstractCategory, \
                       AbstarctPackage, AbstractEbuild
 
 import os.path
+import re
 
 def _file_path(file_name):
     return lambda self: os.path.join(self.package_path, file_name)
@@ -218,6 +219,20 @@ class EbuildBaseMixin(ToStrMixin):
     def __unicode__(self):
         return unicode(self.cpv)
 
+REV_STR_RE = '^r(?P<rev>\d+)$'
+rev_re = re.compile(REV_STR_RE)
+
+class EbuildRevMixin(object):
+    
+    @cached_property
+    def revision_as_int(self):
+        d = 0 # Maybe None ?
+        m = rev_re.match(self.revision)
+        if m is not None:
+            d = m.groupdict().get('rev')
+            d = toint(d, 0)
+        return d
+
 class EbuildHomepageMixin(object):
 
     @cached_property
@@ -306,7 +321,7 @@ class EbuildUseMixin(object):
         return frozenset(self.get_uses())
 
 class EbuildGenericProp(EbuildHomepageMixin, EbuildLicenseMixin, \
-                        EbuildKeywordsMixin, EbuildUseMixin):
+                        EbuildKeywordsMixin, EbuildUseMixin, EbuildRevMixin):
     pass
 
 class PortageGenericMixin(PortageBaseMixin, PortageHerdsMixin):

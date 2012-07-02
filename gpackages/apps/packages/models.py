@@ -389,7 +389,7 @@ class LicenseGroupModel(models.Model):
 class EbuildModel(AbstractDateTimeModel):
     package = models.ForeignKey(PackageModel, db_index = True)
     version = models.CharField(max_length = 26, db_index = True)
-    revision = models.CharField(max_length = 12, db_index = True)
+    revision = models.PositiveIntegerField(db_index = True)
     use_flags = models.ManyToManyField(UseFlagModel)
     licenses = models.ManyToManyField(LicenseModel)
     license = models.CharField(max_length = 254, blank = True )
@@ -423,7 +423,7 @@ class EbuildModel(AbstractDateTimeModel):
     def update_by_ebuild(self, ebuild):
         self.is_masked = ebuild.is_masked
         self.version = ebuild.version
-        self.revision = ebuild.revision
+        self.revision = ebuild.revision_as_int
         self.license = ebuild.license
         self.ebuild_mtime = ebuild.mtime
         self.ebuild_hash = ebuild.sha1
@@ -489,8 +489,12 @@ class EbuildModel(AbstractDateTimeModel):
             return self.cpvr
 
     @property
+    def revision_str(self):
+        return 'r%d' % self.revision
+
+    @property
     def fullversion(self):
-        return '%s%s' %  (self.version, ('-'+ self.revision if self.revision else ''))
+        return '%s%s' %  (self.version, ('-'+ self.revision_str if self.revision else ''))
 
     def get_keywords(self, arch_list):
         keywords_dict = self.get_keywords_dict(arch_list)

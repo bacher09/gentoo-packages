@@ -3,7 +3,7 @@ from packages import models
 import sys
 from django.db import IntegrityError
 from collections import defaultdict
-from package_info.generic import StrThatIgnoreCase
+from package_info.generic import StrThatIgnoreCase, toint
 from package_info.porttree import porttree
 
 import anydbm
@@ -84,14 +84,6 @@ def _get_items(items_list, Model, field_name, cache_var):
     geted_items = geted_items | geted
     return items_objects
     
-
-def toint(val, defval):
-    try:
-        return int(val)
-    except ValueError:
-        return defval
-
-
 class Scanner(object):
     "General class for scan and collect data from portage"
     def __init__(self, **kwargs):
