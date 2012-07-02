@@ -6,6 +6,7 @@ from models import CategoryModel, HerdsModel, MaintainerModel, \
                    PackageModel, UseFlagModel
 
 from django.shortcuts import get_object_or_404
+from .utils import EbuildParse, PackageParse
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
 
@@ -49,6 +50,7 @@ class EbuildsListView(ContextListView):
         select_related('package',
                        'package__virtual_package',
                        'package__virtual_package__category'). \
+                       prefetch_related('package__repository'). \
                        prefetch_keywords(arches)
 
 class EbuildDetailView(ContextView, DetailView):
@@ -60,6 +62,25 @@ class EbuildDetailView(ContextView, DetailView):
                        'package__virtual_package',
                        'package__virtual_package__category'). \
                        prefetch_keywords(arches)
+
+    def get_object(self, queryset = None):
+        pk = self.kwargs.get('pk')
+        if pk is not None:
+            return super(EbuildDetailView, self).get_object(queryset)
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        cpvr = self.kwargs.get('cpvr')
+        eo = EbuildParse(cpvr)
+        category, name = eo.category, eo.name
+        version, revision = eo.version, eo.revision_for_q
+        repository = eo.repository_for_q
+        obj = get_object_or_404(queryset, package__virtual_package__name = name,
+                                          package__virtual_package__category__category = category,
+                                          package__repository__name = repository,
+                                          version = version,
+                                          revision = revision)
+        return obj
 
 class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
     allowed_filter = { 'category':'virtual_package__category__category',
@@ -112,10 +133,10 @@ class PackageDetailView(ContextView, DetailView):
         if queryset is None:
             queryset = self.get_queryset()
 
-        name, category = self.kwargs.get('name'), self.kwargs.get('category')
-        repository = self.kwargs.get('repository')
-        if repository is None:
-            repository = 'gentoo'
+        cpr = self.kwargs.get('cpr')
+        po = PackageParse(cpr)
+        category, name = po.category, po.name
+        repository = po.repository_for_q
         obj = get_object_or_404(queryset, name = name,
                                           category = category,
                                           repository__name = repository)

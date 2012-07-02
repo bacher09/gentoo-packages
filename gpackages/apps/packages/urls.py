@@ -13,10 +13,11 @@ urlpatterns = patterns('',
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
     url(r'^$', EbuildsListView.as_view(), name = 'ebuilds'),
     url(r'^ebuild/(?P<pk>\d+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
+    url(r'^ebuild/(?P<cpvr>[^/]+/[^/]+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^packages/{0}$'.format(PackagesListsView.get_url_part()), PackagesListsView.as_view(), name = 'packages'),
 
     # In Future I will write my onw URL Resolver !!!
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<pk>\d+)/$', PackageDetailView.as_view(), name = 'package'),
-    url(r'^package/(?P<category>[^/]+)/(?P<name>[^/:]+)(?:::(?P<repository>[^/]+))?/$', PackageDetailView.as_view(), name = 'package'),
+    url(r'^package/(?P<cpr>[^/]+/[^/]+)/$', PackageDetailView.as_view(), name = 'package'),
 )

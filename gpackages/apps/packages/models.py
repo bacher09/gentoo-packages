@@ -6,11 +6,8 @@ from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
 # relative
 from .keywords import KeywordRepr
-
-from django.core.validators import URLValidator, validate_email 
-from django.core.exceptions import ValidationError
-
-validate_url = URLValidator()
+from utils import get_link
+from .validators import validate_url, validate_email
 
 
 class AbstractDateTimeModel(models.Model):
@@ -228,9 +225,16 @@ class VirtualPackageModel(models.Model):
 
     objects = managers.VirtualPackageManager()
 
+    #forum_template = /
+    #"http://forums.gentoo.org/search.php?search_terms=all&show_results=topics&search_keywords=%s&mode=results"
+
     @property
     def cp(self):
         return "%s/%s" % (unicode(self.category), self.name)
+
+    @property
+    def forum_link(self):
+        return self.forum_template % self.name
 
     def __unicode__(self):
         return unicode(self.cp)
@@ -272,6 +276,16 @@ class PackageModel(AbstractDateTimeModel):
     @property
     def cp(self):
         return self.virtual_package.cp 
+
+    @property
+    def cpr(self):
+        return '%s::%s' % (self.cp, self.repository.name)
+
+    def cp_or_cpr(self):
+        if self.repository.name == 'gentoo':
+            return self.cp
+        else:
+            return self.cpr
 
     def init_by_package(self, package, category = None, virtual_package = None):
         #self.name = package.name
@@ -324,10 +338,7 @@ class PackageModel(AbstractDateTimeModel):
     @models.permalink
     def get_absolute_url(self):
         # It coold been in many repositories
-        kwargs = { 'category': self.virtual_package.category.category,
-                   'name': self.virtual_package.name }
-        if self.repository.name != 'gentoo':
-            kwargs['repository'] = self.repository.name
+        kwargs = { 'cpr': self.cp_or_cpr() }
         return ('package',(), kwargs )
             
     class Meta:
@@ -460,8 +471,22 @@ class EbuildModel(AbstractDateTimeModel):
         return self.package.cp
 
     @property
+    def cpr(self):
+        return self.package.cpr
+
+    @property
     def cpv(self):
         return '%s-%s' % (self.package, self.fullversion) 
+
+    @property
+    def cpvr(self):
+        return '%s::%s' % (self.cpv, self.package.repository.name)
+
+    def cpv_or_cpvr(self):
+        if self.package.repository.name == 'gentoo':
+            return self.cpv
+        else:
+            return self.cpvr
 
     @property
     def fullversion(self):
@@ -502,6 +527,16 @@ class EbuildModel(AbstractDateTimeModel):
         # Maybe copy object ? !!
         self.keywords = self.get_keywords(arch_list)
         return (self, )
+
+    @models.permalink
+    def get_absolute_url_by_pk(self):
+        return ('ebuild',(), {'pk': self.pk})
+
+    @models.permalink
+    def get_absolute_url(self):
+        # It coold been in many repositories
+        kwargs = { 'cpvr': self.cpv_or_cpvr() }
+        return ('ebuild',(), kwargs )
 
     class Meta:
         unique_together = ('package', 'version', 'revision')
