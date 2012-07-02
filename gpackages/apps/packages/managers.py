@@ -39,6 +39,8 @@ class EbuildsWithKeywrods(Prefetcher):
 
     def decorator(self, package, ebuilds = ()):
         setattr(package, 'ebuilds', ebuilds)
+        for ebuild in ebuilds:
+            ebuild.package = package
 
 class KeywordsPrefetch(Prefetcher):
     def __init__(self, arches):
