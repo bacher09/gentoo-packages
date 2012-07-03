@@ -227,10 +227,11 @@ class EbuildRevMixin(object):
     @cached_property
     def revision_as_int(self):
         d = 0 # Maybe None ?
-        m = rev_re.match(self.revision)
-        if m is not None:
-            d = m.groupdict().get('rev')
-            d = toint(d, 0)
+        if self.revision:
+            m = rev_re.match(self.revision)
+            if m is not None:
+                d = m.groupdict().get('rev')
+                d = toint(d, 0)
         return d
 
 class EbuildHomepageMixin(object):

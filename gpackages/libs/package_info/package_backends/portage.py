@@ -5,8 +5,8 @@ from portage.dep import Atom
 from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
-from gentoolkit.cpv import CPV
 from ..generic import cached_property 
+from ..parse_cp import EbuildParse
 import os.path
 #Mixins
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
@@ -152,11 +152,14 @@ class Ebuild(EbuildMixin):
     def __init__(self, package, ebuild):
         self.package = package
         self.ebuild = ebuild
-        self.cpv_object = CPV(ebuild)
+        self.cpv_object = EbuildParse(ebuild)
         self._cache = {}
         self._env = None
         # Maybe this should be lazy ?
-        self._set_env()
+        if not self.cpv_object.is_valid:
+            self._is_valid = False
+        else:
+            self._set_env()
 
     def _set_env(self):
         try:

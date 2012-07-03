@@ -6,8 +6,8 @@ from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
 # relative
 from .keywords import KeywordRepr
-from utils import get_link
-from .validators import validate_url, validate_email
+#from utils import get_link
+from package_info.validators import validate_url, validate_email
 
 
 class AbstractDateTimeModel(models.Model):

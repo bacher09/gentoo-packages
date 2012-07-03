@@ -6,7 +6,7 @@ from models import CategoryModel, HerdsModel, MaintainerModel, \
                    PackageModel, UseFlagModel
 
 from django.shortcuts import get_object_or_404
-from .utils import EbuildParse, PackageParse
+from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
 
@@ -71,7 +71,7 @@ class EbuildDetailView(ContextView, DetailView):
             queryset = self.get_queryset()
 
         cpvr = self.kwargs.get('cpvr')
-        eo = EbuildParse(cpvr)
+        eo = EbuildParseCPVR(cpvr)
         category, name = eo.category, eo.name
         version, revision = eo.version, eo.revision_for_q
         repository = eo.repository_for_q
@@ -134,7 +134,7 @@ class PackageDetailView(ContextView, DetailView):
             queryset = self.get_queryset()
 
         cpr = self.kwargs.get('cpr')
-        po = PackageParse(cpr)
+        po = PackageParseCPR(cpr)
         category, name = po.category, po.name
         repository = po.repository_for_q
         obj = get_object_or_404(queryset, name = name,
