@@ -60,7 +60,7 @@ class NewsItem(ToStrMixin):
         self._fetch_news()
 
     def _iter_news_items(self):
-        pattern_str = self.N_ITEM_P % {'name': self.name}
+        pattern_str = self.N_ITEM_P % {'name': re.escape(self.name)}
         pattern = re.compile(pattern_str)
         for item in os.listdir(self.news_dir):
             m = pattern.match(item)
