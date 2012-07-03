@@ -13,6 +13,8 @@ from .generic_metadata.category_metadata import CategoryMetadata
 from .generic_metadata.package_metadata import PackageMetaData
 #License group metadata
 from .generic_metadata.license_groups import LicenseGroups
+# News
+from .generic_metadata.news import News
 # Validators
 from .validators import validate_url, validate_email, ValidationError
 #Generic objects
@@ -125,6 +127,15 @@ class PortTreeBaseMixin(ToStrMixin):
 
     def __unicode__(self):
         return self.name
+
+class PortTreeNewsMixin(object):
+    
+    @cached_property
+    def news(self):
+        try:
+            return News(self.porttree_path)
+        except:
+            return None
 
 class PortTreeIteratorMixin(AutoGeneratorMixin):
     main_iterator = 'iter_categories'
@@ -335,7 +346,8 @@ class PackageGenericMixin(PackageBaseMixin, PackageFilesMixin):
 class PortageMixin(PortageGenericMixin, PortageIteratorMixin, AbstractPortage):
     pass
 
-class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, AbstractPortTree):
+class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, \
+                    PortTreeNewsMixin, AbstractPortTree):
     pass
 
 class CategoryMixin(CategoryBaseMixin, CategoryIteratorMixin, AbstractCategory):
