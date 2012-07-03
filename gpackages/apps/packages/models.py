@@ -494,11 +494,16 @@ class EbuildModel(AbstractDateTimeModel):
 
     @property
     def fullversion(self):
-        return '%s%s' %  (self.version, ('-'+ self.revision_str if self.revision else ''))
+        rev_p = '-'+ self.revision_str if self.revision else ''
+        return '%s%s' %  (self.version, rev_p)
 
     def get_keywords(self, arch_list):
         keywords_dict = self.get_keywords_dict(arch_list)
-        return (KeywordRepr(arch, keywords_dict[arch], self.is_hard_masked) for arch in arch_list)
+        l = []
+        for arch in arch_list:
+            l.append(
+                KeywordRepr(arch, keywords_dict[arch], self.is_hard_masked))
+        return l
 
     def get_keywords_dict(self, arch_list):
         arch_set = set(arch_list)

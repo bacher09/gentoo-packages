@@ -4,6 +4,7 @@ from pkgcore.config import load_config
 from pkgcore.ebuild.repository import UnconfiguredTree, SlavedTree
 from pkgcore.util.repo_utils import get_raw_repos, get_virtual_repos
 from pkgcore.ebuild.atom import atom
+from pkgcore.ebuild.domain import generate_unmasking_restrict
 
 #Mixins
 from ..mixins import PortageMixin, PortTreeMixin, CategoryMixin, PackageMixin, \
@@ -27,6 +28,7 @@ class Portage(PortageMixin):
             raise ValueError("Bad domain name - '%s'" % domain_name)
         finally:
             self._domain = domain
+            self._mask = generate_unmasking_restrict(domain.profile.masks)
 
     def _get_repos(self):
         repo_dict = {}
@@ -42,7 +44,7 @@ class Portage(PortageMixin):
 
     def iter_trees(self):
         for tree in self.repo_list:
-            yield PortTree(tree)
+            yield PortTree(tree, self)
 
     def get_tree_by_name(self, tree_name):
         if tree_name in self.repo_dict:
@@ -50,15 +52,19 @@ class Portage(PortageMixin):
         else:
             raise ValueError
 
+    def is_masked(self, ebuild):
+        return self._mask.match(ebuild)
+
     def __unicode__(self):
         return u'pkgcore'
         
 class PortTree(PortTreeMixin):
 
-    def __init__(self, repo_obj):
+    def __init__(self, repo_obj, porttree):
         self._repo_obj = repo_obj
         self.name = repo_obj.repo_id
         self.categories = sorted(repo_obj.categories)
+        self.porttree = porttree
 
     def iter_categories(self):
         for category in self.categories:
@@ -95,13 +101,21 @@ class Category(CategoryMixin):
     @property
     def category_path(self):
         "Full path to category"
-        return os.path.join(self._repo_obj.porttree_path, self.name)
+        return os.path.join(self.porttree_path, self.name)
 
     def _get_packages_names(self):
         return self._repo_obj._packages[self.name]
 
     def _get_ebuilds_names_by_name(self, package_name):
         return self._repo_obj._versions[(self.name, package_name)]
+
+    @property
+    def porttree_name(self):
+        return self._repo_obj.name
+
+    @property
+    def porttree_path(self):
+        return self._repo_obj.porttree_path
 
 class Package(PackageMixin):
 
@@ -177,7 +191,7 @@ class Ebuild(EbuildMixin):
 
     cpv = ebuild_prop('cpvstr')
 
-    # Need changes !!!
     @property
     def is_hard_masked(self):
-        return False
+        return self.package_obj.category_obj._repo_obj. \
+            porttree.is_masked(self._ebuild)

@@ -107,6 +107,10 @@ class Category(CategoryMixin):
     def porttree_path(self):
         return self.porttree.porttree
 
+    @property
+    def porttree_name(self):
+        return self.porttree.name
+
 class Package(PackageMixin):
     "Represent package as object"
 
@@ -127,7 +131,7 @@ class Package(PackageMixin):
 
     @property
     def package_path(self):
-        return os.path.join(self.category.porttree.porttree_path, self.package)
+        return os.path.join(self.category.porttree_path, self.package)
 
     @property
     def cp(self):
@@ -141,7 +145,8 @@ class Package(PackageMixin):
 class Ebuild(EbuildMixin):
     "Represent ebuild as object"
 
-    __slots__ = ('package', 'ebuild', 'cpv_object', '_cache', '_env', '_is_valid')
+    __slots__ = ('package', 'ebuild', 'cpv_object', '_cache', '_env',
+                 '_is_valid')
     ENV_VARS = PORTDB._aux_cache_keys
 
     def __init__(self, package, ebuild):
@@ -230,7 +235,7 @@ class Ebuild(EbuildMixin):
         reas, in_file = portage.getmaskingreason(self.cpv,
                                                  metadata = self._env,
                                                  return_location=True,
-                                                 myrepo = self.package.category.porttree.name)
+                                 myrepo = self.package.category.porttree_name)
         if in_file is None:
             return None
         elif in_file.startswith('/etc/portage/'):
