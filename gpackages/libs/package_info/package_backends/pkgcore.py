@@ -179,5 +179,5 @@ class Ebuild(EbuildMixin):
 
     # Need changes !!!
     @property
-    def is_masked(self):
+    def is_hard_masked(self):
         return False

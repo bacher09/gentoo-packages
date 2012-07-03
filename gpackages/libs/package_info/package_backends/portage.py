@@ -5,8 +5,7 @@ from portage.dep import Atom
 from portage.exception import PortageException, FileNotFound, InvalidAtom, \
                               InvalidDependString, InvalidPackageName
 
-from gentoolkit.package import Package as PackageInfo
-from gentoolkit import errors
+from gentoolkit.cpv import CPV
 from ..generic import cached_property 
 import os.path
 #Mixins
@@ -22,7 +21,7 @@ VARDB = portage.db[portage.root]["vartree"].dbapi
 ARCHES = PORTDB.settings["PORTAGE_ARCHLIST"].split()
 
 def _ebuild_environment(name):
-    return lambda self: self.package_object.environment(name)
+    return lambda self: self._env.get(name, '')
 
 class Portage(PortageMixin):
 
@@ -142,74 +141,96 @@ class Package(PackageMixin):
 class Ebuild(EbuildMixin):
     "Represent ebuild as object"
 
-    __slots__ = ('package', 'ebuild', 'package_object', '_cache')
+    __slots__ = ('package', 'ebuild', 'cpv_object', '_cache', '_env', '_is_valid')
+    ENV_VARS = PORTDB._aux_cache_keys
 
     def __init__(self, package, ebuild):
         self.package = package
         self.ebuild = ebuild
-        self.package_object = PackageInfo(ebuild)
+        self.cpv_object = CPV(ebuild)
         self._cache = {}
+        self._env = None
+        # Maybe this should be lazy ?
+        self._set_env()
+
+    def _set_env(self):
+        try:
+            env_t = PORTDB.aux_get(self.cpv, self.ENV_VARS,
+                    mytree = self.package.category.porttree_path)
+        except KeyError: 
+            env_t = ()
+            self._is_valid = False
+        else:
+            self._is_valid = True
+        env = {}
+
+        if self._is_valid:
+            env = dict(zip(self.ENV_VARS, env_t))
+
+        self._env = env
 
     @property
     def keywords_env(self):
-        return self.package_object.environment("KEYWORDS", prefer_vdb = False)
+        return self._env.get("KEYWORDS")
 
     @property
     def is_valid(self):
         "Check if ebuild is valid"
-        try:
-            self.eapi
-        except errors.GentoolkitFatalError:
-            return False
-        else:
-            return True
+        return self._is_valid
 
-    #Could be faster
     @cached_property
-    def is_masked(self):
-        return self.package_object.is_masked()
+    def is_hard_masked(self):
+        if self.mask_reason:
+            return True
+        else:
+            return False
 
     @property
     def version(self):
         "Ebuild version"
-        return self.package_object.version
+        return self.cpv_object.version
 
     @property
     def revision(self):
         "Ebuild revision"
-        return self.package_object.revision
+        return self.cpv_object.revision
 
     @property
     def fullversion(self):
         "Version with revision"
-        return self.package_object.fullversion
+        return self.cpv_object.fullversion
 
-    @property
+    @cached_property
     def ebuild_path(self):
         "Full path to ebuild"
-        return self.package_object.ebuild_path()
+        return os.path.join(self.package.package_path, self.ebuild_file)
 
-    homepage_env = cached_property(_ebuild_environment('HOMEPAGE'),
-                                   name = 'homepage_env')
-    license = cached_property(_ebuild_environment('LICENSE'),
-                              name = 'license')
-    description = cached_property(_ebuild_environment('DESCRIPTION'),
-                                  name = 'description')
-    eapi = cached_property(_ebuild_environment('EAPI'),
-                           name = 'eapi')
-    slot = cached_property(_ebuild_environment('SLOT'),
-                           name = 'slot')
+    @property
+    def name(self):
+        return self.cpv_object.name
 
-    iuse_env = cached_property(_ebuild_environment('IUSE'),
-                           name = 'iuse')
+    @property
+    def ebuild_file(self):
+        return '%s-%s.ebuild' % (self.name, self.fullversion)
+
+    homepage_env = property(_ebuild_environment('HOMEPAGE'))
+    license = property(_ebuild_environment('LICENSE'))
+    description = property(_ebuild_environment('DESCRIPTION'))
+    eapi = property(_ebuild_environment('EAPI'))
+    slot = property(_ebuild_environment('SLOT'))
+
+    iuse_env = property(_ebuild_environment('IUSE'))
 
     @property
     def cpv(self):
-        return self.package
+        return self.cpv_object.cpv
 
     @cached_property
     def mask_reason(self):
-        reas, in_file = self.package_object.get_mask_reason()
+        reas, in_file = portage.getmaskingreason(self.cpv,
+                                                 metadata = self._env,
+                                                 return_location=True,
+                                                 myrepo = self.package.category.porttree.name)
         if in_file is None:
             return None
         elif in_file.startswith('/etc/portage/'):

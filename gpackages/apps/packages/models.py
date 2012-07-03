@@ -396,7 +396,7 @@ class EbuildModel(AbstractDateTimeModel):
     ebuild_hash = models.CharField(max_length = 128)
     ebuild_mtime = models.DateTimeField(blank = True, null = True)
     is_deleted = models.BooleanField(default = False)
-    is_masked = models.BooleanField(default = False)
+    is_hard_masked = models.BooleanField(default = False)
 
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
@@ -421,7 +421,7 @@ class EbuildModel(AbstractDateTimeModel):
         self.update_by_ebuild(ebuild)
 
     def update_by_ebuild(self, ebuild):
-        self.is_masked = ebuild.is_masked
+        self.is_hard_masked = ebuild.is_hard_masked
         self.version = ebuild.version
         self.revision = ebuild.revision_as_int
         self.license = ebuild.license

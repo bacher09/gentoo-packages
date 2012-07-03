@@ -33,8 +33,8 @@ class ArchesAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 class EbuildAdmin(admin.ModelAdmin):
-    list_display = ('__unicode__', 'is_masked', )
-    list_filter = ('created_datetime','updated_datetime', 'licenses', 'is_masked')
+    list_display = ('__unicode__', 'is_hard_masked', )
+    list_filter = ('created_datetime','updated_datetime', 'licenses', 'is_hard_masked')
     filter_horizontal = ('licenses', 'use_flags', 'homepages')
     date_hierarchy = 'updated_datetime'
     list_select_related = True
