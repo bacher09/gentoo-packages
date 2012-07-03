@@ -498,7 +498,7 @@ class EbuildModel(AbstractDateTimeModel):
 
     def get_keywords(self, arch_list):
         keywords_dict = self.get_keywords_dict(arch_list)
-        return (KeywordRepr(arch, keywords_dict[arch]) for arch in arch_list)
+        return (KeywordRepr(arch, keywords_dict[arch], self.is_hard_masked) for arch in arch_list)
 
     def get_keywords_dict(self, arch_list):
         arch_set = set(arch_list)
