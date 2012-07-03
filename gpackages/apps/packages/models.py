@@ -7,7 +7,8 @@ from package_info.repo_info import REPOS_TYPE
 # relative
 from .keywords import KeywordRepr
 #from utils import get_link
-from package_info.validators import validate_url, validate_email
+from package_info.validators import validate_url, validate_email, \
+                                    validate_name
 
 
 class AbstractDateTimeModel(models.Model):
@@ -220,7 +221,8 @@ class HerdsModel(AbstractDateTimeModel):
         ordering = ('name',)
 
 class VirtualPackageModel(models.Model):
-    name = models.CharField(max_length = 254, db_index = True)
+    name = models.CharField(max_length = 254, db_index = True,
+                            validators = [validate_name])
     category = models.ForeignKey(CategoryModel)
 
     objects = managers.VirtualPackageManager()
