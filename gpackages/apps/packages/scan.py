@@ -2,6 +2,7 @@ from datetime import datetime
 from packages import models
 import sys
 from django.db import IntegrityError
+from django.utils.encoding import smart_unicode
 from collections import defaultdict
 from package_info.generic import StrThatIgnoreCase, toint
 from package_info.porttree import porttree
@@ -415,18 +416,26 @@ class Scanner(object):
         homepages = ebuild.homepages
         return _get_items(homepages, models.HomepageModel, 'url', self.homepages_cache)
 
-    def get_maintainers_objects(self, maintainers):
+    def get_maintainers_objects(self, maintainers, update_maintainer = False):
         objects = []
         #for maintainer in package.metadata.maintainers():
         for maintainer in maintainers:
             if maintainer.email in self.maintainers_cache:
-                objects.append(self.maintainers_cache[maintainer.email])
+                m_obj = self.maintainers_cache[maintainer.email]
             else:
-                maintainer_object, created = models.MaintainerModel \
+                m_obj, created = models.MaintainerModel \
                         .objects.get_or_create(maintainer = maintainer)
-                objects.append(maintainer_object)
                 # Add to cache
-                self.maintainers_cache[maintainer_object.email] = maintainer_object
+                self.maintainers_cache[m_obj.email] = m_obj
+
+            #If we find maintainer name
+            if (update_maintainer or m_obj.name is None) and \
+                    smart_unicode(m_obj.name) != smart_unicode(maintainer.name):
+
+                m_obj.name = maintainer.name
+                m_obj.save(force_update = True)
+
+            objects.append(m_obj)
         return objects
 
     def get_herds_objects(self, package):
@@ -669,9 +678,11 @@ class Scanner(object):
                     self.scan_news_item(news)
 
     def add_related_to_news(self, news, news_obj):
-        authors_obj = self.get_maintainers_objects(news.authors)
+        authors_obj = self.get_maintainers_objects(news.authors,
+                                                   update_maintainer = True)
         news_obj.authors.add(*authors_obj)
-        translators_obj = self.get_maintainers_objects(news.translators)
+        translators_obj = self.get_maintainers_objects(news.translators,
+                                                       update_maintainer = True)
         news_obj.translators.add(*translators_obj)
 
     def update_related_to_news(self, news, news_obj):
