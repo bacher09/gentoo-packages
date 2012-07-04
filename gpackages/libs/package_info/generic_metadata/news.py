@@ -6,7 +6,7 @@ from datetime import datetime
 from email import message_from_string
 from email.utils import getaddresses
 from ..generic import ToStrMixin, toint, file_get_content
-from ..abstract import AbstractNewsItem
+from ..abstract import AbstractNewsItem, SimpleMaintainer
 
 NEWS_STR_RE = r'^(?P<date>\d{4,4}-\d{2}-\d{2})-(?P<title>.*)$'
 news_re = re.compile(NEWS_STR_RE)
@@ -88,21 +88,12 @@ class NewsItem(ToStrMixin):
     def __unicode__(self):
         return unicode(self.name)
 
-class SimpleMaintainer(ToStrMixin):
-
-    def __init__(self, email, name = None):
-        self.email = email
-        self.name = name
-
-    def __unicode__(self):
-        return unicode(self.email)
-
 def maintainers_list(tuple_list):
-    l = []
+    s = set()
     if tuple_list:
         for name, email in getaddresses(tuple_list):
-            l.append(SimpleMaintainer(email, name))
-    return l
+            s.add(SimpleMaintainer(email, name))
+    return tuple(s)
 
 class NewsItemLang(AbstractNewsItem):
     

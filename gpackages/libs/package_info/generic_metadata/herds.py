@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from collections import defaultdict
 from .my_etree import etree
 from ..generic import ToStrMixin
+from ..abstract import SimpleMaintainer
 
 def _gen_func(name):
     return lambda self: getattr(self, name)
@@ -28,7 +29,7 @@ class AbstractXmlObject(object):
             if obj_xml is not None:
                 setattr(self, '_' + val, obj_xml.text)
 
-class Maintainer(AbstractXmlObject, ToStrMixin):
+class Maintainer(AbstractXmlObject, SimpleMaintainer):
     """Have 3 atributes:
 
         - name -- maintainer name
@@ -41,21 +42,6 @@ class Maintainer(AbstractXmlObject, ToStrMixin):
         super(Maintainer, self).__init__(*args, **kwargs)
         if self._email is not None:
             self._email = self._email.lower()
-
-    def __eq__(self, other):
-        if isinstance(other, Maintainer):
-            return self.email == other.email
-        else:
-            return self.email == unicode(other)
-
-    def __ne__(self, other):
-        return self.email != other.email
-
-    def __hash__(self):
-        return hash(self.email)
-
-    def __unicode__(self):
-        return self.email
 
 class Herd(AbstractXmlObject, ToStrMixin):
     """Have 3 atributes:
