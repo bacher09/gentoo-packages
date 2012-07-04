@@ -88,6 +88,22 @@ class NewsItem(ToStrMixin):
     def __unicode__(self):
         return unicode(self.name)
 
+class SimpleMaintainer(ToStrMixin):
+
+    def __init__(self, email, name = None):
+        self.email = email
+        self.name = name
+
+    def __unicode__(self):
+        return unicode(self.email)
+
+def maintainers_list(tuple_list):
+    l = []
+    if tuple_list:
+        for name, email in getaddresses(tuple_list):
+            l.append(SimpleMaintainer(email, name))
+    return l
+
 class NewsItemLang(AbstractNewsItem):
     
     def __init__(self, item, date, lang = 'en', name = ''):
@@ -118,15 +134,11 @@ class NewsItemLang(AbstractNewsItem):
 
     @property
     def authors(self):
-        "Returns list of tuples"
-        authors = self._mes_obj.get_all('Author')
-        return getaddresses(authors)
+        return maintainers_list(self._mes_obj.get_all('Author'))
 
     @property
     def translators(self):
-        "Returns list of tuples"
-        translators = self._mes_obj.get_all('Translator')
-        return getaddresses(translators)
+        return maintainers_list(self._mes_obj.get_all('Translator'))
 
     @property
     def message(self):

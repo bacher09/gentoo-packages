@@ -42,6 +42,9 @@ class PortageNewsModel(AbstractDateTimeModel):
     hash = models.CharField(max_length = 128)
     #repository = models.ForeignKey(RepositoryModel)
 
+    authors = models.ManyToManyField('MaintainerModel', related_name = 'author_news_set')
+    translators = models.ManyToManyField('MaintainerModel', related_name = 'translator_news_set')
+
     objects = managers.PortageNewsManager()
 
     def init_by_news(self, news):
@@ -55,6 +58,10 @@ class PortageNewsModel(AbstractDateTimeModel):
 
     def update_by_news(self, news):
         self.init_by_news(news)
+
+    def clear_related(self):
+        self.authors.clear()
+        self.translators.clear()
 
     def save(self, *args, **kwargs):
         self.message_as_html = simple_markup(self.message)

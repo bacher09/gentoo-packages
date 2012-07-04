@@ -415,9 +415,10 @@ class Scanner(object):
         homepages = ebuild.homepages
         return _get_items(homepages, models.HomepageModel, 'url', self.homepages_cache)
 
-    def get_maintainers_objects(self, package):
+    def get_maintainers_objects(self, maintainers):
         objects = []
-        for maintainer in package.metadata.maintainers():
+        #for maintainer in package.metadata.maintainers():
+        for maintainer in maintainers:
             if maintainer.email in self.maintainers_cache:
                 objects.append(self.maintainers_cache[maintainer.email])
             else:
@@ -495,7 +496,8 @@ class Scanner(object):
 
     def add_related_to_package(self, package, package_object):
         package_object.herds.add(*self.get_herds_objects(package))
-        package_object.maintainers.add(*self.get_maintainers_objects(package))
+        package_object.maintainers. \
+            add(*self.get_maintainers_objects(package.metadata.maintainers()))
 
     def update_related_to_package(self, package, package_object):
         self.clear_related_to_package(package_object)
@@ -662,17 +664,30 @@ class Scanner(object):
 
     def scan_news(self):
         for tree in porttree.iter_trees():
-            if tree.news is None:
-                continue
-            for news in tree.news.iter_news():
-                self.scan_news_item(news)
+            if tree.news is not None:
+                for news in tree.news.iter_news():
+                    self.scan_news_item(news)
+
+    def add_related_to_news(self, news, news_obj):
+        authors_obj = self.get_maintainers_objects(news.authors)
+        news_obj.authors.add(*authors_obj)
+        translators_obj = self.get_maintainers_objects(news.translators)
+        news_obj.translators.add(*translators_obj)
+
+    def update_related_to_news(self, news, news_obj):
+        news_obj.clear_related()
+        self.add_related_to_news(news, news_obj)
                  
     def scan_news_item(self, news_item):
         for n in news_item.news.itervalues():
             n_obj, created = models.PortageNewsModel.objects. \
                 only('hash').get_or_create(news = n)
 
-            if not created and n.sha1 != n_obj.hash:
+            if created:
+                self.add_related_to_news(n, n_obj)
+            # and not creted 
+            if n.sha1 != n_obj.hash:
                 n_obj.update_by_news(n)
                 n_obj.save(force_update = True)
+                self.update_related_to_news(n, n_obj)
 
