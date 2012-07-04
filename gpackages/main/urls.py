@@ -19,14 +19,15 @@ if DEBUG:
                                 MaintainerModel, UseFlagDescriptionModel, \
                                 RepositoryModel, VirtualPackageModel, \
                                 RepositoryFeedModel, RepositorySourceModel, \
-                                LicenseGroupModel
+                                LicenseGroupModel, PortageNewsModel
 
     databrowse.site.register(EbuildModel, PackageModel, UseFlagModel, 
                              LicenseModel, LicenseGroupModel, CategoryModel,
                              Keyword, ArchesModel, HomepageModel, HerdsModel,
                              MaintainerModel, UseFlagDescriptionModel, 
                              RepositoryModel, VirtualPackageModel, 
-                             RepositoryFeedModel, RepositorySourceModel )
+                             RepositoryFeedModel, RepositorySourceModel,
+                             PortageNewsModel)
     urlpatterns += (
         url(r'^data/(.*)', databrowse.site.root),
         url(r'^templateview/(?P<templatename>.*)/?$', 

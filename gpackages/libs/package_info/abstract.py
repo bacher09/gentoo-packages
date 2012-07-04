@@ -20,3 +20,6 @@ class AbstractKeywords(object):
 
 class AbstractUse(object):
     pass
+
+class AbstractNewsItem(object):
+    pass

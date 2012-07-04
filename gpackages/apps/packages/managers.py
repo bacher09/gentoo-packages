@@ -179,8 +179,15 @@ class RepositoryMixin(object):
             kwargs['name'] = repo.name
         return super(RepositoryMixin, self).filter(*args, **kwargs)
 
+class PortageNewsMixin(object):
+    def filter(self, *args, **kwargs):
+        news = get_from_kwargs_and_del('news', kwargs)
+        if news is not None:
+            kwargs.update({'lang': news.lang, 'name': news.name })
+        return super(PortageNewsMixin, self).filter(*args, **kwargs)
+
 
 _gen_all_query_and_manager('Mixin', 'QuerySet', 'Manager',
                            KeywordMixin, HerdsMixin,
                            MaintainerMixin, VirtualPackageMixin,
-                           RepositoryMixin)
+                           RepositoryMixin, PortageNewsMixin)

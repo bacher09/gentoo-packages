@@ -1,6 +1,6 @@
 from django.db import models
 from package_info.abstract import AbstractCategory, AbstarctPackage, \
-                                  AbstractEbuild
+                                  AbstractEbuild, AbstractNewsItem
 import managers
 from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
@@ -10,6 +10,12 @@ from .keywords import KeywordRepr
 from package_info.validators import validate_url, validate_email, \
                                     validate_name
 
+from django.utils.html import urlize, linebreaks
+
+
+def simple_markup(value):
+    temp = urlize(value,trim_url_limit = 57, autoescape=True) # maybe nofollow
+    return linebreaks(temp)
 
 class AbstractDateTimeModel(models.Model):
     created_datetime = models.DateTimeField(auto_now_add = True)
@@ -17,6 +23,49 @@ class AbstractDateTimeModel(models.Model):
 
     class Meta:
         abstract = True
+
+class PortageNewsModel(AbstractDateTimeModel):
+
+    def __init__(self, *args, **kwargs):
+        news = get_from_kwargs_and_del('news', kwargs)
+        super(PortageNewsModel, self).__init__(*args, **kwargs)
+        if news is not None:
+            self.init_by_news(news)
+
+    date = models.DateField()
+    name = models.SlugField(max_length = 200, db_index = True)
+    title = models.CharField(max_length = 255)
+    lang = models.CharField(max_length = 5, db_index = True)
+    revision = models.PositiveIntegerField(default = 1)
+    message = models.TextField()
+    message_as_html = models.TextField()
+    hash = models.CharField(max_length = 128)
+    #repository = models.ForeignKey(RepositoryModel)
+
+    objects = managers.PortageNewsManager()
+
+    def init_by_news(self, news):
+        self.date = news.date
+        self.name = news.name
+        self.title = news.title
+        self.lang = news.lang
+        self.revision = news.revision
+        self.message = news.message
+        self.hash = news.sha1
+
+    def update_by_news(self, news):
+        self.init_by_news(news)
+
+    def save(self, *args, **kwargs):
+        self.message_as_html = simple_markup(self.message)
+        return super(PortageNewsModel, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return unicode(self.name)
+
+    class Meta:
+        ordering = ('-date',)
+        unique_together = ('name', 'lang')
 
 class HomepageModel(models.Model):
     url = models.URLField(max_length=255, unique = True, validators = [validate_url])

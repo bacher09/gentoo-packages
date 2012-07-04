@@ -4,7 +4,7 @@ from models import EbuildModel, PackageModel, LicenseModel, CategoryModel, \
                    UseFlagModel,  RepositoryModel, HomepageModel, MaintainerModel, \
                    Keyword, ArchesModel, UseFlagDescriptionModel, HerdsModel, \
                    VirtualPackageModel, RepositoryFeedModel, \
-                   RepositorySourceModel, LicenseGroupModel
+                   RepositorySourceModel, LicenseGroupModel, PortageNewsModel
 
 class AbstractAnnotateAdmin(object):
     annotate_dict = {}
@@ -92,6 +92,12 @@ class RepositorySourceAdmin(admin.ModelAdmin):
     list_filter = ('repo_type', )
     list_select_related = True
 
+class PortageNewsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'lang', 'date')
+    list_filter = ('lang',)
+    search_fields = ('name', 'title', 'message')
+    date_hierarchy = 'date'
+
 
 admin.site.register(EbuildModel, EbuildAdmin)
 admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
@@ -108,3 +114,4 @@ admin.site.register(HomepageModel, HomepageAdmin)
 admin.site.register(HerdsModel, HerdsAdmin)
 admin.site.register(MaintainerModel, MaintainerAdmin)
 admin.site.register(ArchesModel, ArchesAdmin)
+admin.site.register(PortageNewsModel, PortageNewsAdmin)

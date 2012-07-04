@@ -6,6 +6,7 @@ from datetime import datetime
 from email import message_from_string
 from email.utils import getaddresses
 from ..generic import ToStrMixin, toint, file_get_content
+from ..abstract import AbstractNewsItem
 
 NEWS_STR_RE = r'^(?P<date>\d{4,4}-\d{2}-\d{2})-(?P<title>.*)$'
 news_re = re.compile(NEWS_STR_RE)
@@ -87,7 +88,7 @@ class NewsItem(ToStrMixin):
     def __unicode__(self):
         return unicode(self.name)
 
-class NewsItemLang(object):
+class NewsItemLang(AbstractNewsItem):
     
     def __init__(self, item, date, lang = 'en', name = ''):
         f = file_get_content(item)

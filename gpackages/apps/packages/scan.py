@@ -127,6 +127,7 @@ class Scanner(object):
         self.scan_global_use_descr = bool_get('scan_global_use', False)
         self.scan_local_use_descr = bool_get('scan_local_use', False)
         self.is_scan_license_groups = bool_get('scan_license_groups', False)
+        self.is_scan_news = bool_get('scan_news', False)
 
     def show_time(self):
         "Prints scan time"
@@ -162,6 +163,9 @@ class Scanner(object):
 
         if self.is_scan_license_groups:
             self.scan_license_groups()
+
+        if self.is_scan_news:
+            self.scan_news()
 
         if self.is_show_time:
             self.show_time()
@@ -655,4 +659,20 @@ class Scanner(object):
                         use_desc_obj.description = description
                         use_desc_obj.save(force_update = True)
             models.UseFlagDescriptionModel.objects.bulk_create(to_create)
-                
+
+    def scan_news(self):
+        for tree in porttree.iter_trees():
+            if tree.news is None:
+                continue
+            for news in tree.news.iter_news():
+                self.scan_news_item(news)
+                 
+    def scan_news_item(self, news_item):
+        for n in news_item.news.itervalues():
+            n_obj, created = models.PortageNewsModel.objects. \
+                only('hash').get_or_create(news = n)
+
+            if not created and n.sha1 != n_obj.hash:
+                n_obj.update_by_news(n)
+                n_obj.save(force_update = True)
+
