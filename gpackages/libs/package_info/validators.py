@@ -8,7 +8,7 @@ __all__ = ('validate_email', 'validate_url', 'ValidationError')
 
 REVISION_RE = r'r\d+'
 VERSION_RE = r'[\w.]+'
-NAME_RE = r'[\w+-]+'
+NAME_RE = r'[\w+-]+?'
 
 validate_revision = RegexValidator('^%s$' % REVISION_RE)
 validate_version = RegexValidator('^%s$' % VERSION_RE)

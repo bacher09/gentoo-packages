@@ -147,7 +147,11 @@ class Ebuild(EbuildMixin):
 
     __slots__ = ('package', 'ebuild', 'cpv_object', '_cache', '_env',
                  '_is_valid')
-    ENV_VARS = PORTDB._aux_cache_keys
+
+    ENV_NEED = set(['KEYWORDS', 'HOMEPAGE', 'LICENSE',
+                    'DESCRIPTION', 'EAPI', 'SLOT'])
+
+    ENV_VARS = PORTDB._aux_cache_keys | ENV_NEED
 
     def __init__(self, package, ebuild):
         self.package = package
