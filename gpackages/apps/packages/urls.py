@@ -2,7 +2,7 @@ from django.conf.urls import patterns, include, url
 from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   RepositoriesListView, LicenseGroupsView , EbuildsListView, \
                   PackagesListsView, PackageDetailView, EbuildDetailView, \
-                  GlobalUseListView
+                  GlobalUseListView, NewsListView, NewsDetailView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -16,8 +16,10 @@ urlpatterns = patterns('',
     url(r'^ebuild/(?P<cpvr>[^/]+/[^/]+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^packages/{0}$'.format(PackagesListsView.get_url_part()), PackagesListsView.as_view(), name = 'packages'),
 
-    # In Future I will write my onw URL Resolver !!!
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<pk>\d+)/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<cpr>[^/]+/[^/]+)/$', PackageDetailView.as_view(), name = 'package'),
+    url(r'^news/$', NewsListView.as_view(), name = 'news'),
+    url(r'^news/(?P<pk>\d+)/$', NewsDetailView.as_view(), name = 'news_item'),
+    url(r'^news/(?P<slug>[^/]+)/$', NewsDetailView.as_view(), name = 'news_item'),
 )

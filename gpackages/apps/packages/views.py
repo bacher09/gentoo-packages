@@ -3,7 +3,7 @@ from generic.views import ContextListView, ContextTemplateView, ContextView, \
                           MultipleFilterListViewMixin
 from models import CategoryModel, HerdsModel, MaintainerModel, \
                    RepositoryModel, LicenseGroupModel, EbuildModel, \
-                   PackageModel, UseFlagModel
+                   PackageModel, UseFlagModel, PortageNewsModel
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
@@ -147,3 +147,19 @@ class GlobalUseListView(ContextListView):
     template_name = 'global_use.html'
     context_object_name = 'uses'
     queryset = UseFlagModel.objects.exclude(description = '') 
+
+class NewsListView(ContextListView):
+    extra_context = {'page_name': 'News'}
+    template_name = 'portage_news.html'
+    context_object_name = 'news'
+    paginate_by = 20
+    queryset = PortageNewsModel.objects.filter(lang = 'en'). \
+        prefetch_related('authors', 'translators')
+
+class NewsDetailView(ContextView, DetailView):
+    extra_context = {'page_name': 'News Item'}
+    template_name = 'portage_news_item.html'
+    context_object_name = 'news_item'
+    slug_field = 'name'
+    queryset = PortageNewsModel.objects.filter(lang = 'en'). \
+        prefetch_related('authors', 'translators')

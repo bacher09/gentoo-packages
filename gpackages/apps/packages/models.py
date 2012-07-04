@@ -14,7 +14,7 @@ from django.utils.html import urlize, linebreaks
 
 
 def simple_markup(value):
-    temp = urlize(value,trim_url_limit = 57, autoescape=True) # maybe nofollow
+    temp = urlize(value,trim_url_limit = 70, autoescape=True) # maybe nofollow
     return linebreaks(temp)
 
 class AbstractDateTimeModel(models.Model):
@@ -46,6 +46,10 @@ class PortageNewsModel(AbstractDateTimeModel):
     translators = models.ManyToManyField('MaintainerModel', related_name = 'translator_news_set')
 
     objects = managers.PortageNewsManager()
+
+    @models.permalink
+    def get_absolute_url(self):
+        return ('news_item',(), {'pk': self.pk})
 
     def init_by_news(self, news):
         self.date = news.date

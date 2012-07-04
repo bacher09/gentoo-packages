@@ -24,21 +24,28 @@
         .package-well {
             padding: 10px 10px 0px 10px;
         }
-
         .package-name {
             border-radius: 6px 6px 6px 6px;
             padding: 8px 10px 8px 10px;
             margin: 0px 0px 10px 0px;
             background-color: #CCC;
         }
-
         .nowrap {
             white-space: nowrap;
         }
-
         .package_update_datetime {
             text-align: right;
             float: right;
+        }
+        .metadata {
+            font-size: 11px;
+            color: grey;
+        }
+        .metadata span {
+            display: block;
+        }
+        .news_item {
+            padding-top: 15px;
         }
 
     </style>
@@ -66,6 +73,7 @@
             <ul class="nav">
               {% get_flatpages '/about/' as about_pages %}
               <li class="{% active_str '/' %}"><a href="/">Home</a></li>
+              {% active_link 'news' 'Portage News' %}
               {% for about in about_pages %}<li class="{% active_str about.url %}"><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
               <li><a href="#contact">Contact</a></li>
             </ul>

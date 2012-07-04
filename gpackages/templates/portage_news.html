@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load paginator %}
+
+{% block content %}
+
+{% for news_item in news %}
+    {% include 'portage_news_object.html' %}
+{% endfor %}
+
+{% paginator page_obj 3 1 %}
+
+{% endblock content %}
