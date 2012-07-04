@@ -135,3 +135,14 @@ class NewsItemLang(AbstractNewsItem):
     def message(self):
         return self._mes_obj.get_payload()
 
+    @property
+    def if_installed(self):
+        return tuple(set(self._mes_obj.get_all('Display-If-Installed')))
+
+    @property
+    def if_keyword(self):
+        return tuple(set(self._mes_obj.get_all('Display-If-Keyword')))
+
+    @property
+    def if_profile(self):
+        return tuple(set(self._mes_obj.get_all('Display-If-Profile')))
