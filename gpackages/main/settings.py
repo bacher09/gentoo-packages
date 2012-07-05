@@ -130,6 +130,7 @@ INSTALLED_APPS = (
     #
     'packages',
     'generic',
+    'model_stats',
 )
 
 FIXTURE_DIRS = (os.path.join(PROJECT_ROOT, 'fixtures'),)
