@@ -463,8 +463,9 @@ class EbuildModel(AbstractDateTimeModel):
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
 
-    #eapi = models.PositiveSmallIntegerField(default = 0)
-    #slot = models.PositiveSmallIntegerField(default = 0)
+    eapi = models.PositiveSmallIntegerField(default = 0)
+    slot = models.CharField(max_length = 32, null = True,
+                            db_index = True, default = '0')
     
 
     objects = managers.EbuildManager()
@@ -490,6 +491,8 @@ class EbuildModel(AbstractDateTimeModel):
         self.ebuild_mtime = ebuild.mtime
         self.ebuild_hash = ebuild.sha1
         self.description = ebuild.description
+        self.eapi = ebuild.eapi_as_int
+        self.slot = ebuild.slot_for_q
 
     def check_or_need_update(self, ebuild):
         return self.ebuild_hash != ebuild.sha1

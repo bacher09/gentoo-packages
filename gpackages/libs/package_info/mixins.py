@@ -245,6 +245,20 @@ class EbuildRevMixin(object):
                 d = toint(d, 0)
         return d
 
+class EbuildEapiMixin(object):
+    
+    @cached_property
+    def eapi_as_int(self):
+        return toint(self.eapi, 0)
+
+class EbuildSlotMixin(object):
+    
+    @cached_property
+    def slot_for_q(self):
+        if not self.slot:
+            return None
+        return self.slot
+
 class EbuildHomepageMixin(object):
 
     @cached_property
@@ -333,7 +347,8 @@ class EbuildUseMixin(object):
         return frozenset(self.get_uses())
 
 class EbuildGenericProp(EbuildHomepageMixin, EbuildLicenseMixin, \
-                        EbuildKeywordsMixin, EbuildUseMixin, EbuildRevMixin):
+                        EbuildKeywordsMixin, EbuildUseMixin, EbuildRevMixin,
+                        EbuildSlotMixin, EbuildEapiMixin):
     pass
 
 class PortageGenericMixin(PortageBaseMixin, PortageHerdsMixin):
