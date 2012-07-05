@@ -57,10 +57,12 @@ class Herd(AbstractXmlObject, ToStrMixin):
         self._xml_object = xml_object
 
     def __eq__(self, other):
+        if not isinstance(other, Herd):
+            return False
         return self.name == other.name
 
     def __ne__(self, other):
-        return self.name != other.name
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.name)

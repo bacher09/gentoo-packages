@@ -66,9 +66,13 @@ class SourcesObject(ToStrMixin):
         return hash(self.source_url)
 
     def __eq__(self, other):
+        if not isinstance(other, SourcesObject):
+            return False
         return self.source_url == other.source_url
 
     def __lt__(self, other):
+        if not isinstance(other, SourcesObject):
+            return NotImplemented
         return self.source_url < other.source_url
 
     @property

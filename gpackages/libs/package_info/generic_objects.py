@@ -21,10 +21,12 @@ class Use(ToStrMixin, AbstractUse):
         return self.name
 
     def __eq__(self, other):
+        if not isinstance(other, self):
+            return False
         return self.name == other.name
 
     def __ne__(self, other):
-        return self.name != other.name
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.name)
@@ -69,9 +71,13 @@ class Keyword(ToStrMixin, AbstractKeywords):
         return self.status > other.status
 
     def __eq__(self, other):
+        if not isinstance(other, Keyword):
+            return False
         return (self.arch, self.status) == (other.arch, other.status)
 
     def __lt__(self, other):
+        if not isinstance(other, Keyword):
+            return NotImplemented
         return (self.status, self.arch) > (other.status, other.arch)
 
     @property
