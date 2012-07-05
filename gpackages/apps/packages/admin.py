@@ -6,25 +6,6 @@ from models import EbuildModel, PackageModel, LicenseModel, CategoryModel, \
                    VirtualPackageModel, RepositoryFeedModel, \
                    RepositorySourceModel, LicenseGroupModel, PortageNewsModel
 
-class AbstractAnnotateAdmin(object):
-    annotate_dict = {}
-
-    def queryset(self, request):
-        return super(AbstractAnnotateAdmin, self).queryset(request) \
-            .annotate(**self.annotate_dict)
-
-class EbuildsCountAdmin(AbstractAnnotateAdmin):
-    annotate_dict = {'ebuilds_count': Count('ebuildmodel')}
-    
-    def ebuilds_count(self, obj):
-        return obj.ebuilds_count
-
-class PackagesCountAdmin(AbstractAnnotateAdmin):
-    annotate_dict = {'packages_count': Count('packagemodel')}
-
-    def packages_count(self, obj):
-        return obj.packages_count
-
 class KeywordAdmin(admin.TabularInline):
     model = Keyword 
 
@@ -45,20 +26,23 @@ class VirtualPackageAdmin(admin.ModelAdmin):
     search_fields = ('name','category__category')
     list_select_related = True
 
-class PackageAdmin(EbuildsCountAdmin, admin.ModelAdmin):
+class PackageAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'ebuilds_count')
     list_filter = ('created_datetime', 'updated_datetime', 'herds')
     list_select_related = True
 
-class HerdsAdmin(PackagesCountAdmin, admin.ModelAdmin):
-    list_display = ('name', 'email', 'description', 'packages_count')
+class HerdsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'description', 'packages_count',
+                    'ebuilds_count', 'maintainers_count',)
+                    # 'repositories_count')
     search_fields = ('name', 'email')
 
-class MaintainerAdmin(PackagesCountAdmin, admin.ModelAdmin):
-    list_display = ('name', 'email', 'packages_count')
+class MaintainerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'packages_count', 'ebuilds_count',
+                    'herds_count')
     search_fields = ('name', 'email')
 
-class UseFlagAdmin(EbuildsCountAdmin, admin.ModelAdmin):
+class UseFlagAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'ebuilds_count')
     search_fields = ('name', 'description')
 
@@ -70,12 +54,13 @@ class HomepageAdmin(admin.ModelAdmin):
     list_display = ('url',)
     search_fields = ('url',)
 
-class LicenseAdmin(EbuildsCountAdmin, admin.ModelAdmin):
+class LicenseAdmin(admin.ModelAdmin):
     list_display = ('name', 'ebuilds_count')
     search_fields = ('name',)
 
 class RepositoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'updated_datetime', 'official', 'homepage', 'quality')
+    list_display = ('name', 'updated_datetime', 'official', 'homepage', 
+                    'quality', 'packages_count', 'ebuilds_count')
     search_fields = ('name', 'description', 'owner_name', 'owner_email')
     list_filter = ('created_datetime', 'updated_datetime', 'official', 'quality')
     date_hierarchy = 'updated_datetime'
@@ -98,13 +83,18 @@ class PortageNewsAdmin(admin.ModelAdmin):
     search_fields = ('name', 'title', 'message')
     date_hierarchy = 'date'
 
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('category', 'virtual_packages_count', 'packages_count',
+                    'ebuilds_count', 'repositories_count')
+    search_fields = ('category', 'description')
+
 
 admin.site.register(EbuildModel, EbuildAdmin)
 admin.site.register(VirtualPackageModel, VirtualPackageAdmin)
 admin.site.register(PackageModel, PackageAdmin)
 admin.site.register(LicenseModel, LicenseAdmin)
 admin.site.register(LicenseGroupModel)
-admin.site.register(CategoryModel)
+admin.site.register(CategoryModel, CategoryAdmin)
 admin.site.register(UseFlagModel, UseFlagAdmin)
 admin.site.register(UseFlagDescriptionModel, UseFlagDescriptionAdmin)
 admin.site.register(RepositoryModel, RepositoryAdmin)
