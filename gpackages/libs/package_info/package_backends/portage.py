@@ -51,6 +51,9 @@ class Portage(PortageMixin):
     def __unicode__(self):
         return u'portage'
 
+    def __len__(self):
+        return len(self.tree_order)
+
 class PortTree(PortTreeMixin):
     "Represent portage tree as object"
 
@@ -71,6 +74,9 @@ class PortTree(PortTreeMixin):
     def porttree_path(self):
         "Full path to portage tree"
         return self.porttree
+
+    def __len__(self):
+        return len(PORTDB.settings.categories)
 
 class Category(CategoryMixin):
     "Represent category of portage tree as object"

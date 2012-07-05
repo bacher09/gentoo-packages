@@ -6,6 +6,7 @@ from package_info.generic import get_from_kwargs_and_del
 from package_info.repo_info import REPOS_TYPE
 # relative
 from .keywords import KeywordRepr
+from .stats import StatsMixin
 #from utils import get_link
 from package_info.validators import validate_url, validate_email, \
                                     validate_name
@@ -90,11 +91,16 @@ class ArchesModel(models.Model):
     def __unicode__(self):
         return self.name
 
-class RepositoryModel(AbstractDateTimeModel):
+class RepositoryModel(StatsMixin, AbstractDateTimeModel):
     QUALITY_CHOICES = ( (0, 'stable'),
                         (1, 'testing'),
                         (2, 'experimental'),
                       )
+
+    stats_params = (
+        ('packages_count', 'packagemodel'),
+        ('ebuilds_count', 'packagemodel__ebuildmodel'),
+    )
 
     def __init__(self, *args, **kwargs):
         repo = get_from_kwargs_and_del('repo', kwargs)
@@ -112,6 +118,12 @@ class RepositoryModel(AbstractDateTimeModel):
     homepage = models.URLField(blank = True, null = True)
     official = models.BooleanField(default = False)
     quality = models.PositiveSmallIntegerField(choices = QUALITY_CHOICES)
+
+    # Maybe in future auto generate this field by metaclass ?
+    # For fast stats
+    packages_count = models.PositiveIntegerField(default = 0)
+    ebuilds_count = models.PositiveIntegerField(default = 0)
+
 
     objects = managers.RepositoryManager()
 
@@ -194,13 +206,20 @@ class RepositorySourceModel(models.Model):
     def __unicode__(self):
         return self.url
 
-class CategoryModel(models.Model):
+class CategoryModel(StatsMixin, models.Model):
     def __init__(self, *args, **kwargs):
         super(CategoryModel, self).__init__(*args, **kwargs)
 
         category = kwargs.get('category')
         if isinstance(category, AbstractCategory):  
             self.update_by_category(category)
+
+    stats_params = (
+        ('virtual_packages_count', 'virtualpackagemodel'),
+        ('packages_count', 'virtualpackagemodel__packagemodel'),
+        ('repositories_count', 'virtualpackagemodel__packagemodel__repository'),
+        ('ebuilds_count', 'virtualpackagemodel__packagemodel__ebuildmodel'),
+    )
 
     def update_by_category(self, category):
         self.description = category.metadata.default_descr
@@ -212,20 +231,46 @@ class CategoryModel(models.Model):
     category = models.CharField(unique = True, max_length = 70, db_index = True)
     description = models.TextField(blank = True, null = True)
     metadata_hash = models.CharField(max_length = 128, null = True)
+
+    # Maybe in future auto generate this field by metaclass ?
+    # For fast stats
+    virtual_packages_count = models.PositiveIntegerField(default = 0)
+    packages_count = models.PositiveIntegerField(default = 0)
+    repositories_count = models.PositiveIntegerField(default = 0)
+    ebuilds_count =  models.PositiveIntegerField(default = 0)
     
     def __unicode__(self):
         return unicode(self.category)
 
-class MaintainerModel(AbstractDateTimeModel):
+class MaintainerModel(StatsMixin, AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
         maintainer = get_from_kwargs_and_del('maintainer', kwargs)
         super(MaintainerModel, self).__init__(*args, **kwargs)
         if maintainer is not None:
             self.init_by_maintainer(maintainer)
+
+    stats_params = (
+           ('packages_count', 'packagemodel'),
+           ('herds_count', 'herdsmodel'),
+           ('ebuilds_count', 'packagemodel__ebuildmodel'),
+           ('repositories_count', 'packagemodel__ebuildmodel'),
+           ('news_author_count', 'author_news_set'),
+           ('news_translator_count', 'translator_news_set')
+        )
         
     name = models.CharField(max_length = 255, blank = True, null = True)
     email = models.EmailField(unique = True, validators = [validate_email], db_index = True)
+
+    # For fast stats
+    # Maybe use django-composition ?
+    # Maybe in future auto generate this field by metaclass ?
+    herds_count = models.PositiveIntegerField(default = 0)
+    packages_count = models.PositiveIntegerField(default = 0)
+    ebuilds_count =  models.PositiveIntegerField(default = 0)
+    repositories_count =  models.PositiveIntegerField(default = 0)
+    news_author_count = models.PositiveIntegerField(default = 0)
+    news_translator_count = models.PositiveIntegerField(default = 0)
 
     objects = managers.MaintainerManager()
 
@@ -246,7 +291,7 @@ class MaintainerModel(AbstractDateTimeModel):
     class Meta:
         ordering = ('name',)
 
-class HerdsModel(AbstractDateTimeModel):
+class HerdsModel(StatsMixin, AbstractDateTimeModel):
 
     def __init__(self, *args, **kwargs):
         herd = get_from_kwargs_and_del('herd', kwargs)
@@ -254,10 +299,25 @@ class HerdsModel(AbstractDateTimeModel):
         if herd is not None:
             self.init_by_herd(herd)
 
+    stats_params = (
+           ('packages_count', 'packagemodel'),
+           ('maintainers_count', 'maintainers'),
+           ('ebuilds_count', 'packagemodel__ebuildmodel'),
+           ('repositories_count', 'packagemodel__repository'),
+        )
+
     name = models.CharField(unique = True, max_length = 150, db_index = True)
     email = models.EmailField(validators = [validate_email])
     description = models.TextField(blank = True, null = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
+
+    # For fast stats
+    # Maybe use django-composition ?
+    # Maybe in future auto generate this field by metaclass ?
+    maintainers_count = models.PositiveIntegerField(default = 0)
+    packages_count = models.PositiveIntegerField(default = 0)
+    ebuilds_count = models.PositiveIntegerField(default = 0)
+    repositories_count = models.PositiveIntegerField(default = 0)
 
     objects = managers.HerdsManager()
 
@@ -304,7 +364,8 @@ class VirtualPackageModel(models.Model):
     class Meta:
         unique_together = ('name', 'category')
 
-class PackageModel(AbstractDateTimeModel):
+class PackageModel(StatsMixin, AbstractDateTimeModel):
+
     def __init__(self, *args, **kwargs):
         package_object, category = \
             get_from_kwargs_and_del(('package','category' ), kwargs)
@@ -313,6 +374,9 @@ class PackageModel(AbstractDateTimeModel):
         if isinstance(package_object, AbstarctPackage):
             self.init_by_package(package_object, category = category)
             
+    stats_params = (
+           ('ebuilds_count', 'ebuildmodel'),
+        )
         
     virtual_package = models.ForeignKey(VirtualPackageModel, db_index = True)
     changelog = models.TextField(blank = True, null = True)
@@ -329,6 +393,8 @@ class PackageModel(AbstractDateTimeModel):
     description = models.TextField(blank = True, null = True)
     repository = models.ForeignKey(RepositoryModel, db_index = True)
     # Different versions can have different licenses, or homepages.
+
+    ebuilds_count = models.PositiveIntegerField(default = 0)
     
     objects = managers.PackageManager()
 
@@ -407,10 +473,16 @@ class PackageModel(AbstractDateTimeModel):
         unique_together = ('virtual_package', 'repository')
         ordering = ('-updated_datetime',)
 
-class UseFlagModel(models.Model):
+class UseFlagModel(StatsMixin, models.Model):
+    stats_params = (
+           ('ebuilds_count', 'ebuildmodel'),
+        )
+
     name = models.CharField(unique = True, max_length = 60, db_index = True)
     description = models.TextField(blank = True)
     
+    ebuilds_count = models.PositiveIntegerField(default = 0)
+
     def __unicode__(self):
         return self.name
 
@@ -431,9 +503,14 @@ class UseFlagDescriptionModel(models.Model):
     class Meta:
         unique_together = ('use_flag', 'package')
 
-class LicenseModel(models.Model):
+class LicenseModel(StatsMixin, models.Model):
+    stats_params = (
+           ('ebuilds_count', 'ebuildmodel'),
+        )
+
     name = models.CharField(unique = True, max_length = 60, db_index = True)
     #description = TextField()
+    ebuilds_count = models.PositiveIntegerField(default = 0)
     
     def __unicode__(self):
         return self.name
@@ -647,5 +724,4 @@ class Keyword(models.Model):
 
     class Meta:
         unique_together = ('ebuild', 'arch')
-
 

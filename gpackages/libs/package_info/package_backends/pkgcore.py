@@ -57,6 +57,9 @@ class Portage(PortageMixin):
 
     def __unicode__(self):
         return u'pkgcore'
+
+    def __len__(self):
+        return len(self.repo_list)
         
 class PortTree(PortTreeMixin):
 
@@ -85,6 +88,9 @@ class PortTree(PortTreeMixin):
     @property
     def _versions(self):
         return self._repo_obj.versions
+
+    def __len__(self):
+        return len(self.categories)
 
 class Category(CategoryMixin):
     
