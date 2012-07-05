@@ -1,6 +1,8 @@
 import re
+from functools import total_ordering
+from types import StringTypes
 from .validators import REVISION_RE, VERSION_RE, NAME_RE
-from .generic import ToStrMixin
+from .generic import ToStrMixin, toint
 from .mixins import EbuildRevMixin
 
 PACKAGE_RE_P = r'(?P<category>[^/]+)/(?P<name>%(name)s)' %  \
@@ -32,10 +34,53 @@ EBUILD_CPVR_RE_P = r'%(cpv)s%(repository)s' % {
 EBUILD_CPV_RE = r'^%s$' % EBUILD_CPV_RE_P
 EBUILD_CPVR_RE = r'^%s$' % EBUILD_CPVR_RE_P
 
+VERSION_MAJ_P_RE = r'(?P<mver>(?P<num>(?:\d+\.)+\d+)(?P<alpha>[a-z])?)'
+VERSION_MIN_P_RE = r'(?:_(?P<prefix>alpha|beta|pre|rc|p)(?P<prefix_num>\d*))?'
+VERSION_P_RE = '^%(maj)s%(min)s$' % {'maj' : VERSION_MAJ_P_RE,
+                                     'min' : VERSION_MIN_P_RE }
+
 package_re = re.compile(PACKAGE_RE)
 package_cpr_re = re.compile(PACKAGE_CPV_RE)
 ebuild_cpvr_re = re.compile(EBUILD_CPVR_RE)
 ebuild_cpv_re = re.compile(EBUILD_CPV_RE)
+version_parse_re = re.compile(VERSION_P_RE)
+
+def maj_parse(num, alpha):
+    return tuple(num.split('.') + [alpha])
+
+PREFIX_WEIGHT = {'alpha': 0, 'beta': 1, 'pre': 2, 'rc': 3, None: 4, 'p' : 5}
+def min_parse(prefix, prefix_num):
+    p_weight = PREFIX_WEIGHT.get(prefix, 4)
+    if p_weight == 4:
+        prefix_num = 0
+
+    return (p_weight, toint(prefix_num, 0))
+
+@total_ordering
+class VersionParse(ToStrMixin):
+    
+    def __init__(self, version):
+        self.version = version
+        m = version_parse_re.match(version)
+        if m is None:
+            raise ValueError
+
+        dct = m.groupdict()
+        self.maj = maj_parse(dct['num'], dct['alpha'])
+        self.min = min_parse(dct['prefix'], dct['prefix_num'])
+
+    def __eq__(self, other):
+        if not isinstance(other, VersionParse):
+            return False
+        return (self.maj, self.min) == (other.maj, other.min)
+
+    def __lt__(self, other):
+        if not isinstance(other, VersionParse):
+            return NotImplemented
+        return (self.maj, self.min) < (other.maj, other.min)
+
+    def __unicode__(self):
+        return unicode(self.version)
 
 def _gen_func(name):
     return lambda self: self.gr_dict.get(name)
