@@ -129,6 +129,7 @@ class Scanner(object):
         self.scan_local_use_descr = bool_get('scan_local_use', False)
         self.is_scan_license_groups = bool_get('scan_license_groups', False)
         self.is_scan_news = bool_get('scan_news', False)
+        self.is_scan_license_text = bool_get('license_text', False)
 
     def show_time(self):
         "Prints scan time"
@@ -167,6 +168,9 @@ class Scanner(object):
 
         if self.is_scan_news:
             self.scan_news()
+
+        if self.is_scan_license_text:
+            self.scan_license_text()
 
         if self.is_show_time:
             self.show_time()
@@ -701,4 +705,12 @@ class Scanner(object):
                 n_obj.update_by_news(n)
                 n_obj.save(force_update = True)
                 self.update_related_to_news(n, n_obj)
+
+    def scan_license_text(self):
+        licenses = models.LicenseModel.objects.all()
+        for license in licenses:
+            text = porttree.licenses.get_license(license.name)
+            if text:
+                license.text = smart_unicode(text, errors='ignore')
+                license.save(force_update = True)
 
