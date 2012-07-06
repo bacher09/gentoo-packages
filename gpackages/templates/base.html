@@ -14,41 +14,6 @@
 
     <!-- Le styles -->
     <link href="{{ STATIC_URL }}css/style.css" rel="stylesheet">
-    <style>
-        .well {
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            border-bottom-right-radius: 10px;
-            border-bottom-left-radius: 10px;
-        }
-        .package-well {
-            padding: 10px 10px 0px 10px;
-        }
-        .package-name {
-            border-radius: 6px 6px 6px 6px;
-            padding: 8px 10px 8px 10px;
-            margin: 0px 0px 10px 0px;
-            background-color: #CCC;
-        }
-        .nowrap {
-            white-space: nowrap;
-        }
-        .package_update_datetime {
-            text-align: right;
-            float: right;
-        }
-        .metadata {
-            font-size: 11px;
-            color: grey;
-        }
-        .metadata span {
-            display: block;
-        }
-        .news_item {
-            padding-top: 15px;
-        }
-
-    </style>
     <link href="{{ STATIC_URL }}css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -123,11 +88,11 @@ Text
                     <div class="well">
                                                         <div id="rightcontent">
                                                         <div>
-                                                            <span class="label label-info" style="display: block"> Last update</span> 
+                                                            <span class="label label-info label-legend"> Last update</span> 
                                                             {% last_updated %}
                                                         </div><br/>
                                                       <div>
-                                                          <span class="left-legend label label-info" style="display: block;">Legend</span>
+                                                          <span class="label label-info label-legend">Legend</span>
                                                           <ul class="legend left-bar-list">
                                                               <li><span class="stable">+</span> - stable</li>
                                                               <li><span class="unstable">~</span> - unstable</li>

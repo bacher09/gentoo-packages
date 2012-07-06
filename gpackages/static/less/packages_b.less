@@ -64,21 +64,70 @@
 body {
     padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
 }
+@unstable: #FC0;
+@stable: #3F0;
+@hardmask: #F00;
+@blank: #FFF;
+
 .unstable {
-    background-color: #FC0;
+    background-color: @unstable;
 }
 .stable {
-    background-color: #3F0;
+    background-color: @stable;
 }
 .hardmask {
-    background-color: #F00;
+    background-color: @hardmask;
 }
 .blank {
-    background-color: #FFF;
+    background-color: @blank;
 }
-
 .keywords {
     td, th {
         text-align: center;
     }
+}
+@myradius: 10px;
+
+.well {
+    border-top-left-radius: @myradius;
+    border-top-right-radius: @myradius;
+    border-bottom-right-radius: @myradius;
+    border-bottom-left-radius: @myradius;
+}
+.package-well {
+    padding: 10px 10px 0px 10px;
+}
+.package-name {
+    border-radius: 6px 6px 6px 6px;
+    padding: 8px 10px 8px 10px;
+    margin: 0px 0px 10px 0px;
+    background-color: #CCC;
+}
+.nowrap {
+    white-space: nowrap;
+}
+.package_update_datetime {
+    text-align: right;
+    float: right;
+}
+.metadata {
+    font-size: 11px;
+    color: grey;
+    span {
+        display: block;
+    }
+}
+.news_item {
+    padding-top: 15px;
+}
+
+.recent-ebuilds {
+    padding: 2px;
+    li > a {
+        font-size: 12px;
+    }
+}
+
+.label-legend {
+    display: block;
 }

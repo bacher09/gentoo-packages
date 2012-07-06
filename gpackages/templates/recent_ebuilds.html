@@ -1,9 +1,9 @@
 <div class="well">
-    <ul class="nav nav-list" style="padding: 2px;">
+    <ul class="nav nav-list recent-ebuilds">
         <li class="nav-header">Recent Ebuilds</li>
         {% for ebuild in ebuilds %}
             <li>
-            <a href="{{ ebuild.package.get_absolute_url }}" style="font-size: 12px;">
+            <a href="{{ ebuild.package.get_absolute_url }}">
             {{ ebuild.cpvr }}
             </a>
             </li>
