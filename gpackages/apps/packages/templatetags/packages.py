@@ -3,7 +3,7 @@ from django import template
 
 register = template.Library()
 
-from ..models import RepositoryModel
+from ..models import RepositoryModel, EbuildModel
 
 @register.inclusion_tag('last_updated.html')
 def last_updated():
@@ -25,3 +25,12 @@ def text_sincode(text):
     return mark_safe(''.join(text_l))
 
 register.filter('obfuscate', text_sincode)
+
+@register.inclusion_tag('recent_ebuilds.html')
+def recent_ebuilds(num = 10):
+    query = EbuildModel.objects.order_by('-updated_datetime').all().\
+        select_related('package',
+                       'package__virtual_package',
+                       'package__virtual_package__category'). \
+                       prefetch_related('package__repository')[:num]
+    return {'ebuilds': query}

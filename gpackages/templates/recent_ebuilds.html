@@ -1,0 +1,12 @@
+<div class="well">
+    <ul class="nav nav-list" style="padding: 2px;">
+        <li class="nav-header">Recent Ebuilds</li>
+        {% for ebuild in ebuilds %}
+            <li>
+            <a href="{{ ebuild.package.get_absolute_url }}" style="font-size: 12px;">
+            {{ ebuild.cpvr }}
+            </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
