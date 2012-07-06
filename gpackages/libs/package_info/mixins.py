@@ -13,6 +13,8 @@ from .generic_metadata.category_metadata import CategoryMetadata
 from .generic_metadata.package_metadata import PackageMetaData
 #License group metadata
 from .generic_metadata.license_groups import LicenseGroups
+# License text
+from .generic_metadata.license_text import Licenses, LicensesSet
 # News
 from .generic_metadata.news import News
 # Validators
@@ -100,6 +102,10 @@ class PortageHerdsMixin(object):
         "Return new `LicenseGroups` object"
         return LicenseGroups()
 
+    @cached_property
+    def licenses(self):
+        return LicensesSet([tree.licenses for tree in self.iter_trees()])
+
 def _get_info_by_func(func, path1, path2):
         path = os.path.join(path1, path2)
         try:
@@ -140,6 +146,12 @@ class PortTreeNewsMixin(object):
 class PortTreeIteratorMixin(AutoGeneratorMixin):
     main_iterator = 'iter_categories'
     generator_names = ('iter_packages', 'iter_ebuilds')
+
+class PortTreeLicenseMixin(object):
+    
+    @cached_property
+    def licenses(self):
+        return Licenses(self.porttree_path)
     
 class CategoryBaseMixin(ToStrMixin):
 
@@ -362,7 +374,7 @@ class PortageMixin(PortageGenericMixin, PortageIteratorMixin, AbstractPortage):
     pass
 
 class PortTreeMixin(PortTreeBaseMixin, PortTreeIteratorMixin, \
-                    PortTreeNewsMixin, AbstractPortTree):
+                    PortTreeNewsMixin, PortTreeLicenseMixin, AbstractPortTree):
     pass
 
 class CategoryMixin(CategoryBaseMixin, CategoryIteratorMixin, AbstractCategory):
