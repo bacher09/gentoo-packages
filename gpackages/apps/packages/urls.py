@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     url(r'^ebuild/(?P<pk>\d+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^ebuild/(?P<cpvr>[^/]+/[^/]+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^packages/{0}$'.format(PackagesListsView.get_url_part()), PackagesListsView.as_view(), name = 'packages'),
+    url(r'^newpackages/$', PackagesListsView.as_view(), kwargs = {'order': 'create', 'rev': 'rev'},name = 'newpackages'),
 
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<pk>\d+)/$', PackageDetailView.as_view(), name = 'package'),
