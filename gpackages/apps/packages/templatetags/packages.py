@@ -7,8 +7,13 @@ from ..models import RepositoryModel
 
 @register.inclusion_tag('last_updated.html')
 def last_updated():
-    l = RepositoryModel.objects.only('updated_datetime').latest('updated_datetime')
-    return {'last_updated': l.updated_datetime}
+    try:
+        l = RepositoryModel.objects.only('updated_datetime'). \
+            latest('updated_datetime')
+    except RepositoryModel.DoesNotExist:
+        return {'las_updated' : None}
+    else:
+        return {'last_updated': l.updated_datetime}
 
 @register.inclusion_tag('keywords_table.html')
 def render_keywords_table(obj, arch_list):
