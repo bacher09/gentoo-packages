@@ -2,7 +2,8 @@ from django.conf.urls import patterns, include, url
 from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   RepositoriesListView, LicenseGroupsView , EbuildsListView, \
                   PackagesListsView, PackageDetailView, EbuildDetailView, \
-                  GlobalUseListView, NewsListView, NewsDetailView
+                  GlobalUseListView, NewsListView, NewsDetailView, \
+                  LicenseDetailView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -22,4 +23,5 @@ urlpatterns = patterns('',
     url(r'^news/$', NewsListView.as_view(), name = 'news'),
     url(r'^news/(?P<pk>\d+)/$', NewsDetailView.as_view(), name = 'news_item'),
     url(r'^news/(?P<slug>[^/]+)/$', NewsDetailView.as_view(), name = 'news_item'),
+    url(r'^license/(?P<slug>[^/]+)/$', LicenseDetailView.as_view(), name = 'license'),
 )

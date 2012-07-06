@@ -3,7 +3,7 @@ from generic.views import ContextListView, ContextTemplateView, ContextView, \
                           MultipleFilterListViewMixin
 from models import CategoryModel, HerdsModel, MaintainerModel, \
                    RepositoryModel, LicenseGroupModel, EbuildModel, \
-                   PackageModel, UseFlagModel, PortageNewsModel
+                   PackageModel, UseFlagModel, PortageNewsModel, LicenseModel
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
@@ -163,3 +163,11 @@ class NewsDetailView(ContextView, DetailView):
     slug_field = 'name'
     queryset = PortageNewsModel.objects.filter(lang = 'en'). \
         prefetch_related('authors', 'translators')
+
+class LicenseDetailView(ContextView, DetailView):
+    extra_context = {'page_name': 'Licens'}
+    template_name = 'license.html'
+    context_object_name = 'license'
+    slug_field = 'name'
+    queryset = LicenseModel.objects.all()
+    

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="license">
+    <h2>{{ license.name }}</h2>
+    <div class="license_content">
+        {{ license.text|linebreaks|urlize }}
+    </div>
+</div>
+{% endblock content %}
