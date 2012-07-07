@@ -1,14 +1,30 @@
-from django.views.generic import DetailView
+from django.views.generic import DetailView, FormView, ListView
 from generic.views import ContextListView, ContextTemplateView, ContextView, \
                           MultipleFilterListViewMixin
-from models import CategoryModel, HerdsModel, MaintainerModel, \
-                   RepositoryModel, LicenseGroupModel, EbuildModel, \
-                   PackageModel, UseFlagModel, PortageNewsModel, LicenseModel
+from .models import CategoryModel, HerdsModel, MaintainerModel, \
+                    RepositoryModel, LicenseGroupModel, EbuildModel, \
+                    PackageModel, UseFlagModel, PortageNewsModel, LicenseModel
+from .forms import ArchChoiceForm
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
+
+class ArchesViewMixin(object):
+    def get_arches(self):
+        arches_s = self.request.session.get('arches')
+        return arches_s or arches
+        
+
+class ArchesContexView(ArchesViewMixin, ContextView):
+    def get_context_data(self, **kwargs):
+        ret = super(ArchesContexView, self).get_context_data(**kwargs)
+        ret.update({'arches': self.get_arches()})
+        return ret
+
+class ContextArchListView(ArchesContexView, ListView):
+    pass
 
 class CategoriesListView(ContextListView):
     extra_context = {'page_name': 'Categories',}
@@ -41,7 +57,7 @@ class LicenseGroupsView(ContextListView):
     template_name = 'license_groups.html'
     context_object_name = 'license_groups'
 
-class EbuildsListView(ContextListView):
+class EbuildsListView(ContextArchListView):
     paginate_by = 40
     extra_context = {'page_name': 'Ebuilds', 'arches' : arches}
     template_name = 'ebuilds.html'
@@ -53,7 +69,7 @@ class EbuildsListView(ContextListView):
                        prefetch_related('package__repository'). \
                        prefetch_keywords(arches)
 
-class EbuildDetailView(ContextView, DetailView):
+class EbuildDetailView(ArchesContexView, DetailView):
     template_name = 'ebuild.html'
     extra_context = {'page_name': 'Ebuild', 'arches': arches}
     context_object_name = 'ebuild'
@@ -82,7 +98,7 @@ class EbuildDetailView(ContextView, DetailView):
                                           revision = revision)
         return obj
 
-class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
+class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
     allowed_filter = { 'category':'virtual_package__category__category',
                        'repo':'repository__name',
                        'herd':'herds__name',
@@ -116,7 +132,7 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextListView):
         prefetch_related('repository', 'herds', 'maintainers'). \
         prefetch_keywords(arches)
 
-class PackageDetailView(ContextView, DetailView):
+class PackageDetailView(ArchesContexView, DetailView):
     template_name = 'package.html'
     extra_context = {'page_name': 'Package', 'arches': arches}
     context_object_name = 'package'
@@ -171,3 +187,18 @@ class LicenseDetailView(ContextView, DetailView):
     slug_field = 'name'
     queryset = LicenseModel.objects.all()
     
+class ArchChoiceView(ArchesViewMixin, FormView):
+    form_class = ArchChoiceForm
+    template_name = 'arch_choice.html'
+    success_url = '/'
+
+    def get_initial(self):
+        arches = self.get_arches()
+        return {'arches': arches }
+
+    def form_valid(self, form):
+        arches = form.cleaned_data['arches']
+        # Maybe save it to cookies ?
+        # arches_str = ','.join(arches)
+        self.request.session['arches'] = arches
+        return super(ArchChoiceView, self).form_valid(form)

@@ -3,7 +3,7 @@ from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   RepositoriesListView, LicenseGroupsView , EbuildsListView, \
                   PackagesListsView, PackageDetailView, EbuildDetailView, \
                   GlobalUseListView, NewsListView, NewsDetailView, \
-                  LicenseDetailView
+                  LicenseDetailView, ArchChoiceView
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -25,4 +25,5 @@ urlpatterns = patterns('',
     url(r'^news/(?P<pk>\d+)/$', NewsDetailView.as_view(), name = 'news_item'),
     url(r'^news/(?P<slug>[^/]+)/$', NewsDetailView.as_view(), name = 'news_item'),
     url(r'^license/(?P<slug>[^/]+)/$', LicenseDetailView.as_view(), name = 'license'),
+    url(r'^arches/$', ArchChoiceView.as_view(), name = 'archchoice'),
 )

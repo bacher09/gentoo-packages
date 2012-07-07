@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="arches">
+<form action="./" method="post" enctype="multipart/form-data">{% csrf_token %}
+   {{ form.as_ul }} 
+    <input type="submit" value="Submit" />
+</form>
+</div>
+{% endblock content %}
