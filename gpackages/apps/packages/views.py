@@ -187,10 +187,12 @@ class LicenseDetailView(ContextView, DetailView):
     slug_field = 'name'
     queryset = LicenseModel.objects.all()
     
-class ArchChoiceView(ArchesViewMixin, FormView):
+class ArchChoiceView(ContextView, ArchesViewMixin, FormView):
     form_class = ArchChoiceForm
     template_name = 'arch_choice.html'
     success_url = '/'
+    extra_context = {'page_name': 'Select arches', 
+                     'default_arches': arches}
 
     def get_initial(self):
         arches = self.get_arches()

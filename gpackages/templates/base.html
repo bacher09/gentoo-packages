@@ -133,11 +133,13 @@
 
     <!-- Le javascript
     ================================================== -->
-    <script src="{{ STATIC_URL }}js/jquery.js"></script>
-    <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
-    <script src="{{ STATIC_URL }}js/csrf.js"></script>
-    <script src="{{ STATIC_URL }}js/language.js"></script>
-    <script src="{{ STATIC_URL }}js/packages_details.js"></script>
+    {% block scripts %}
+        <script src="{{ STATIC_URL }}js/jquery.js"></script>
+        <script src="{{ STATIC_URL }}js/bootstrap.js"></script>
+        <script src="{{ STATIC_URL }}js/csrf.js"></script>
+        <script src="{{ STATIC_URL }}js/language.js"></script>
+        <script src="{{ STATIC_URL }}js/packages_details.js"></script>
+    {% endblock scripts %}
 {% endblock body %}
   </body>
 </html>

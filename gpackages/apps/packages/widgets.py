@@ -39,4 +39,10 @@ class DivCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
         row2.append('</div>')
         output.extend(row1 + row2)
         output.append('</div>')
+        output.append('<input type="button" id="reset" value="Reset" />')
+        output.append('<input type="button" id="set" value="Set" />')
+        output.append('<input type="button" id="default" value="Default" />')
         return mark_safe('\n'.join(output))
+
+    class Media:
+        js = ('js/arches_select.js',)
