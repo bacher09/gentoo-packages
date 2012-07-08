@@ -4,7 +4,7 @@
         {% for ebuild in ebuilds %}
             <li>
             <a href="{{ ebuild.package.get_absolute_url }}">
-            {{ ebuild.cpvr }}
+            {{ ebuild.cpv_or_cpvr }}
             </a>
             </li>
         {% endfor %}
