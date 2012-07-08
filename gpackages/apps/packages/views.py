@@ -214,7 +214,7 @@ class ArchChoiceView(ContextView, ArchesViewMixin, FormView):
         return {'arches': arches }
 
     def form_valid(self, form):
-        arches = form.cleaned_data['arches']
+        arches = sorted(form.cleaned_data['arches'])
         # Maybe save it to cookies ?
         # arches_str = ','.join(arches)
         self.request.session['arches'] = arches
