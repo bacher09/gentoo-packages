@@ -3,7 +3,8 @@ from generic.views import ContextListView, ContextTemplateView, ContextView, \
                           MultipleFilterListViewMixin
 from .models import CategoryModel, HerdsModel, MaintainerModel, \
                     RepositoryModel, LicenseGroupModel, EbuildModel, \
-                    PackageModel, UseFlagModel, PortageNewsModel, LicenseModel
+                    PackageModel, UseFlagModel, PortageNewsModel, \
+                    UseFlagDescriptionModel, LicenseModel
 from .forms import ArchChoiceForm
 
 from django.shortcuts import get_object_or_404
@@ -164,6 +165,13 @@ class GlobalUseListView(ContextListView):
     context_object_name = 'uses'
     queryset = UseFlagModel.objects.exclude(description = '') 
 
+class LocalUseListView(ContextListView):
+    extra_context = {'page_name': 'Local Use'}
+    template_name = 'local_use.html'
+    context_object_name = 'uses'
+    queryset = UseFlagDescriptionModel.objects.all().\
+        select_related('use_flag', 'package', 'package__category')
+
 class NewsListView(ContextListView):
     extra_context = {'page_name': 'News'}
     template_name = 'portage_news.html'
@@ -184,7 +192,6 @@ class LicensesListView(ContextListView):
     extra_context = {'page_name': 'Licens'}
     template_name = 'licenses.html'
     context_object_name = 'licenses'
-    slug_field = 'name'
     paginate_by = 20
     queryset = LicenseModel.objects.all()
 

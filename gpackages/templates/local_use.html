@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block content %}
+
+<table class='table table-striped table-hover'>
+    <colgroup>
+        <col class="span1" >
+        <col class="span1" >
+        <col class="span9" >
+    </colgroup>
+    <thead>
+            <tr>
+                <th>Use flag</th>
+                <th>Package</th>
+                <th>Description</th>
+            </tr>
+    </thead>
+    <tbody>
+        {% for use in uses %}
+            <tr>
+                <td class="nowrap"><a href="{% url 'packages' use=use.use_flag.name %}">{{ use.use_flag.name }}</a></td>
+                <td class="nowrap">{{ use.package.cp }}</td>
+                <td>{{ use.description }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}
