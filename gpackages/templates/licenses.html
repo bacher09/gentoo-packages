@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load paginator %}
+{% block content %}
+    {% for license in licenses %}
+        <div class="license">
+            <h2><a href="{{ license.get_absolute_url }}">{{ license.name }}</a></h2>
+            <div class="license_content">
+                {{ license.text|truncatewords:50|linebreaks }}
+            </div>
+        </div>
+    {% endfor %}
+{% paginator page_obj 3 2 %}
+{% endblock content %}

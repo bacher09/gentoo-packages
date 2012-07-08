@@ -180,6 +180,14 @@ class NewsDetailView(ContextView, DetailView):
     queryset = PortageNewsModel.objects.filter(lang = 'en'). \
         prefetch_related('authors', 'translators')
 
+class LicensesListView(ContextListView):
+    extra_context = {'page_name': 'Licens'}
+    template_name = 'licenses.html'
+    context_object_name = 'licenses'
+    slug_field = 'name'
+    paginate_by = 20
+    queryset = LicenseModel.objects.all()
+
 class LicenseDetailView(ContextView, DetailView):
     extra_context = {'page_name': 'Licens'}
     template_name = 'license.html'
