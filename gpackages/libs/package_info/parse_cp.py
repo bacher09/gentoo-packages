@@ -2,8 +2,7 @@ import re
 from functools import total_ordering
 from types import StringTypes
 from .validators import REVISION_RE, VERSION_RE, NAME_RE
-from .generic import ToStrMixin, toint
-from .mixins import EbuildRevMixin
+from .generic import ToStrMixin, toint, cached_property
 
 PACKAGE_RE_P = r'(?P<category>[^/]+)/(?P<name>%(name)s)' %  \
                     {'name' : NAME_RE}
@@ -55,6 +54,21 @@ def min_parse(prefix, prefix_num):
         prefix_num = 0
 
     return (p_weight, toint(prefix_num, 0))
+
+REV_STR_RE = '^r(?P<rev>\d+)$'
+rev_re = re.compile(REV_STR_RE)
+
+class EbuildRevMixin(object):
+    
+    @cached_property
+    def revision_as_int(self):
+        d = 0 # Maybe None ?
+        if self.revision:
+            m = rev_re.match(self.revision)
+            if m is not None:
+                d = m.groupdict().get('rev')
+                d = toint(d, 0)
+        return d
 
 @total_ordering
 class VersionParse(ToStrMixin):

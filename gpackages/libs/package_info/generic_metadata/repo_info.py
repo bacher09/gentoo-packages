@@ -2,13 +2,15 @@ from __future__ import absolute_import
 from functools import total_ordering
 import os.path
 # Layman API
-from layman.api import LaymanAPI
-layman_api = LaymanAPI()
+#from layman.api import LaymanAPI
+import layman.api
+layman_api = layman.api.LaymanAPI()
 
 # Validators
 from ..validators import validate_url, validate_email, ValidationError
 
 from ..generic import ToStrMixin, cached_property
+from .repo_const import REPOS_TYPE
 
 __all__ = ('TreeMetadata',)
 
@@ -17,38 +19,7 @@ def _gen_funct(name):
     func.__name__ = name
     return func
 
-class Enum(object):
-    "Enum object"
-
-    def __init__(self, lst):
-        """Args:
-        lst -- list of strings"""
-        dct = {}
-        dct2 = {}
-        self.list = lst
-        for num, item in enumerate(lst):
-            dct[item] = num
-            dct2[num] = item
-
-        self.repo_dict = dct
-        self.num_dict = dct2
-
-    def get_as_tuple(self):
-       "Return tuple to use as choices in django model"
-       return tuple([(num, item) for num, item in enumerate(self.list)])
             
-REPO_TYPE = (  'git', 
-               'g-common',
-               'cvs' ,
-               'subversion',
-               'rsync',
-               'tar',
-               'bzr',
-               'mercurial',
-               'darcs',
-             )
-
-REPOS_TYPE = Enum(REPO_TYPE)
 
 @total_ordering
 class SourcesObject(ToStrMixin):

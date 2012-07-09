@@ -3,7 +3,7 @@ from package_info.abstract import AbstractCategory, AbstarctPackage, \
                                   AbstractEbuild, AbstractNewsItem
 import managers
 from package_info.generic import get_from_kwargs_and_del
-from package_info.repo_info import REPOS_TYPE
+from package_info.generic_metadata.repo_const import REPOS_TYPE
 # relative
 from .keywords import KeywordRepr
 from model_stats.models import StatsModel

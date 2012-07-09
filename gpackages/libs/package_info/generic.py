@@ -5,7 +5,27 @@ from datetime import datetime
 
 __all__ = ('StrThatIgnoreCase', 'ToStrMixin', 'file_get_content', 'file_sha1',\
            'file_mtime', 'cached_property', 'iter_over_gen', 'lofstr_to_ig', \
-           'toint')
+           'toint', 'Enum')
+
+class Enum(object):
+    "Enum object"
+
+    def __init__(self, lst):
+        """Args:
+        lst -- list of strings"""
+        dct = {}
+        dct2 = {}
+        self.list = lst
+        for num, item in enumerate(lst):
+            dct[item] = num
+            dct2[num] = item
+
+        self.repo_dict = dct
+        self.num_dict = dct2
+
+    def get_as_tuple(self):
+       "Return tuple to use as choices in django model"
+       return tuple([(num, item) for num, item in enumerate(self.list)])
 
 def iter_over_gen(iterat, name):
     for obj in iterat:

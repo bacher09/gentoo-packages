@@ -21,6 +21,8 @@ from .generic_metadata.news import News
 from .validators import validate_url, validate_email, ValidationError
 #Generic objects
 from .generic_objects import Use, Keyword, KeywordsSet
+# Parse
+from .parse_cp import EbuildRevMixin
 # Abstract classes
 from .abstract import AbstractPortage, AbstractPortTree, AbstractCategory, \
                       AbstarctPackage, AbstractEbuild
@@ -241,21 +243,6 @@ class EbuildBaseMixin(ToStrMixin):
 
     def __unicode__(self):
         return unicode(self.cpv)
-
-REV_STR_RE = '^r(?P<rev>\d+)$'
-rev_re = re.compile(REV_STR_RE)
-
-class EbuildRevMixin(object):
-    
-    @cached_property
-    def revision_as_int(self):
-        d = 0 # Maybe None ?
-        if self.revision:
-            m = rev_re.match(self.revision)
-            if m is not None:
-                d = m.groupdict().get('rev')
-                d = toint(d, 0)
-        return d
 
 class EbuildEapiMixin(object):
     
