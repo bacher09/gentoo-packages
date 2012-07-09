@@ -24,18 +24,25 @@ set_lang_view = SetLang.as_view()
 # but it is too big and i need just a litle of its functionly
 # but if this code have to be grove maybe i replace it to django-filter
 # application or another.
-def dynamic_filter(filter_set, allowed):
+def dynamic_filter(filter_set, allowed, many_set = set([])):
     result = {}
-    for k in allowed.iterkeys():
+    for k, v in allowed.iteritems():
         if k in filter_set:
-            result[allowed[k]] = filter_set[k]
+            vv = filter_set[k]
+            if k in many_set:
+                l = vv.split(',')
+                if len(l)>1:
+                    v += '__in'
+                    vv = l
+            result[v] = vv
     return result
 
-def exclude_blank(res_dict):
+def filter_req(filter_set, allowed):
     result = {}
-    for k in res_dict.iterkeys():
-        if res_dict[k]:
-            result[k] = res_dict[k]
+    for k in allowed.iterkeys():
+        v = filter_set.get(k)
+        if v:
+            result[k] = v
     return result
 
 def dynamic_order(args_list, allowed_list, reverse = None):
@@ -57,24 +64,15 @@ def dynamic_order(args_list, allowed_list, reverse = None):
 class MultipleFilterListViewMixin(object):
     allowed_filter = {}
     allowed_order = {}
-    m2m_filter = ()
+    allowed_many = set()
+    m2m_filter = set()
 
     base_queryset = None # should be queryset
 
-    def __init__(self, *args, **kwargs):
-        super(MultipleFilterListViewMixin, self).__init__(*args, **kwargs)
-        l =  []
-        for key, val in self.allowed_filter.iteritems():
-            if key in self.m2m_filter:
-                l.append(val)
-        self.m2m_set = frozenset(l)
-
     def get_queryset(self):
-        qs = dynamic_filter(exclude_blank(self.request.GET),
-                                        self.allowed_filter)
-        qs.update( dynamic_filter(exclude_blank(self.kwargs),
-                                        self.allowed_filter) )
-        
+        qs = filter_req(self.request.GET, self.allowed_filter)
+        qs.update(filter_req(self.kwargs, self.allowed_filter))
+
         if self.kwargs.get('rev') is None:
             reverse = bool(self.request.GET.get('rev',False))
         else:
@@ -87,10 +85,11 @@ class MultipleFilterListViewMixin(object):
             if self.kwargs.get('order') not in self.allowed_order:
                 raise Http404('no such order')
 
-        queryset = self.base_queryset.filter(**qs).order_by(order)
+        qa = dynamic_filter(qs, self.allowed_filter, self.allowed_many)
+        queryset = self.base_queryset.filter(**qa).order_by(order)
 
         for q in qs.iterkeys():
-            if q in self.m2m_set:
+            if q in self.m2m_filter:
                 queryset = queryset.distinct()
                 break
 

@@ -115,6 +115,8 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
                       'rand':'?', # it slow
                       None: '-updated_datetime'
                     }
+    allowed_many = set(['repo', 'use'])
+
     paginate_by = 40
     extra_context = {'page_name': 'Packages', 'arches': arches}
     template_name = 'packages.html'
