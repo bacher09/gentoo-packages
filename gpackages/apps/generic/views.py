@@ -24,7 +24,7 @@ set_lang_view = SetLang.as_view()
 # but it is too big and i need just a litle of its functionly
 # but if this code have to be grove maybe i replace it to django-filter
 # application or another.
-def dynamic_filter(filter_set, allowed, many_set = set([])):
+def dynamic_filter(filter_set, allowed, many_set = {}):
     result = {}
     for k, v in allowed.iteritems():
         if k in filter_set:
@@ -33,9 +33,14 @@ def dynamic_filter(filter_set, allowed, many_set = set([])):
                 l = vv.split(',')
                 if len(l)>1:
                     v += '__in'
-                    vv = l
+                    vv = cut_to_len(l, many_set[k])
             result[v] = vv
     return result
+
+def cut_to_len(lst, num):
+    if not num:
+        return lst
+    return lst[:num]
 
 def filter_req(filter_set, allowed):
     result = {}
@@ -64,7 +69,8 @@ def dynamic_order(args_list, allowed_list, reverse = None):
 class MultipleFilterListViewMixin(object):
     allowed_filter = {}
     allowed_order = {}
-    allowed_many = set()
+    # allowed_many = {'name': int_count}
+    allowed_many = {}
     m2m_filter = set()
 
     base_queryset = None # should be queryset
