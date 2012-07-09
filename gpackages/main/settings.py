@@ -135,18 +135,6 @@ INSTALLED_APPS = (
 
 FIXTURE_DIRS = (os.path.join(PROJECT_ROOT, 'fixtures'),)
 
-if DEBUG:
-    INSTALLED_APPS += ('django.contrib.databrowse', 'debug_toolbar') 
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = os.path.join(PROJECT_ROOT,'mail.mbox')
-    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
-    DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
-else:
-    TEMPLATE_LOADERS = (
-        ('django.template.loaders.cached.Loader', TEMPLATE_LOADERS),)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'localhost'
-
 gettext = lambda s: s
 
 LANGUAGES = (
@@ -190,3 +178,16 @@ try:
     from local_settings import *
 except ImportError:
     print("Pleasy provide local_settings")
+
+if DEBUG:
+    INSTALLED_APPS += ('django.contrib.databrowse', 'debug_toolbar') 
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(PROJECT_ROOT,'mail.mbox')
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
+else:
+    TEMPLATE_LOADERS = (
+        ('django.template.loaders.cached.Loader', TEMPLATE_LOADERS),)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'localhost'
+
