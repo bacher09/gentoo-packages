@@ -5,7 +5,8 @@ from .models import CategoryModel, HerdsModel, MaintainerModel, \
                     RepositoryModel, LicenseGroupModel, EbuildModel, \
                     PackageModel, UseFlagModel, PortageNewsModel, \
                     UseFlagDescriptionModel, LicenseModel
-from .forms import ArchChoiceForm
+from .forms import ArchChoiceForm, FilteringForm
+from django.core.urlresolvers import reverse
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
@@ -115,7 +116,7 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
                       'rand':'?', # it slow
                       None: '-updated_datetime'
                     }
-    allowed_many = {'repo': 5, 'use' : 3}
+    allowed_many = {'repo': 5, 'use' : 3, 'herd': 4, 'category': 4, 'license': 3}
 
     paginate_by = 40
     extra_context = {'page_name': 'Packages', 'arches': arches}
@@ -221,3 +222,26 @@ class ArchChoiceView(ContextView, ArchesViewMixin, FormView):
         # arches_str = ','.join(arches)
         self.request.session['arches'] = arches
         return super(ArchChoiceView, self).form_valid(form)
+
+class FilteringView(FormView):
+    form_class = FilteringForm
+    template_name = 'filtering_view.html'
+    success_url = '/'
+    params_dict = { 'repos': 'repo',
+                    'herds': 'herd',
+                    'categories': 'category',
+                    'licenses': 'license',
+                    'uses': 'use'
+                  }
+
+    def form_valid(self, form):
+        self.form_data = form.cleaned_data
+        return super(FilteringView, self).form_valid(form)
+
+    def get_success_url(self):
+        dct = {}
+        for k, v in self.params_dict.iteritems():
+            vv = self.form_data[k]
+            if vv:
+                dct[v] = ','.join(vv)
+        return reverse('packages', kwargs = dct)
