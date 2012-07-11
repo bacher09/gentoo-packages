@@ -1,8 +1,10 @@
 import re
-from ..generic import ToStrMixin
+from ..generic import ToStrMixin, toint
 from ..parse_cp import VERSIONS_RE_P, EbuildRevMixin
 from ..validators import NAME_RE
-from datetime import datetime
+from datetime import datetime, date, MINYEAR
+import calendar
+from difflib import get_close_matches
 
 DATE_FORMAT = '%d %b %Y'
 
@@ -28,9 +30,43 @@ changelog_m_re = re.compile(CHANGELOG_MESSAGE_RE_STR, re.S)
 changelog_v_re = re.compile(CHANGELOG_VERSION_RE_STR)
 clear_re = re.compile(r'\s+')
 email_re = re.compile(r'(?P<email_name>[\w\.\-]+)@(?P<email_host>[\w\.\-]+)')
+date_re = re.compile(CHANGELOG_DATE_RE_P)
 
-def parse_date(date_str):
-    return datetime.strptime(date_str, DATE_FORMAT).date()
+MONTH_TUPLE = tuple(calendar.month_abbr)[1:]
+
+def parse_date(date_str, traceback = False):
+    try:
+        mdate = datetime.strptime(date_str, DATE_FORMAT).date()
+    except ValueError:
+        if traceback:
+            raise
+        # Bad date format, humman error
+        # Add here logger
+        mdate = date.min
+        m = date_re.match(date_str)
+        if m is not None:
+            dct = m.groupdict()
+            day = dct['day']
+            month = dct['month']
+            year = dct['year']
+            if month not in MONTH_TUPLE:
+                months = get_close_matches(month, MONTH_TUPLE, 1)
+                if len(months) >=1:
+                    month = months[0]
+                else:
+                    month = MONTH_TUPLE[0]
+
+            month_num = MONTH_TUPLE.index(month) + 1
+            year_num = toint(year, MINYEAR)
+            day_num = toint(day, 1)
+            try:
+                mdate = date(year_num, month_num, day_num)
+            except ValueError:
+                mdate = date.min
+
+    return mdate
+
+    return mdate.date()
 
 def date_str(date):
     return date.strftime(DATE_FORMAT)
@@ -95,6 +131,8 @@ class ChangeLogMessage(ToStrMixin):
         return self.header
 
 def parse_changelog(changelog):
+    if not changelog:
+        raise StopIteration
     lst = changelog.split("\n\n")
     for item in lst:
         if item.startswith('*'):
