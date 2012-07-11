@@ -1,6 +1,7 @@
 from django.db import models
 from package_info.abstract import AbstractCategory, AbstarctPackage, \
                                   AbstractEbuild, AbstractNewsItem
+from package_info.utils import ciavc_link, email_parse
 import managers
 from package_info.generic import get_from_kwargs_and_del
 from package_info.generic_metadata.repo_const import REPOS_TYPE
@@ -272,7 +273,15 @@ class MaintainerModel(StatsModel, AbstractDateTimeModel):
     def check_or_need_update(self, maintainer):
         return not (self.name == maintainer.name and \
                     self.email == maintainer.email)
-    
+
+    @property
+    def ciavc_link(self):
+        return ciavc_link(self.email_name)
+
+    @property
+    def email_name(self):
+        return email_parse(self.email)[0]
+        
     def __unicode__(self):
         return ':'.join((unicode(self.name), self.email))
 
