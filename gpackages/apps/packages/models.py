@@ -330,8 +330,18 @@ class VirtualPackageModel(models.Model):
 
     objects = managers.VirtualPackageManager()
 
-    #forum_template = /
-    #"http://forums.gentoo.org/search.php?search_terms=all&show_results=topics&search_keywords=%s&mode=results"
+    forum_template = "http://forums.gentoo.org/search.php" \
+        "?search_terms=all&show_results=topics&search_keywords=%s&mode=results"
+
+    bugs_template = "https://bugs.gentoo.org/buglist.cgi" \
+        "?bug_status=UNCONFIRMED&bug_status=IN_PROGRESS&bug_status=CONFIRMED" \
+        "&query_format=&short_desc_type=allwords&short_desc=%s"
+
+    wiki_template = "http://en.gentoo-wiki.com/w/index.php" \
+        "?title=Special%%3ASearch&search=%s"
+
+    maillist_template = "http://www.mail-archive.com/search" \
+        "?q=%s&l=gentoo-user%%40lists.gentoo.org"
 
     @property
     def cp(self):
@@ -340,6 +350,18 @@ class VirtualPackageModel(models.Model):
     @property
     def forum_link(self):
         return self.forum_template % self.name
+
+    @property
+    def bugs_link(self):
+        return self.bugs_template % self.name
+
+    @property
+    def wiki_link(self):
+        return self.wiki_template % self.name
+
+    @property
+    def maillist_link(self):
+        return self.maillist_template % self.name
 
     def __unicode__(self):
         return unicode(self.cp)
