@@ -28,10 +28,12 @@
                     <td>{{ repository.owner_name }}</td>
                 </tr>
                 {% endif %}
+                {% if repository.owner_email %}
                 <tr>
                     <td class="nowrap">Owner email</td>
                     <td><a href="{{ 'mailto:'|add:repository.owner_email|obfuscate }}">{{ repository.owner_email|obfuscate }}</a></td>
                 </tr>
+                {% endif %}
                 <tr>
                     <td>Homepage</td>
                     <td><a href="{{ repository.homepage }}">{{ repository.homepage }}</a></td>

@@ -21,6 +21,8 @@ def render_keywords_table(obj, arch_list):
     return {'arches': arch_list, 'ebuilds' : ebuilds}
 
 def text_sincode(text):
+    if not text:
+        return ''
     text_l = map(lambda x: '&#%s;' % ord(x), text)
     return mark_safe(''.join(text_l))
 
