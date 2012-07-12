@@ -100,6 +100,8 @@ class RepositoryModel(StatsModel, AbstractDateTimeModel):
 
     stats_params = (
         ('packages_count', 'packagemodel'),
+        ('maintainers_count', 'packagemodel__maintainers'),
+        ('categories_count', 'packagemodel__virtual_package__category'),
         ('ebuilds_count', 'packagemodel__ebuildmodel'),
     )
 
