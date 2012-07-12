@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load url from future %}
+{% load packages %}
 
 {% block content %}
 <h2>{{ repository.name|title }}</h2>
@@ -29,7 +30,7 @@
                 {% endif %}
                 <tr>
                     <td class="nowrap">Owner email</td>
-                    <td>{{ repository.owner_email }}</td>
+                    <td><a href="{{ 'mailto:'|add:repository.owner_email|obfuscate }}">{{ repository.owner_email|obfuscate }}</a></td>
                 </tr>
                 <tr>
                     <td>Homepage</td>
@@ -42,6 +43,14 @@
                 <tr>
                     <td>Official</td>
                     <td>{% if repository.official %}<span class="bool-ok">&#10004; Yes</span>{% else %}<span class="bool-no">&#10005; No</span>{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Last Updated</td>
+                    <td>{{ repository.updated_datetime }}</td>
+                </tr>
+                <tr>
+                    <td>Created in database</td>
+                    <td>{{ repository.created_datetime }}</td>
                 </tr>
             </tbody>
         </table>
