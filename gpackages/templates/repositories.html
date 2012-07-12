@@ -19,7 +19,7 @@
     <tbody>
         {% for repository in repositories %}
             <tr>
-                <td class="nowrap"><a href="{% url 'packages' repo=repository.name %}">{{ repository.name }}</a></td>
+                <td class="nowrap"><a href="{{ repository.get_absolute_url }}">{{ repository.name }}</a></td>
                 <td>{{ repository.description|default_if_none:"" }}</td>
                 <td>{{ repository.updated_datetime|date:"d m Y H:i:s" }}</td>
             </tr>
