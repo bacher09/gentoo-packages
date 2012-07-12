@@ -1,3 +1,4 @@
+from __future__ import absolute_import, unicode_literals
 from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_unicode, force_unicode
@@ -39,9 +40,13 @@ class DivCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
         row2.append('</div>')
         output.extend(row1 + row2)
         output.append('</div>')
-        output.append('<input type="button" id="reset" value="Reset" />')
-        output.append('<input type="button" id="set" value="Set" />')
-        output.append('<input type="button" id="default" value="Default" />')
+        button_group = []
+        button_group.append('<div class="btn-group">')
+        button_group.append('<button type="button" class="btn" id="reset">Reset</button>')
+        button_group.append('<button type="button" class="btn" id="set">Set</button>')
+        button_group.append('<button type="button" class="btn" id="default">Default</button>')
+        button_group.append('</div>')
+        output.extend(button_group)
         return mark_safe('\n'.join(output))
 
     class Media:

@@ -7,8 +7,13 @@
 </script>
 <div class="arches">
 <form action="./" method="post" enctype="multipart/form-data">{% csrf_token %}
-   {{ form.as_ul }} <br />
-    <input type="submit" value="Submit" />
+    {% if form.arches.errors %}
+        <div class="alert alert-error">
+            {{ form.arches.errors }}
+        </div>
+    {% endif %}
+    {{ form.arches }} <br />
+    <input type="submit" class="btn btn-primary" value="Submit" />
 </form>
 </div>
 {% endblock content %}
