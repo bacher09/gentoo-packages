@@ -245,3 +245,9 @@ class FilteringView(FormView):
             if vv:
                 dct[v] = ','.join(vv)
         return reverse('packages', kwargs = dct)
+
+class RepoDetailView(DetailView):
+    template_name = 'repository.html'
+    context_object_name = 'repository'
+    slug_field = 'name'
+    queryset = RepositoryModel.objects.all()

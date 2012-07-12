@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block content %}
+<h2>{{ repository.name|title }}</h2>
+
+<p style="padding-bottom: 10px;">{{ repository.description|urlize }}</p>
+
+<div class="row">
+    <div class="span4">
+        <table class="table table-hover table-striped table-bordered">
+            <colgroup>
+                <col class="span1" />
+                <col class="span1" />
+            </colgroup>
+            <caption><h3>Options</h3></caption>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if repository.owner_name %}
+                <tr>
+                    <td class="nowrap">Owner name</td>
+                    <td>{{ repository.owner_name }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td class="nowrap">Owner email</td>
+                    <td>{{ repository.owner_email }}</td>
+                </tr>
+                <tr>
+                    <td>Homepage</td>
+                    <td><a href="{{ repository.homepage }}">{{ repository.homepage }}</a></td>
+                </tr>
+                <tr>
+                    <td>Quality</td>
+                    <td>{{ repository.get_quality_display }}</td>
+                </tr>
+                <tr>
+                    <td>Official</td>
+                    <td>{% if repository.official %}<span class="bool-ok">&#10004; Yes</span>{% else %}<span class="bool-no">&#10005; No</span>{% endif %}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="span4">
+        <table class="table table-striped table-hover table-bordered">
+            <colgroup>
+                <col class="span1" />
+                <col class="span1" />
+            </colgroup>
+            <caption><h3>Stats</h3></caption>
+            <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="nowrap">Packages Count</td>
+                    <td>{{ repository.packages_count }}</td>
+                </tr>
+                <tr>
+                    <td class="nowrap">Ebuilds Count</td>
+                    <td>{{ repository.ebuilds_count }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% with sources=repository.repositorysourcemodel_set.all %}
+    {% if sources %}
+        <table class="table table-striped table-hover table-bordered">
+            <colgroup>
+                <col class="span1" />
+                <col class="span7" />
+            </colgroup>
+            <caption><h3>Sources</h3></caption>
+            <thead>
+                    <tr>
+                        <th class="nowrap">Repository type</th>
+                        <th>URL</th>
+                    </tr>
+            </thead>
+            <tbody>
+        {% for source in sources %}
+            <tr>
+                <td>{{ source.get_repo_type_display }}</td>
+                <td>{{ source.url }}</td>
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endwith %}
+{% with feeds=repository.repositoryfeedmodel_set.all %}
+    {% if feeds %}
+        <div>
+        <h4>Feeds:</h4>
+        <ul>
+        {% for feed in feeds %}
+            <li><a href="{{ feed.feed }}">{{ feed.feed }}</a></li>
+        {% endfor %}
+        </ul>
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% endblock content %}

@@ -184,6 +184,10 @@ class RepositoryModel(StatsModel, AbstractDateTimeModel):
     def __unicode__(self):
         return self.name
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('repository', (), {'slug': self.name})
+
 class RepositoryFeedModel(models.Model):
     repository = models.ForeignKey(RepositoryModel, db_index = True)
     feed = models.URLField()

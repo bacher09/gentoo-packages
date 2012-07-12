@@ -726,3 +726,5 @@ body{padding-top:60px;}
 .news_item{padding-top:15px;}
 .recent-ebuilds{padding:2px;}.recent-ebuilds li>a{font-size:12px;}
 .label-legend{display:block;}
+.bool-ok{color:#468847;}
+.bool-no{color:#b94a48;}
