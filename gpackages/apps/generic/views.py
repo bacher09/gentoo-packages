@@ -73,9 +73,9 @@ class MultipleFilterListViewMixin(object):
     allowed_many = {}
     m2m_filter = set()
 
-    base_queryset = None # should be queryset
-
     def get_queryset(self):
+        query = super(MultipleFilterListViewMixin, self).get_queryset()
+
         qs = filter_req(self.request.GET, self.allowed_filter)
         qs.update(filter_req(self.kwargs, self.allowed_filter))
 
@@ -92,7 +92,7 @@ class MultipleFilterListViewMixin(object):
                 raise Http404('no such order')
 
         qa = dynamic_filter(qs, self.allowed_filter, self.allowed_many)
-        queryset = self.base_queryset.filter(**qa).order_by(order)
+        queryset = query.filter(**qa).order_by(order)
 
         for q in qs.iterkeys():
             if q in self.m2m_filter:

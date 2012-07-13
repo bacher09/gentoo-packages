@@ -25,6 +25,10 @@ class ArchesContexView(ArchesViewMixin, ContextView):
         ret.update({'arches': self.get_arches()})
         return ret
 
+    def get_queryset(self):
+        query = super(ArchesContexView, self).get_queryset()
+        return query.prefetch_keywords(self.get_arches())
+
 class ContextArchListView(ArchesContexView, ListView):
     pass
 
@@ -68,8 +72,7 @@ class EbuildsListView(ContextArchListView):
         select_related('package',
                        'package__virtual_package',
                        'package__virtual_package__category'). \
-                       prefetch_related('package__repository'). \
-                       prefetch_keywords(arches)
+                       prefetch_related('package__repository')
 
 class EbuildDetailView(ArchesContexView, DetailView):
     template_name = 'ebuild.html'
@@ -78,8 +81,7 @@ class EbuildDetailView(ArchesContexView, DetailView):
     queryset = EbuildModel.objects.all(). \
         select_related('package',
                        'package__virtual_package',
-                       'package__virtual_package__category'). \
-                       prefetch_keywords(arches)
+                       'package__virtual_package__category')
 
     def get_object(self, queryset = None):
         pk = self.kwargs.get('pk')
@@ -130,11 +132,11 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
     #INNER JOIN packages_virtualpackagemodel vp 
     #ON( `vp`.id = t.virtual_package_id) INNER JOIN `packages_categorymodel` cp
     #ON (vp.category_id = cp.id);
-    base_queryset = PackageModel.objects.all(). \
+    queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
                        'virtual_package__category'). \
-        prefetch_related('repository', 'herds', 'maintainers'). \
-        prefetch_keywords(arches)
+        prefetch_related('repository', 'herds', 'maintainers')
+        #prefetch_keywords(['sparc-solaris', 'sparc64-solaris'])
 
 class PackageDetailView(ArchesContexView, DetailView):
     template_name = 'package.html'
@@ -143,8 +145,7 @@ class PackageDetailView(ArchesContexView, DetailView):
     queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
                        'virtual_package__category'). \
-        prefetch_related('repository'). \
-        prefetch_keywords(arches)
+        prefetch_related('repository')
 
     def get_object(self, queryset = None):
         pk = self.kwargs.get('pk')
