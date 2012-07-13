@@ -1,10 +1,20 @@
 var ArchesMenu = function (){
     var self = function(){};
-    var cache, default_arch_obj;
+    var cache;
     var gen_func = function(func){
         return function() { cache.each(func); }
     }
-    function create_dict(arr){
+    var gen_func2 = function(dict) {
+        return gen_func(function(num, obj){
+            if(obj.value in dict){
+                obj.checked = true;
+            } else {
+                obj.checked = false;
+            }
+        });
+    }
+
+    function create_dict(arr) {
         o = {};
         for(i=0;i<arr.length;i++){
             o[arr[i]] = true;
@@ -12,12 +22,18 @@ var ArchesMenu = function (){
         return o;
     }
     $.extend(self, {
-        init: function () {
-            $('#reset').live('click', ArchesMenu.reset);
-            $('#set').live('click', ArchesMenu.set);
-            $('#default').live('click', ArchesMenu.set_default);
+        init: function (id_list, var_names) {
             cache = $(':checkbox');
-            default_arch_obj = create_dict(default_arches);
+            $('#reset').click(ArchesMenu.reset);
+            $('#set').click(ArchesMenu.set);
+            var dict, param;
+            for(var i=0; i<id_list.length; i++){
+                dict = create_dict(var_names[i]);
+                param = 'set_' + id_list[i];
+                ArchesMenu[param] = gen_func2(dict);
+                $('#' + id_list[i]).click(ArchesMenu[param]);
+
+            }
         },
         reset: gen_func(function(num, obj){
                 obj.checked = false;
@@ -26,14 +42,6 @@ var ArchesMenu = function (){
         set: gen_func(function(num, obj){
                 obj.checked = true;
             }
-        ),
-        set_default: gen_func(function(num, obj){
-                if(obj.value in default_arch_obj){
-                    obj.checked = true;
-                } else {
-                    obj.checked = false;
-                }
-            }
         )
     });
     return self;
@@ -41,7 +49,8 @@ var ArchesMenu = function (){
 
 !function ($){
   $(function () {
-        ArchesMenu.init();
+        ArchesMenu.init(['default', 'exotic', 'fbsd', 'linux', 'solaris', 'prefix'], 
+                        [default_arches, exotic_arches, fbsd_arches, linux_arches, solaris_arches, prefix_arches]);
     });
 }(window.jQuery);
 

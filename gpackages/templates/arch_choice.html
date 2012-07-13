@@ -4,6 +4,14 @@
 <script>
     // set default arches
     var default_arches = {{ default_arches|safe }};
+    var exotic_arches = ['mk68k', 'mips', 's390', 'sh'];
+    var fbsd_arches = ['amd64-fbsd', 'sparc-fbsd', 'x86-fbsd'];
+    var linux_arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'm68k', 'mips', 'ppc', 'ppc64', 's390', 'sh', 'sparc', 'x86'];
+    var solaris_arches = ['sparc64-solaris', 'sparc-solaris', 'x64-solaris', 'x86-solaris'];
+    var prefix_arches = ['amd64-linux', 'arm-linux', 'hppa-hpux', 'ia64-hpux', 'ia64-linux', 'm68k-mint',
+                         'mips-irix', 'ppc-aix', 'ppc-macos', 'ppc-openbsd', 'sparc-solaris', 'sparc64-solaris',
+                         'x64-freebsd', 'x64-macos', 'x64-openbsd', 'x64-solaris', 'x86-cygwin', 'x86-freebsd', 'x86-interix',
+                         'x86-linux', 'x86-macos', 'x86-netbsd', 'x86-openbsd', 'x86-solaris', 'x86-winnt'];
 </script>
 <div class="arches">
 <form action="./" method="post" enctype="multipart/form-data">{% csrf_token %}
