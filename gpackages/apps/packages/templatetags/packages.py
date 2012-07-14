@@ -5,7 +5,7 @@ register = template.Library()
 
 from ..models import RepositoryModel, EbuildModel
 from ..views import arches
-from ..forms import ArchChoiceForm
+from ..forms import ArchChoiceForm, FilteringForm
 
 @register.inclusion_tag('last_updated.html')
 def last_updated():
@@ -46,3 +46,8 @@ def arch_choice_modal(context):
     arches_s = arches_s or arches
     return {'form': ArchChoiceForm(initial = {'arches': arches_s}),
             'arches': arches_s}
+
+@register.inclusion_tag('filtering_modal.html')
+def filtering_modal():
+    form = FilteringForm()
+    return {'form': form }

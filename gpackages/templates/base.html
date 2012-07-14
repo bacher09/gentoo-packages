@@ -116,7 +116,7 @@
                             {% active_link 'local_uses' 'Local Use Flags' %}
                             {% active_link 'archchoice' 'Select Arches' id='archchoice' %}
                             {% active_link 'licenses' 'Licenses' %}
-                            {% active_link 'filter' 'Filter' %}
+                            {% active_link 'filter' 'Filter' id='filterchoice' %}
                         </ul>
                        </div>
                        {% recent_ebuilds %}
@@ -144,7 +144,11 @@
         <script src="{{ STATIC_URL }}js/packages_details.js"></script>
         <script src="{{ STATIC_URL }}js/modals.js"></script>
     {% endblock scripts %}
-{% arch_choice_modal %}
+
+    {% block modals %}
+        {% arch_choice_modal %}
+        {% filtering_modal %}
+    {% endblock modals %}
 {% endblock body %}
   </body>
 </html>
