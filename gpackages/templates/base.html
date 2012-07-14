@@ -114,7 +114,7 @@
                             {% active_link 'license_groups' 'License Groups' %}
                             {% active_link 'global_uses' 'Global Use Flags' %}
                             {% active_link 'local_uses' 'Local Use Flags' %}
-                            {% active_link 'archchoice' 'Select Arches' %}
+                            {% active_link 'archchoice' 'Select Arches' id='archchoice' %}
                             {% active_link 'licenses' 'Licenses' %}
                             {% active_link 'filter' 'Filter' %}
                         </ul>
@@ -142,7 +142,9 @@
         <script src="{{ STATIC_URL }}js/csrf.js"></script>
         <script src="{{ STATIC_URL }}js/language.js"></script>
         <script src="{{ STATIC_URL }}js/packages_details.js"></script>
+        <script src="{{ STATIC_URL }}js/modals.js"></script>
     {% endblock scripts %}
+{% arch_choice_modal %}
 {% endblock body %}
   </body>
 </html>

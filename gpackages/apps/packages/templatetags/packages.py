@@ -4,6 +4,8 @@ from django import template
 register = template.Library()
 
 from ..models import RepositoryModel, EbuildModel
+from ..views import arches
+from ..forms import ArchChoiceForm
 
 @register.inclusion_tag('last_updated.html')
 def last_updated():
@@ -36,3 +38,11 @@ def recent_ebuilds(num = 10):
                        'package__virtual_package__category'). \
                        prefetch_related('package__repository')[:num]
     return {'ebuilds': query}
+
+@register.inclusion_tag('arch_choice_modal.html', takes_context = True)
+def arch_choice_modal(context):
+    request = context['request']
+    arches_s = request.session.get('arches')
+    arches_s = arches_s or arches
+    return {'form': ArchChoiceForm(initial = {'arches': arches_s}),
+            'arches': arches_s}

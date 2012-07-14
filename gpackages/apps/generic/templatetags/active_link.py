@@ -12,7 +12,7 @@ def active_str(context, url):
 
 # Waring this work only in django>=1.4
 @register.simple_tag(takes_context = True)
-def active_link(context, url_name, text, *args, **kwargs):
+def active_link(context, url_name, text, id = None, *args, **kwargs):
     request = context['request']
     try:
         url = reverse(url_name, *args, **kwargs)
@@ -22,6 +22,9 @@ def active_link(context, url_name, text, *args, **kwargs):
     class_str = ''
     if request.path == url:
         class_str = ' class="active"'
+    id_text = ''
+    if id is not None:
+        id_text = ' id="%s"' % id
     # This would be faster that render in template :)
-    format_str = '<li{2}><a href="{0}">{1}</a><li>'
-    return format_str.format(url, text, class_str)
+    format_str = '<li{2}><a href="{0}"{3}>{1}</a><li>'
+    return format_str.format(url, text, class_str, id_text)
