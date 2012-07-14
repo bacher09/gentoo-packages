@@ -1,5 +1,6 @@
 from django.views.generic import TemplateView, ListView
 from string import Template
+import re
 
 class ContextView(object):
     extra_context = {}
@@ -73,16 +74,21 @@ class MultipleFilterListViewMixin(object):
     allowed_many = {}
     m2m_filter = set()
 
-    def get_queryset(self):
-        query = super(MultipleFilterListViewMixin, self).get_queryset()
-
+    def get_filters(self):
         qs = filter_req(self.request.GET, self.allowed_filter)
         qs.update(filter_req(self.kwargs, self.allowed_filter))
+        return qs
 
+    def is_reverse(self):
         if self.kwargs.get('rev') is None:
             reverse = bool(self.request.GET.get('rev',False))
         else:
             reverse = bool(self.kwargs.get('rev',False))
+
+        return reverse
+
+    def get_order(self):
+        reverse = self.is_reverse()
         
         if 'order' in self.request.GET:
             order = dynamic_order(self.request.GET, self.allowed_order,reverse)
@@ -90,6 +96,12 @@ class MultipleFilterListViewMixin(object):
             order = dynamic_order(self.kwargs, self.allowed_order, reverse)
             if self.kwargs.get('order') not in self.allowed_order:
                 raise Http404('no such order')
+        return order
+
+    def get_queryset(self):
+        query = super(MultipleFilterListViewMixin, self).get_queryset()
+        qs = self.get_filters()
+        order = self.get_order()
 
         qa = dynamic_filter(qs, self.allowed_filter, self.allowed_many)
         queryset = query.filter(**qa).order_by(order)
@@ -106,7 +118,7 @@ class MultipleFilterListViewMixin(object):
         t = "(?:{0}/(?P<{0}>[^/]+)/)?"
         l =[]
         for key in cls.allowed_filter.iterkeys():
-            l.append(t.format(key))
+            l.append(t.format(re.escape(key)))
 
         return ''.join(l) + "(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?"
             
