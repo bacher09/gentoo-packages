@@ -128,6 +128,8 @@ INSTALLED_APPS = (
     'django.contrib.flatpages',
     # 'django.contrib.admindocs',
     #
+    'south',
+    #
     'packages',
     'generic',
     'model_stats',
