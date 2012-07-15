@@ -1,5 +1,6 @@
 from django.utils.safestring import mark_safe
 from django import template
+from django.core.cache import cache
 
 register = template.Library()
 
@@ -9,13 +10,18 @@ from ..forms import ArchChoiceForm, FilteringForm
 
 @register.inclusion_tag('last_updated.html')
 def last_updated():
-    try:
-        l = RepositoryModel.objects.only('updated_datetime'). \
-            latest('updated_datetime')
-    except RepositoryModel.DoesNotExist:
-        return {'las_updated' : None}
-    else:
-        return {'last_updated': l.updated_datetime}
+    updated = cache.get('last_updated_t')
+    if not updated:
+        try:
+            l = RepositoryModel.objects.only('updated_datetime'). \
+                latest('updated_datetime')
+        except RepositoryModel.DoesNotExist:
+            updated = None
+        else:
+            updated = l.updated_datetime
+            cache.set('last_udpated_t', updated)
+
+    return {'last_updated': updated}
 
 @register.inclusion_tag('keywords_table.html')
 def render_keywords_table(obj, arch_list):
