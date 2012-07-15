@@ -2,6 +2,7 @@ from datetime import datetime
 from packages import models
 import sys
 from django.db import IntegrityError
+from django.db import transaction
 from django.utils.encoding import smart_unicode
 from collections import defaultdict
 from package_info.generic import StrThatIgnoreCase, toint
@@ -255,6 +256,7 @@ class Scanner(object):
         self.maintainers_cache = mo_dict
         self.maitainers_cache_loaded = True
 
+    @transaction.commit_on_success
     def scan_license_groups(self):
         "Scan license groups"
         self.write('Scaning license groups\n', 3)
@@ -268,6 +270,7 @@ class Scanner(object):
 
             self.output("update license group '%s'\n", group, 2)
             
+    @transaction.commit_on_success
     def scan_herds(self):
         "Scan herds and maintainers in herds.xml"
         self.write('Scaning herds\n', 3)
@@ -366,6 +369,7 @@ class Scanner(object):
         if repo is not None:
             self.scan_repo(repo, **kwargs)
 
+    @transaction.commit_on_success
     def get_repo_obj(self, repo, update_repo = False):
         repo_obj, repo_created = models.RepositoryModel \
             .objects.get_or_create(repo = repo)
@@ -693,6 +697,7 @@ class Scanner(object):
         news_obj.clear_related()
         self.add_related_to_news(news, news_obj)
                  
+    @transaction.commit_on_success
     def scan_news_item(self, news_item):
         for n in news_item.news.itervalues():
             n_obj, created = models.PortageNewsModel.objects. \
