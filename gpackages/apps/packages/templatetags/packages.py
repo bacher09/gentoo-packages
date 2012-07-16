@@ -9,7 +9,11 @@ from ..views import arches
 from ..forms import ArchChoiceForm, FilteringForm
 from generic.utils import inclusion_cached_tag
 
-@inclusion_cached_tag('last_updated.html', register, lambda: 'last_updated_th')
+def last_updated_key():
+    return 'last_updated_th'
+
+@inclusion_cached_tag('last_updated.html', register, last_updated_key, \
+                                                     time_zone = False)
 def last_updated():
     updated = cache.get('last_updated_t')
     if not updated:
@@ -40,7 +44,8 @@ register.filter('obfuscate', text_sincode)
 def recent_ebuilds_cache_key(num = 10):
     return 'recent_ebuilds_th_' + str(num)
 
-@inclusion_cached_tag('recent_ebuilds.html', register, recent_ebuilds_cache_key)
+@inclusion_cached_tag('recent_ebuilds.html', register, \
+                      recent_ebuilds_cache_key, time_zone = False)
 def recent_ebuilds(num = 10):
     query = EbuildModel.objects.order_by('-updated_datetime').all().\
         select_related('package',

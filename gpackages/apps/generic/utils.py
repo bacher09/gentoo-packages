@@ -7,7 +7,8 @@ from django.template.context import (Context, RequestContext,
     ContextPopException)
 
 # Most part steeled from django code
-def inclusion_cached_tag(file_name, register, cache_key_func,
+def inclusion_cached_tag(file_name, register, cache_key_func, lang_code = True,
+                        time_zone = True,
                         context_class=Context, takes_context=False, name=None):
     def dec(func):
         params, varargs, varkw, defaults = getargspec(func)
@@ -16,7 +17,18 @@ def inclusion_cached_tag(file_name, register, cache_key_func,
 
             def render(self, context):
                 resolved_args, resolved_kwargs = self.get_resolved_arguments(context)
+                key_kwargs = resolved_kwargs.copy()
+
                 key = cache_key_func(*resolved_args, **resolved_kwargs)
+                if lang_code:
+                    lc = context.get('LANGUAGE_CODE')
+                    lc = lc if lc else ''
+                    key += lc
+                if time_zone:
+                    tz = context.get('TIME_ZONE')
+                    tz = str(tz) if tz else ''
+                    key += tz
+
                 cache_v = cache.get(key)
                 if cache_v is not None:
                     return cache_v
