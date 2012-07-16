@@ -7,6 +7,7 @@ from django.utils.encoding import smart_unicode
 from collections import defaultdict
 from package_info.generic import StrThatIgnoreCase, toint
 from package_info.porttree import porttree
+from django.core.cache import cache as cache_backend
 
 import anydbm
 
@@ -131,6 +132,7 @@ class Scanner(object):
         self.is_scan_license_groups = bool_get('scan_license_groups', False)
         self.is_scan_news = bool_get('scan_news', False)
         self.is_scan_license_text = bool_get('license_text', False)
+        self.is_cache_clear = bool_get('cache_clear', False)
 
     def show_time(self):
         "Prints scan time"
@@ -172,6 +174,9 @@ class Scanner(object):
 
         if self.is_scan_license_text:
             self.scan_license_text()
+
+        if self.is_cache_clear:
+            cache_backend.clear()
 
         if self.is_show_time:
             self.show_time()
