@@ -41,6 +41,8 @@ class EbuildsWithKeywrods(Prefetcher):
         setattr(package, 'ebuilds', ebuilds)
         for ebuild in ebuilds:
             ebuild.package = package
+            if ebuild.pk == package.latest_ebuild_id:
+                package.latest_ebuild = ebuild
 
 class KeywordsPrefetch(Prefetcher):
     def __init__(self, arches):
