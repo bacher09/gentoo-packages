@@ -53,7 +53,7 @@ def get_from_kwargs_and_del(list_what, kwargs):
     else:
         return ret_list
             
-def toint(val, defval):
+def toint(val, defval = None):
     try:
         return int(val)
     except ValueError:

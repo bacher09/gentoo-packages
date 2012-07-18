@@ -33,27 +33,50 @@ EBUILD_CPVR_RE_P = r'%(cpv)s%(repository)s' % {
 EBUILD_CPV_RE = r'^%s$' % EBUILD_CPV_RE_P
 EBUILD_CPVR_RE = r'^%s$' % EBUILD_CPVR_RE_P
 
-VERSION_MAJ_P_RE = r'(?P<mver>(?P<num>(?:\d+\.)+\d+)(?P<alpha>[a-z])?)'
-VERSION_MIN_P_RE = r'(?:_(?P<prefix>alpha|beta|pre|rc|p)(?P<prefix_num>\d*))?'
-VERSION_P_RE = '^%(maj)s%(min)s$' % {'maj' : VERSION_MAJ_P_RE,
-                                     'min' : VERSION_MIN_P_RE }
+VERSION_MAJ_P_RE = r'(?P<mver>(?P<num>(?:\d+\.)*\d+)(?P<alpha>[a-z])?)'
+VERSION_PREFIX_RE = r'(?:_(?P<prefix>alpha|beta|pre|rc|p)(?P<prefix_num>\d*))?'
+VERSION_MINS_P_RE = r'(?P<prefixes>(?:_(?:alpha|beta|pre|rc|p)(?:\d*))*)'
+VERSION_P_RE = '^%(maj)s%(mins)s$' % {'maj'  : VERSION_MAJ_P_RE,
+                                      'mins' : VERSION_MINS_P_RE }
 
 package_re = re.compile(PACKAGE_RE)
 package_cpr_re = re.compile(PACKAGE_CPV_RE)
 ebuild_cpvr_re = re.compile(EBUILD_CPVR_RE)
 ebuild_cpv_re = re.compile(EBUILD_CPV_RE)
 version_parse_re = re.compile(VERSION_P_RE)
+version_prefix_re = re.compile(VERSION_PREFIX_RE)
 
-def maj_parse(num, alpha):
-    return tuple(num.split('.') + [alpha])
+def maj_parse(nums, alpha):
+    lst = []
+    for num in nums.split('.'):
+        rnum = toint(num)
+        if rnum is not None:
+            lst.append(rnum)
+    if alpha:
+        lst.append(alpha)
+    return tuple(lst)
 
 PREFIX_WEIGHT = {'alpha': 0, 'beta': 1, 'pre': 2, 'rc': 3, None: 4, 'p' : 5}
-def min_parse(prefix, prefix_num):
+def prefix_info(prefix, prefix_num = 0):
     p_weight = PREFIX_WEIGHT.get(prefix, 4)
     if p_weight == 4:
         prefix_num = 0
 
     return (p_weight, toint(prefix_num, 0))
+
+def min_parse(prefixes):
+    if not prefixes:
+        return (prefix_info(None),)
+
+    lst = []
+    for matched in version_prefix_re.finditer(prefixes):
+        if matched is not None:
+            dct = matched.groupdict()
+            prefix, prefix_num = dct['prefix'], dct['prefix_num']
+            if prefix is not None:
+                lst.append(prefix_info(prefix, prefix_num))
+
+    return tuple(lst)
 
 REV_STR_RE = '^r(?P<rev>\d+)$'
 rev_re = re.compile(REV_STR_RE)
@@ -77,11 +100,11 @@ class VersionParse(ToStrMixin):
         self.version = version
         m = version_parse_re.match(version)
         if m is None:
-            raise ValueError
+            raise ValueError('Bad version "%s"' % version)
 
         dct = m.groupdict()
         self.maj = maj_parse(dct['num'], dct['alpha'])
-        self.min = min_parse(dct['prefix'], dct['prefix_num'])
+        self.min = min_parse(dct['prefixes'])
 
     def __eq__(self, other):
         if not isinstance(other, VersionParse):
