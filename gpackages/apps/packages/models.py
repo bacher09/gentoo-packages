@@ -441,6 +441,10 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
         else:
             return self.cpr
 
+    @property
+    def short_description(self):
+        return self.latest_ebuild.description
+
     def init_by_package(self, package, category = None, virtual_package = None):
         #self.name = package.name
         self.update_info(package)
