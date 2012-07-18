@@ -37,9 +37,12 @@ def get_all_choices():
     return values
 
 class FilteringForm(forms.Form):
+    names = ['repos', 'categories', 'herds', 'uses', 'licenses']
+    f_names = ['repo', 'category', 'herd', 'use', 'license']
+
     def __init__(self, *args, **kwargs):
         super(FilteringForm, self).__init__(*args, **kwargs)
-        names = ['repos', 'categories', 'herds', 'uses', 'licenses']
+        names = self.names
         names_cache = map(lambda x: x+'_f_list', names)
         cache_vals = cache.get_many(names_cache)
         f = False

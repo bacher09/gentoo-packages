@@ -62,7 +62,17 @@ def arch_choice_modal(context):
     return {'form': ArchChoiceForm(initial = {'arches': arches_s}),
             'arches': arches_s}
 
-@register.inclusion_tag('filtering_modal.html')
-def filtering_modal():
-    form = FilteringForm()
+@register.inclusion_tag('filtering_modal.html', takes_context = True)
+def filtering_modal(context):
+    filters = context.get('filters_dict')
+    initial = {}
+    if filters:
+        for item, k in zip(FilteringForm.names, FilteringForm.f_names):
+            if k in filters:
+                v = filters[k]
+                if not isinstance(v, list):
+                    v = [v]
+                initial[item] = v
+
+    form = FilteringForm(initial = initial)
     return {'form': form }

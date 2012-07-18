@@ -30,11 +30,8 @@ def dynamic_filter(filter_set, allowed, many_set = {}):
     for k, v in allowed.iteritems():
         if k in filter_set:
             vv = filter_set[k]
-            if k in many_set:
-                l = vv.split(',')
-                if len(l)>1:
-                    v += '__in'
-                    vv = cut_to_len(l, many_set[k])
+            if k in many_set and isinstance(vv, list):
+                v += '__in'
             result[v] = vv
     return result
 
@@ -74,10 +71,27 @@ class MultipleFilterListViewMixin(object):
     allowed_many = {}
     m2m_filter = set()
 
-    def get_filters(self):
+    def get_context_data(self, **kwargs):
+        cd = super(MultipleFilterListViewMixin, self).get_context_data(**kwargs)
+        cd['filters_dict'] = self.queries_dict
+        return cd
+
+    def get_base_filters(self):
         qs = filter_req(self.request.GET, self.allowed_filter)
         qs.update(filter_req(self.kwargs, self.allowed_filter))
         return qs
+
+    def get_filters(self):
+        qs = self.get_base_filters()
+        newqs = {}
+        for k, v in qs.iteritems():
+            if k in self.allowed_many:
+                vm = v.split(',')
+                if len(vm)>1:
+                    v = cut_to_len(vm, self.allowed_many[k])
+            newqs[k] = v 
+        self.queries_dict = newqs
+        return newqs
 
     def is_reverse(self):
         if self.kwargs.get('rev') is None:
