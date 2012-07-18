@@ -133,6 +133,7 @@ class Scanner(object):
         self.is_scan_news = bool_get('scan_news', False)
         self.is_scan_license_text = bool_get('license_text', False)
         self.is_cache_clear = bool_get('cache_clear', False)
+        self.is_set_latest_ebuilds = bool_get('set_latest_ebuilds', False)
 
     def show_time(self):
         "Prints scan time"
@@ -159,6 +160,9 @@ class Scanner(object):
             self.scan_all_repo_info(delete = self.delete)
         elif self.s_only_repo_info and len(self.scan_repos_name) > 0:
             self.scan_repo_info_by_names(self.scan_repos_name)
+
+        if self.is_set_latest_ebuilds:
+            self.set_latest_ebuilds_to_package()
 
         if self.scan_global_use_descr:
             self.update_all_globals_uses_descriptions()
@@ -724,3 +728,14 @@ class Scanner(object):
                 license.text = smart_unicode(text, errors='ignore')
                 license.save(force_update = True)
 
+    @staticmethod
+    def set_latest_ebuilds_to_package():
+        for package in models.PackageModel.objects.only('pk').iterator():
+            # search latest ebuild should done by version and revison
+            # and database could not allow smart order by version becaouse
+            # version are compared as string
+            ebuilds = package.ebuildmodel_set.only('version', 'revision').all()
+            latest_ebuild = max(ebuilds, key = lambda x: x.version_cmp)
+            # Hack for not update last modified datetime
+            models.PackageModel.objects.filter(pk = package.pk). \
+                update(latest_ebuild = latest_ebuild)
