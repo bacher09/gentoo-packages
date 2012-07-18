@@ -32,6 +32,9 @@ clear_re = re.compile(r'\s+')
 email_re = re.compile(r'(?P<email_name>[\w\.\-]+)@(?P<email_host>[\w\.\-]+)')
 date_re = re.compile(CHANGELOG_DATE_RE_P)
 
+# Warning !!!
+# For working this part code correctly locale should be right switched
+# May be change localte manualy ?
 MONTH_TUPLE = tuple(calendar.month_abbr)[1:]
 
 def parse_date(date_str, traceback = False):
