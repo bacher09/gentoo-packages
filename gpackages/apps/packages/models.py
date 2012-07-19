@@ -233,7 +233,7 @@ class CategoryModel(StatsModel):
         self.metadata_hash = category.metadata_sha1
 
     def check_or_need_update(self, category):
-        return self.metadata_hash == category.metadata_sha1
+        return self.metadata_hash != category.metadata_sha1
 
     category = models.CharField(unique = True, max_length = 70, db_index = True)
     description = models.TextField(blank = True, null = True)
