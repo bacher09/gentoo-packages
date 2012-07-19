@@ -95,6 +95,8 @@ class EbuildRevMixin(object):
 
 @total_ordering
 class VersionParse(ToStrMixin):
+
+    __slots__ = ('version', 'maj', 'min', 'cmp_attr')
     
     def __init__(self, version):
         self.version = version
@@ -105,16 +107,17 @@ class VersionParse(ToStrMixin):
         dct = m.groupdict()
         self.maj = maj_parse(dct['num'], dct['alpha'])
         self.min = min_parse(dct['prefixes'])
+        self.cmp_attr = (self.maj, self.min)
 
     def __eq__(self, other):
         if not isinstance(other, VersionParse):
             return False
-        return (self.maj, self.min) == (other.maj, other.min)
+        return self.cmp_attr == other.cmp_attr
 
     def __lt__(self, other):
         if not isinstance(other, VersionParse):
             return NotImplemented
-        return (self.maj, self.min) < (other.maj, other.min)
+        return self.cmp_attr < other.cmp_attr
 
     def __unicode__(self):
         return unicode(self.version)
