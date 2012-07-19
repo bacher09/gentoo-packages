@@ -12,8 +12,8 @@
     {% endif %}
     {% render_keywords_table package arches %}
 
-    {% with herds=package.herds.all maintainers=package.maintainers.all %}
-    {% if herds or maintainers %}
+    {% with herds=package.herds.all maintainers=package.maintainers.all homepages=package.latest_ebuild.homepages.all %}
+    {% if herds or maintainers or homepages %}
     <div style="padding-bottom: 10px; padding-top: 0px; margin-top: 0px;">
     <a href="#" class="trigger"><span class="trigger">+</span>Details</a>
     </div>
@@ -40,6 +40,16 @@
                     <td>
                         {% for maintainer in maintainers %}
                         <a href="{% url 'packages' maintainer=maintainer.pk %}">{{ maintainer.name }}</a>{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if homepages %}
+                <tr>
+                    <td>Homepages:</td>
+                    <td>
+                        {% for homepage in homepages %}
+                        <a href="{{ homepage.url }}">{{ homepage.url }}</a>{% if not forloop.last %},{% endif %}
                         {% endfor %}
                     </td>
                 </tr>

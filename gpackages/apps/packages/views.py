@@ -135,7 +135,8 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
     queryset = PackageModel.objects.all(). \
         select_related('virtual_package',
                        'virtual_package__category'). \
-        prefetch_related('repository', 'herds', 'maintainers')
+        prefetch_related('repository', 'herds', 
+                         'maintainers', 'latest_ebuild__homepages')
 
 class PackageDetailView(ArchesContexView, DetailView):
     template_name = 'package.html'
