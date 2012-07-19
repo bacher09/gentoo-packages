@@ -27,10 +27,11 @@ def make_query_for_stats(model, params):
 def update_stats(model, params):
     query = make_query_for_stats(model, params)
     for obj in query:
+        kwargs = {}
         for key, mykey in starmap(lambda  x,y: (x, gen_prefix(x)), params):
-            setattr(obj, key, getattr(obj, mykey))
+            kwargs[key] = getattr(obj, mykey)
 
-        obj.save(force_update = True)
+        model.objects.filter(pk = obj.pk).update(**kwargs)
 
 class StatsMixin(object):
 
