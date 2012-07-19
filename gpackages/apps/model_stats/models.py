@@ -22,16 +22,17 @@ def gen_query_dict(params):
 
 def make_query_for_stats(model, params):
     query_dict = gen_query_dict(params)
-    return model.objects.annotate(**query_dict)
+    only = query_dict.keys() + ['pk']
+    return model.objects.annotate(**query_dict).values(*only)
 
 def update_stats(model, params):
     query = make_query_for_stats(model, params)
-    for obj in query:
+    for item in query:
         kwargs = {}
         for key, mykey in starmap(lambda  x,y: (x, gen_prefix(x)), params):
-            kwargs[key] = getattr(obj, mykey)
+            kwargs[key] = item.get(mykey)
 
-        model.objects.filter(pk = obj.pk).update(**kwargs)
+        model.objects.filter(pk = item['pk']).update(**kwargs)
 
 class StatsMixin(object):
 
