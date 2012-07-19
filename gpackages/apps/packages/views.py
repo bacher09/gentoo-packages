@@ -136,7 +136,6 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
         select_related('virtual_package',
                        'virtual_package__category'). \
         prefetch_related('repository', 'herds', 'maintainers')
-        #prefetch_keywords(['sparc-solaris', 'sparc64-solaris'])
 
 class PackageDetailView(ArchesContexView, DetailView):
     template_name = 'package.html'
