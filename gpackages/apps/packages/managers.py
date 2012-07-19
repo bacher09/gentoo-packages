@@ -30,9 +30,9 @@ class EbuildsWithKeywrods(Prefetcher):
         self.keywords = keywords
 
     def filter(self, ids):
-        return packages.models.EbuildModel.objects. \
-            filter(package__in = ids).order_by('-version', '-revision'). \
-            prefetch_keywords(self.keywords)
+        ebuilds = packages.models.EbuildModel.objects. \
+            filter(package__in = ids).prefetch_keywords(self.keywords)
+        return sorted(ebuilds, key = lambda x: x.version_cmp, reverse = True)
 
     def reverse_mapper(self, ebuild):
         return [ebuild.package_id]
