@@ -420,7 +420,8 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     # ebuilds_count = models.PositiveIntegerField(default = 0)
 
     # latest ebuild info
-    latest_ebuild = models.ForeignKey('EbuildModel', blank = True, null = True)
+    latest_ebuild = models.ForeignKey('EbuildModel', blank = True, null = True,
+                                      on_delete = models.SET_NULL)
     
     objects = managers.PackageManager()
 
