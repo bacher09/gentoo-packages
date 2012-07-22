@@ -12,7 +12,7 @@ class CategoryMetadata(ToStrMixin):
         self._descrs = {}
         try:
             self._metadata_xml = etree.parse(metadata_path)
-        except IOError:
+        except (IOError, etree.ParseError):
             pass
         else:
             self._parse_descrs()
