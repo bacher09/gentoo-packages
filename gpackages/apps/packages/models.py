@@ -233,7 +233,10 @@ class CategoryModel(StatsModel):
         self.metadata_hash = category.metadata_sha1
 
     def check_or_need_update(self, category):
-        return self.metadata_hash != category.metadata_sha1
+        if category.metadata_sha1 is not None:
+            return self.metadata_hash != category.metadata_sha1
+        else:
+            return False
 
     category = models.CharField(unique = True, max_length = 70, db_index = True)
     description = models.TextField(blank = True, null = True)
@@ -402,9 +405,9 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
         
     virtual_package = models.ForeignKey(VirtualPackageModel, db_index = True)
     changelog = models.TextField(blank = True, null = True)
-    changelog_hash = models.CharField(max_length = 128)
-    manifest_hash = models.CharField(max_length = 128)
-    metadata_hash = models.CharField(max_length = 128)
+    changelog_hash = models.CharField(max_length = 128, null = True)
+    manifest_hash = models.CharField(max_length = 128, null = True)
+    metadata_hash = models.CharField(max_length = 128, null = True)
     changelog_mtime = models.DateTimeField(blank = True, null = True)
     manifest_mtime = models.DateTimeField(blank = True, null = True)
     mtime = models.DateTimeField(blank = True, null = True)
@@ -462,6 +465,8 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
 
     def check_or_need_update(self, package):
         # Need add metadata check to
+        if self.manifest_hash is None:
+            return True
         return self.manifest_hash != package.manifest_sha1
 
     def need_update_metadata(self, package):

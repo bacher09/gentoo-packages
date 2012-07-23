@@ -98,7 +98,7 @@ def file_get_content(file_path):
         return None
 
 def file_sha1(file_path):
-    sha1 = 'NULL'
+    sha1 = None
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             sha1 = hashlib.sha1(f.read()).hexdigest()
