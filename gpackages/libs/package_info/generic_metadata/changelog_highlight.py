@@ -1,8 +1,9 @@
 from pygments.lexer import RegexLexer, bygroups, include
-from pygments.formatters import HtmlFormatter
+from pygments.formatters import HtmlFormatter, Terminal256Formatter
 from pygments.formatters.html import _escape_html_table
 from pygments.style import Style
 from pygments.token import *
+from pygments import highlight
 import re
 
 DATE_RE = r'\d\d? [A-Z][a-z]{2} \d{4}'
@@ -43,7 +44,7 @@ class ChangelogLexer(RegexLexer):
             (r'^(\*)(.+)( )(\()(%s)(\))' % DATE_RE, bygroups(Operator, PackageName, Whitespace, Punctuation, Date, Punctuation)),
             (r'^(  )(%(date)s)(;)( +)([^<]*)(<)(%(email)s)(>)' % {'date': DATE_RE, 'email': EMAIL_RE},
                 bygroups(Whitespace, Date, Punctuation, Whitespace, AuthorName, Punctuation, Number, Punctuation), 'main'), # Date
-            (EMAIL_RE, Email),
+            include('email'),
             (r' ', Whitespace),
             include('bugs'),
             (r'\(|\)|<|>', Punctuation),
@@ -72,7 +73,6 @@ class ChangelogLexer(RegexLexer):
         'message_text': [
             (r' *\n', Whitespace, '#pop'),
             include('bugs'),
-            (r'\(|\)|<|>', Punctuation),
             include('email'),
             include('link'),
             #(KEYWORD_RE, Name.Variable),
@@ -167,4 +167,13 @@ class ChangelogStyle(Style):
         Bug:                    '#E00',
         Email:                  '#0CF',
         AuthorName:             'bold #1C9',
+        #Error:                  'bold underline #F00',
     }
+
+def changelog_highlight(text):
+    return highlight(text, ChangelogLexer(), 
+                     ChangelogHtmlFormater(style = ChangelogStyle))
+
+def changelog_termial_highlight(text):
+    return highlight(text, ChangelogLexer(), 
+                     Terminal256Formatter(style = ChangelogStyle))
