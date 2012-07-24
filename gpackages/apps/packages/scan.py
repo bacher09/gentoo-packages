@@ -8,8 +8,9 @@ from collections import defaultdict
 from package_info.generic import StrThatIgnoreCase, toint
 from package_info.porttree import porttree
 from django.core.cache import cache as cache_backend
-
+import logging
 import anydbm
+logger = logging.getLogger(__name__)
 
 portage = porttree
 
@@ -730,12 +731,15 @@ class Scanner(object):
 
     @staticmethod
     def set_latest_ebuilds_to_package():
-        for package in models.PackageModel.objects.only('pk').iterator():
-            # search latest ebuild should done by version and revison
+        for package_id, in models.PackageModel.objects.values_list('pk'):
+            # search latest ebuild should done by version and revision
             # and database could not allow smart order by version becaouse
             # version are compared as string
-            ebuilds = package.ebuildmodel_set.only('version', 'revision').all()
-            latest_ebuild = max(ebuilds, key = lambda x: x.version_cmp)
+            ebuilds = models.EbuildModel.objects.filter(package = package_id)
+            try:
+                latest_ebuild = max(ebuilds, key = lambda x: x.version_cmp)
+            except ValueError:
+                logger.exception('Bad package without ebuilds %s' % package_id)
             # Hack for not update last modified datetime
-            models.PackageModel.objects.filter(pk = package.pk). \
+            models.PackageModel.objects.filter(pk = package_id). \
                 update(latest_ebuild = latest_ebuild)
