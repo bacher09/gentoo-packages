@@ -5,6 +5,8 @@ from .my_etree import etree
 # Maintainers
 from .herds import Maintainer
 
+#TODO: Add support of restrict attribute !!!
+
 class PackageMetaData(ToStrMixin):
 
     def __init__(self, metadata_path):
@@ -23,6 +25,7 @@ class PackageMetaData(ToStrMixin):
         self._parse_herds()
         self._parse_description()
         self._parse_maintainers()
+        self._parse_upstream()
 
     def _parse_herds(self):
         herd_set = set()
@@ -45,6 +48,10 @@ class PackageMetaData(ToStrMixin):
             maintainers.add(maintainer)
         self._maintainers = tuple(maintainers)
 
+    def _parse_upstream(self):
+        upstream_xml = self._metadata_xml.find('upstream')
+        self.upstream = Upstream(upstream_xml, self._metadata_path)
+
     @property
     def description(self):
         return self.descr['en']
@@ -63,3 +70,34 @@ class PackageMetaData(ToStrMixin):
     
     def __unicode__(self):
         return self._metadata_path
+
+class Upstream(ToStrMixin):
+    
+    simple_attrs = (('changelog', 'changelog'),
+                    ('bugs-to', 'bugs_to'),)
+
+    def __init__(self, upstream_t, metadata_path):
+        self.metadata_path = metadata_path
+        self.remote_id = {}
+        for name in ('doc',):
+            res = {}
+            for item in upstream_t.iterfind(name):
+                lang = item.attrib.get('lang', 'en')
+                res[lang] = item.text
+            setattr(self, name, res)
+
+        for name, attr_name in self.simple_attrs:
+            item = upstream_t.find(name)
+            setattr(self, attr_name, item.text)
+
+        for item in upstream_t.iterfind('remote-id'):
+            type = item.attrib.get('type')
+            self.remote_id[type] = item.text
+            
+
+    @property
+    def main_doc(self):
+        return self.doc.get('en')
+
+    def __unicode__(self):
+        return self.metadata_path
