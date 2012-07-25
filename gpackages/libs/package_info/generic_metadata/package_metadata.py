@@ -14,6 +14,7 @@ class PackageMetaData(ToStrMixin):
         self.descr = {'en': None}
         self._herds = ()
         self._maintainers = ()
+        self.upstream = None
         try:
             self._metadata_xml = etree.parse(metadata_path)
         except (IOError, etree.ParseError):
@@ -50,7 +51,8 @@ class PackageMetaData(ToStrMixin):
 
     def _parse_upstream(self):
         upstream_xml = self._metadata_xml.find('upstream')
-        self.upstream = Upstream(upstream_xml, self._metadata_path)
+        if upstream_xml is not None:
+            self.upstream = Upstream(upstream_xml, self._metadata_path)
 
     @property
     def description(self):
@@ -87,13 +89,21 @@ class Upstream(ToStrMixin):
             setattr(self, name, res)
 
         for name, attr_name in self.simple_attrs:
+            setattr(self, attr_name, None)
             item = upstream_t.find(name)
-            setattr(self, attr_name, item.text)
+            if item is not None:
+                setattr(self, attr_name, item.text)
 
         for item in upstream_t.iterfind('remote-id'):
             type = item.attrib.get('type')
             self.remote_id[type] = item.text
-            
+
+        maintainers = []
+        for maintainer in upstream_t.iterfind('maintainer'):
+            m = UpstreamMaintainer(maintainer)
+            maintainers.append(m)
+
+        self.maintainers = maintainers
 
     @property
     def main_doc(self):
@@ -101,3 +111,12 @@ class Upstream(ToStrMixin):
 
     def __unicode__(self):
         return self.metadata_path
+
+class UpstreamMaintainer(Maintainer):
+    status_dict = {'inactive' : 0, 'active': 1}
+
+    def __init__(self, xml_object):
+        super(UpstreamMaintainer, self).__init__(xml_object)
+        st = xml_object.attrib.get('status','inactive')
+        self.status = self.status_dict.get(st, 0)
+
