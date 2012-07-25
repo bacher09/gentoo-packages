@@ -580,6 +580,38 @@ class Scanner(object):
         package_object.update_info(package)
         package_object.save(force_update = True)
 
+    @transaction.commit_on_success
+    def scanpackage(self, package, porttree, category_object, porttree_obj,
+                    force_update = False):
+        #if use_cache:
+            #key = str(porttree.name)+'/'+str(package)
+            #val = None
+            #if key in cache_dict:
+                #val = cache_dict[key]
+            #if val is not None and val == package.manifest_sha1:
+                #continue
+        self.output('%-44s [%s]\n', (package, porttree))
+        package_object, package_created = models.PackageModel.objects \
+            .only('changelog_hash', 'manifest_hash', 'metadata_hash') \
+            .get_or_create(package = package,
+                           category = category_object,
+                           repository = porttree_obj)
+        #if update_cache:
+            #key = str(porttree.name)+'/'+str(package)
+            #cache_dict[key] = package.manifest_sha1
+            
+        if not package_created:
+            if package_object.check_or_need_update(package) or force_update:
+                # need update
+                self.update_package(package, package_object,
+                    force_update = force_update)
+
+            return package_object.pk
+        # if package_created:
+        self.add_related_to_package(package, package_object)
+        self.create_ebuilds(package, package_object)
+        return package_object.pk
+
     def scanpackages(self, porttree, porttree_obj, delete = True,
                      force_update = False, update_cache = True, use_cache = True):
         """Scan packages (and ebuilds) in porttree
@@ -604,34 +636,10 @@ class Scanner(object):
 
             existend_categorys.append(category_object.pk)
             for package in category.iter_packages():
-                #if use_cache:
-                    #key = str(porttree.name)+'/'+str(package)
-                    #val = None
-                    #if key in cache_dict:
-                        #val = cache_dict[key]
-                    #if val is not None and val == package.manifest_sha1:
-                        #continue
-                self.output('%-44s [%s]\n', (package, porttree))
-                package_object, package_created = models.PackageModel.objects \
-                    .only('changelog_hash', 'manifest_hash', 'metadata_hash') \
-                    .get_or_create(package = package,
-                                   category = category_object,
-                                   repository = porttree_obj)
-                #if update_cache:
-                    #key = str(porttree.name)+'/'+str(package)
-                    #cache_dict[key] = package.manifest_sha1
-                    
-                existend_packages.append(package_object.pk)
-                if not package_created:
-                    if package_object.check_or_need_update(package) or force_update:
-                        # need update
-                        self.update_package(package, package_object,
-                            force_update = force_update)
-
-                    continue
-                # if package_created:
-                self.add_related_to_package(package, package_object)
-                self.create_ebuilds(package, package_object)
+                pk = self.scanpackage(package, porttree,
+                                      category_object, porttree_obj,
+                                      force_update)
+                existend_packages.append(pk)
 
             if delete:
                 models.PackageModel.objects \
@@ -755,6 +763,7 @@ class Scanner(object):
                 latest_ebuild = max(ebuilds, key = lambda x: x.version_cmp)
             except ValueError:
                 logger.exception('Bad package without ebuilds %s' % package_id)
-            # Hack for not update last modified datetime
-            models.PackageModel.objects.filter(pk = package_id). \
-                update(latest_ebuild = latest_ebuild)
+            else:
+                # Hack for not update last modified datetime
+                models.PackageModel.objects.filter(pk = package_id). \
+                    update(latest_ebuild = latest_ebuild)
