@@ -412,8 +412,14 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     manifest_mtime = models.DateTimeField(blank = True, null = True)
     mtime = models.DateTimeField(blank = True, null = True)
 
+    # data from metadata.xml
     herds = models.ManyToManyField(HerdsModel, blank = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
+    #upstream
+    doc = models.URLField(blank = True, null = True)
+    changelog_url = models.URLField(blank = True, null = True)
+    # TODO: IN future this should done by special field type
+    bugs_to = models.CharField(max_length = 255, blank = True, null = True)
 
     description = models.TextField(blank = True, null = True)
     repository = models.ForeignKey(RepositoryModel, db_index = True)
@@ -484,6 +490,11 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
         self.manifest_hash = package.manifest_sha1
         self.metadata_hash = package.metadata_sha1
         self.description = package.description
+        # metadata.xml
+        if package.metadata.upstream is not None:
+            self.doc = package.metadata.upstream.main_doc
+            self.changelog_url = package.metadata.upstream.changelog
+            self.bugs_to = package.metadata.upstream.bugs_to
 
     def get_ebuilds_and_keywords(self, arch_list):
         l = []
