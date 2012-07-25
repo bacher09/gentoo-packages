@@ -1,9 +1,17 @@
 from __future__ import absolute_import
-from ..generic import ToStrMixin
+from ..generic import ToStrMixin, Enum
 #XML
 from .my_etree import etree
 # Maintainers
 from .herds import Maintainer
+
+REMOTE_ID_TYPE = ( 'bitbucket', 'cpan', 'cpan-module', 'cran', 'ctan', 
+                   'freshmeat', 'github', 'gitorious', 'google-code', 
+                   'launchpad', 'pear', 'pecl', 'pypi', 'rubyforge', 
+                   'rubygems', 'sourceforge', 'sourceforge-jp', 'vim'
+                 )
+
+REMOTE_IDS_TYPE = Enum(REMOTE_ID_TYPE)
 
 #TODO: Add support of restrict attribute !!!
 
@@ -96,7 +104,8 @@ class Upstream(ToStrMixin):
 
         for item in upstream_t.iterfind('remote-id'):
             type = item.attrib.get('type')
-            self.remote_id[type] = item.text
+            type_id = REMOTE_IDS_TYPE.repo_dict.get(type)
+            self.remote_id[type_id] = item.text
 
         maintainers = []
         for maintainer in upstream_t.iterfind('maintainer'):

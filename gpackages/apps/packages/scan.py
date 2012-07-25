@@ -516,15 +516,30 @@ class Scanner(object):
 
             self.output("ebuild created '%s'\n", ebuild_object, 3)
 
+    def add_remote_id(self, package, package_object):
+        if package.metadata.upstream is None:
+            return None
+        lst = []
+        for type_id, value in package.metadata.upstream.remote_id.iteritems():
+            o = models.RemoteId(type = type_id,
+                                remote_id = value,
+                                package = package_object)
+            lst.append(o)
+        models.RemoteId.objects.bulk_create(lst)
+
+    def del_remote_id(self, package_object):
+        models.RemoteId.objects.filter(package = package_object).delete()
+
     def clear_related_to_package(self, package_object):
         package_object.herds.clear()
         package_object.maintainers.clear()
-        
+        self.del_remote_id(package_object)
 
     def add_related_to_package(self, package, package_object):
         package_object.herds.add(*self.get_herds_objects(package))
         package_object.maintainers. \
             add(*self.get_maintainers_objects(package.metadata.maintainers()))
+        self.add_remote_id(package, package_object)
 
     def update_related_to_package(self, package, package_object):
         self.clear_related_to_package(package_object)

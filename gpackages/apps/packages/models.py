@@ -5,6 +5,7 @@ from package_info.utils import ciavc_link, email_parse
 import managers
 from package_info.generic import get_from_kwargs_and_del, cached_property
 from package_info.generic_metadata.repo_const import REPOS_TYPE
+from package_info.generic_metadata.package_metadata import REMOTE_IDS_TYPE 
 # relative
 from .keywords import KeywordRepr
 from model_stats.models import StatsModel
@@ -415,7 +416,7 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     # data from metadata.xml
     herds = models.ManyToManyField(HerdsModel, blank = True)
     maintainers = models.ManyToManyField(MaintainerModel, blank = True)
-    #upstream
+    # upstream
     doc = models.URLField(blank = True, null = True)
     changelog_url = models.URLField(blank = True, null = True)
     # TODO: IN future this should done by special field type
@@ -519,6 +520,16 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     class Meta:
         unique_together = ('virtual_package', 'repository')
         ordering = ('-updated_datetime',)
+
+class RemoteId(models.Model):
+    REMOTE_ID_TYPE = REMOTE_IDS_TYPE.get_as_tuple()
+
+    type = models.PositiveSmallIntegerField(choices = REMOTE_ID_TYPE)
+    remote_id = models.CharField(max_length = 120)
+    package = models.ForeignKey(PackageModel)
+
+    def __unicode__(self):
+        return u'%s:%s' % (self.get_type_display(), self.remote_id)
 
 class UseFlagModel(StatsModel):
     stats_params = (
