@@ -40,6 +40,10 @@ class GLSA(ToStrMixin):
     simple_attrs = ('synopsis', 'background', 'description',
                     'workaround', 'resolution')
 
+    product_types = {'ebuild': 0,
+                     'information' : 1,
+                     'infrastructure' : 2}
+
     def __init__(self, file_name):
         if not os.path.isfile(file_name):
             raise ValueError
@@ -66,6 +70,17 @@ class GLSA(ToStrMixin):
         self.impact_type = impact_xml.attrib.get('type')
         self.impact = children_text(impact_xml)
         self._set_references(root)
+        self._set_bugs(root)
+
+        product_xml = root.find('product')
+        product_type = self.product_types[product_xml.attrib.get('type')]
+        self.product = (product_xml.text, product_type)
+
+        access_xml = root.find('access')
+        if access_xml is not None:
+            self.access = access_xml.text
+        else:
+            self.access = None
 
 
     def _set_references(self, root):
@@ -77,6 +92,12 @@ class GLSA(ToStrMixin):
             references.append((name, link))
 
         self.references = references
+
+    def _set_bugs(self, root):
+        bugs = []
+        for bug_xml in root.iterfind('bug'):
+            bugs.append(bug_xml.text)
+        self.bugs = bugs
         
     
     def __unicode__(self):
