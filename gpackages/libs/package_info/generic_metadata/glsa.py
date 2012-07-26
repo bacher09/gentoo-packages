@@ -65,6 +65,18 @@ class GLSA(ToStrMixin):
         impact_xml = root.find('impact')
         self.impact_type = impact_xml.attrib.get('type')
         self.impact = children_text(impact_xml)
+        self._set_references(root)
+
+
+    def _set_references(self, root):
+        references = []
+        references_xml = root.find('references')
+        for node in references_xml.iterfind('uri'):
+            link = node.attrib.get('link')
+            name = node.text
+            references.append((name, link))
+
+        self.references = references
         
     
     def __unicode__(self):
