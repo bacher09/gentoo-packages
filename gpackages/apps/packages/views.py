@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
+from django.contrib.syndication.views import Feed
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
 
@@ -252,3 +253,20 @@ class RepoDetailView(DetailView):
     context_object_name = 'repository'
     slug_field = 'name'
     queryset = RepositoryModel.objects.all()
+
+class MainPageFeed(Feed):
+    title = 'Feed'
+    link = '/rss/'
+    description = 'Descr'
+
+    def items(self):
+        return EbuildModel.objects.all()[:40]
+
+    def item_title(self, item):
+        return item.cpv_or_cpvr()
+
+    def item_description(self, item):
+        return item.description
+
+    def item_pubdate(self, item):
+        return item.created_datetime
