@@ -1,6 +1,10 @@
 from django.views.generic import TemplateView, ListView
 from string import Template
 import re
+from django.contrib.syndication.views import Feed
+from django.utils.feedgenerator import Atom1Feed, rfc3339_date
+from django.utils import tzinfo
+from django.utils.timezone import is_naive
 
 class ContextView(object):
     extra_context = {}
@@ -135,4 +139,27 @@ class MultipleFilterListViewMixin(object):
             l.append(t.format(re.escape(key)))
 
         return ''.join(l) + "(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?"
+
+class FeedWithUpdated(Feed):
+    def item_extra_kwargs(self, item):
+        # for future
+        kwargs = super(FeedWithUpdated, self).item_extra_kwargs(item)
+        # hack for access to private method !!!
+        updated = self._Feed__get_dynamic_attr('item_update', item)
+        if updated and is_naive(updated):
+            ltz = tzinfo.LocalTimezone(updated)
+            updated = updated.replace(tzinfo=ltz)
+        kwargs['updated'] = updated
+        return kwargs
             
+# see bug https://code.djangoproject.com/ticket/14656
+class RightAtom1Feed(Atom1Feed):
+    def add_item_elements(self, handler, item):
+        if item['pubdate'] is not None:
+            handler.addQuickElement(u"published", rfc3339_date(item['pubdate']).decode('utf-8'))
+            item['pubdate'] = None
+
+        if item['updated'] is not None:
+            handler.addQuickElement(u"updated", rfc3339_date(item['updated']).decode('utf-8'))
+
+        return super(RightAtom1Feed, self).add_item_elements(handler, item)

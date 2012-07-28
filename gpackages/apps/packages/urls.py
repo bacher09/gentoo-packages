@@ -5,7 +5,7 @@ from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   GlobalUseListView, NewsListView, NewsDetailView, \
                   LicenseDetailView, ArchChoiceView, LicensesListView, \
                   LocalUseListView, FilteringView, RepoDetailView, \
-                  MainPageFeed
+                  MainPageFeed, MainPageFeedAtom
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -33,4 +33,5 @@ urlpatterns = patterns('',
     url(r'^filter/$', FilteringView.as_view(), name = 'filter'),
     url(r'^repository/(?P<slug>[^/]+)/$', RepoDetailView.as_view(), name = 'repository'),
     url(r'^rss/$', MainPageFeed()),
+    url(r'^atom/$', MainPageFeedAtom()),
 )

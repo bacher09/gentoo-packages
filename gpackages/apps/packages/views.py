@@ -1,6 +1,8 @@
 from django.views.generic import DetailView, FormView, ListView
 from generic.views import ContextListView, ContextTemplateView, ContextView, \
-                          MultipleFilterListViewMixin
+                          MultipleFilterListViewMixin, RightAtom1Feed, \
+                          FeedWithUpdated
+
 from .models import CategoryModel, HerdsModel, MaintainerModel, \
                     RepositoryModel, LicenseGroupModel, EbuildModel, \
                     PackageModel, UseFlagModel, PortageNewsModel, \
@@ -10,7 +12,6 @@ from django.core.urlresolvers import reverse
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
-from django.contrib.syndication.views import Feed
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
 
@@ -254,7 +255,7 @@ class RepoDetailView(DetailView):
     slug_field = 'name'
     queryset = RepositoryModel.objects.all()
 
-class MainPageFeed(Feed):
+class MainPageFeed(FeedWithUpdated):
     title = 'Feed'
     link = '/rss/'
     description = 'Descr'
@@ -270,3 +271,10 @@ class MainPageFeed(Feed):
 
     def item_pubdate(self, item):
         return item.created_datetime
+
+    def item_update(self, item):
+        return item.updated_datetime
+
+class MainPageFeedAtom(MainPageFeed):
+    link = '/atom/'
+    feed_type = RightAtom1Feed
