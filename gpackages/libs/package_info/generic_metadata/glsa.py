@@ -35,6 +35,41 @@ class GLSAs(ToStrMixin):
     def __unicode__(self):
         return self.repo_path 
 
+class VersionCheck(ToStrMixin):
+    ranges = ('le', 'lt', 'eq', 'gt', 'ge', 'rlt', 'rle', 'rgt', 'rge')
+    types = {'unaffected' : 0, 'vulnerable' : 1}
+
+    def __init__(self, type, range, version):
+        if type in self.types:
+            self.type_num = self.types[type]
+        else:
+            raise ValueError
+
+        self.range = range
+        self.version = version
+
+    def __unicode__(self):
+        return 'test'
+
+class PackageMatch(ToStrMixin):
+    
+    def __init__(self, name, archs, auto = False, versions = []):
+        self.name = name
+        self.archs = archs
+        self.auto = auto
+        for item in versions:
+            if not isinstance(item, VersionCheck):
+                raise ValueError
+        self.versions = versions
+
+    def add_version(self, version):
+        if not isinstance(version, VersionCheck):
+            raise ValueError
+        self.versions.append(version)
+
+    def __unicode__(self):
+        return self.name
+
 class GLSA(ToStrMixin):
     
     simple_attrs = ('synopsis', 'background', 'description',
@@ -82,6 +117,24 @@ class GLSA(ToStrMixin):
         else:
             self.access = None
 
+        self._set_affected(root)
+
+    def _set_affected(self, root):
+        affected_xml = root.find('affected')
+        packages = []
+        for package_xml in affected_xml.iterfind('package'):
+            name = package_xml.attrib.get('name')
+            archs = package_xml.attrib.get('arch')
+            auto = package_xml.attrib.get('auto')
+            package = PackageMatch(name, archs, auto)
+            for item in package_xml.iterchildren():
+                v = item.text
+                type = item.tag
+                range = item.attrib.get('range')
+                o = VersionCheck(type, range, v)
+                package.add_version(o)
+            packages.append(package)
+        self.affected = packages
 
     def _set_references(self, root):
         references = []
