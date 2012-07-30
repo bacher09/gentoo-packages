@@ -1,6 +1,18 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from main.settings import DEBUG
+from django.contrib.sitemaps import FlatPageSitemap
+from packages.views import PackageSitemap
+
+# For caching sitemap
+from django.contrib.sitemaps import views as sitemaps_views
+from django.views.decorators.cache import cache_page
+
+sitemaps = {
+    'flatpages': FlatPageSitemap,
+    'packages' : PackageSitemap,
+}
+cached_sitemap = cache_page(3600)(sitemaps_views.sitemap)
 
 admin.autodiscover()
 
@@ -9,6 +21,7 @@ urlpatterns = patterns('',
     url(r'^i18n/' , include('django.conf.urls.i18n')),
     url(r'^setlang/$', 'generic.views.set_lang_view', name = 'setlang'),
     url(r'', include('packages.urls')),
+    (r'^sitemap\.xml$', cached_sitemap, {'sitemaps': sitemaps}),
 )
 
 if DEBUG:

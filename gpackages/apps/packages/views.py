@@ -12,6 +12,7 @@ from django.core.urlresolvers import reverse
 
 from django.shortcuts import get_object_or_404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
+from django.contrib.sitemaps import Sitemap
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
 
@@ -278,3 +279,13 @@ class MainPageFeed(FeedWithUpdated):
 class MainPageFeedAtom(MainPageFeed):
     link = '/atom/'
     feed_type = RightAtom1Feed
+
+class PackageSitemap(Sitemap):
+    priority = 0.9
+    changefreq = "hourly"
+
+    def items(self):
+        return PackageModel.objects.all()[:1000]
+
+    def lastmod(self, obj):
+        return obj.updated_datetime
