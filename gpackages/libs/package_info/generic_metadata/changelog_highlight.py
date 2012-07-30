@@ -177,3 +177,7 @@ def changelog_highlight(text):
 def changelog_termial_highlight(text):
     return highlight(text, ChangelogLexer(), 
                      Terminal256Formatter(style = ChangelogStyle))
+
+def changelog_style_css():
+    f = ChangelogHtmlFormater(style = ChangelogStyle)
+    return f.get_style_defs()
