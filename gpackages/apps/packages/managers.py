@@ -44,6 +44,22 @@ class EbuildsWithKeywrods(Prefetcher):
             if ebuild.pk == package.latest_ebuild_id:
                 package.latest_ebuild = ebuild
 
+class UseWithLocalDesc(Prefetcher):
+    def __init__(self, package):
+        self.package = package
+
+    def filter(self, ids):
+        return packages.models.UseFlagDescriptionModel.objects. \
+            filter(use_flag__in = ids, package = self.package)
+
+    def reverse_mapper(self, descr):
+        return [descr.use_flag_id]
+
+    def decorator(self, use_flag, descrs = ()):
+        if len(descrs)>0:
+            descr = descrs[0]
+            use_flag.local_descr = descr.description
+
 class KeywordsPrefetch(Prefetcher):
     def __init__(self, arches):
         self.arches = arches
@@ -100,6 +116,17 @@ class PackageManager(PackageMixin, PrefetchManagerMixin):
         return PackageQuerySet
 
     prefetch_definitions = {'ebuilds': EbuildsWithKeywrods}
+
+class UseFlagQuerySet(PrefetchQuerySet):
+    def prefetch_package_descr(self, package):
+        return self.prefetch(P('descr', package = package))
+
+class UseFlagManager(PrefetchManagerMixin):
+    @classmethod
+    def get_query_set_class(cls):
+        return UseFlagQuerySet
+
+    prefetch_definitions = {'descr': UseWithLocalDesc}
 
 class KeywordMixin(object):#{{{
     def get_or_create(self, keyword=None,  **kwargs):
