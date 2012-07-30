@@ -1,6 +1,7 @@
 from django.utils.safestring import mark_safe
 from django import template
 from django.core.cache import cache
+from package_info.generic_metadata.changelog_highlight import changelog_highlight
 
 register = template.Library()
 
@@ -38,6 +39,10 @@ def text_sincode(text):
         return ''
     text_l = map(lambda x: '&#%s;' % ord(x), text)
     return mark_safe(''.join(text_l))
+
+@register.filter('changelog_highlight')
+def changelog_highlight_filter(text):
+    return mark_safe(changelog_highlight(text))
 
 register.filter('obfuscate', text_sincode)
 

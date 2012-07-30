@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load packages %}
 
 {% block content %}
     {% include 'package_object.html' %}
+    <div class="changelog">
+    <h4>Changelog</h4>
+    {{ package.changelog|changelog_highlight }}
+    </div>
 {% endblock content %}
