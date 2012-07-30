@@ -5,7 +5,7 @@ from package_info.generic_metadata.changelog_highlight import changelog_highligh
 
 register = template.Library()
 
-from ..models import RepositoryModel, EbuildModel
+from ..models import RepositoryModel, EbuildModel, UseFlagDescriptionModel
 from ..views import arches
 from ..forms import ArchChoiceForm, FilteringForm
 from generic.utils import inclusion_cached_tag
@@ -81,3 +81,10 @@ def filtering_modal(context):
 
     form = FilteringForm(initial = initial)
     return {'form': form }
+
+@register.inclusion_tag('packages_use_flag.html')
+def use_flag_table(package):
+    if package.latest_ebuild:
+        use_flags = package.latest_ebuild.use_flags_with_descr()
+
+    return {'use_flags': use_flags}

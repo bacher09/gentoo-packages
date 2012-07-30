@@ -687,6 +687,9 @@ class EbuildModel(AbstractDateTimeModel):
             l.append(ko)
         self.keyword_set.add(*l)
 
+    def use_flags_with_descr(self):
+        return self.use_flags.all().prefetch_package_descr(self.package)
+
     @property
     def cp(self):
         return self.package.cp

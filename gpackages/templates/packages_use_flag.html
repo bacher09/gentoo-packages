@@ -1,0 +1,21 @@
+{% load url from future %}
+<table class='table table-striped table-hover'>
+    <colgroup>
+        <col class="span1" >
+        <col class="span8" >
+    </colgroup>
+    <thead>
+            <tr>
+                <th>Use flag</th>
+                <th>Description</th>
+            </tr>
+    </thead>
+    <tbody>
+        {% for use_flag in use_flags %}
+        <tr>
+            <td><a href="{% url 'packages' use=use_flag.name %}">{{ use_flag.name }}</a></td>
+            <td>{{ use_flag.descr|urlize }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

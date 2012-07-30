@@ -3,8 +3,22 @@
 
 {% block content %}
     {% include 'package_object.html' %}
-    <div class="changelog">
-    <h4>Changelog</h4>
-    {{ package.changelog|changelog_highlight }}
+    <div class="tabbable">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#tab1" data-toggle="tab">Changelog</a></li>
+      <li><a href="#tab2" data-toggle="tab">Use flags</a></li>
+      <li><a href="#tab3" data-toggle="tab">Licenses</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="tab1">
+            {{ package.changelog|changelog_highlight }}
+        </div>
+        <div class="tab-pane" id="tab2">
+            {% use_flag_table package %}
+        </div>
+        <div class="tab-pane" id="tab3">
+            {{ package.latest_ebuild.license }}
+        </div>
+    </div>
     </div>
 {% endblock content %}
