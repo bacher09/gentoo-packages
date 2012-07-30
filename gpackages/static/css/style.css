@@ -729,3 +729,5 @@ body{padding-top:60px;}
 .bool-ok{color:#468847;}
 .bool-no{color:#b94a48;}
 .auto-overflow{overflow-x:auto;}
+.defcolor{color:inherit;}
+.highlight{padding-top:10px;}
