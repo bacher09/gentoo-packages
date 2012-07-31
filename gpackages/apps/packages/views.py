@@ -11,6 +11,7 @@ from .forms import ArchChoiceForm, FilteringForm
 from django.core.urlresolvers import reverse
 
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
 from django.contrib.sitemaps import Sitemap
 
@@ -159,6 +160,8 @@ class PackageDetailView(ArchesContexView, DetailView):
 
         cpr = self.kwargs.get('cpr')
         po = PackageParseCPR(cpr)
+        if not po.is_valid:
+            raise Http404
         category, name = po.category, po.name
         repository = po.repository_for_q
         obj = get_object_or_404(queryset, name = name,
