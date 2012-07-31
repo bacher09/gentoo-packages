@@ -16,6 +16,9 @@ from package_info.validators import validate_url, validate_email, \
 from package_info.parse_cp import VersionParse
 
 from django.utils.html import urlize, linebreaks
+from package_info.generic_metadata.changelog_highlight import changelog_highlight
+from django.utils.safestring import mark_safe
+from django.core.cache import cache
 
 
 def simple_markup(value):
@@ -455,6 +458,15 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     @property
     def short_description(self):
         return self.latest_ebuild.description
+
+    @property
+    def highlighted_changelog(self):
+        key = 'changelog_package_' + str(self.pk)
+        c = cache.get(key)
+        if c is None:
+            c = mark_safe(changelog_highlight(self.changelog))
+            cache.set(key, c)
+        return c
 
     def init_by_package(self, package, category = None, virtual_package = None):
         #self.name = package.name
