@@ -8,6 +8,7 @@ register = template.Library()
 from ..models import RepositoryModel, EbuildModel, UseFlagDescriptionModel
 from ..views import arches
 from ..forms import ArchChoiceForm, FilteringForm
+from ..utils import license_urlize
 from generic.utils import inclusion_cached_tag
 
 def last_updated_key():
@@ -45,6 +46,7 @@ def changelog_highlight_filter(text):
     return mark_safe(changelog_highlight(text))
 
 register.filter('obfuscate', text_sincode)
+register.filter('license_urlize', license_urlize)
 
 def recent_ebuilds_cache_key(num = 10):
     return 'recent_ebuilds_th_' + str(num)

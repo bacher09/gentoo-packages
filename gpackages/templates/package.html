@@ -17,7 +17,7 @@
             {% use_flag_table package %}
         </div>
         <div class="tab-pane" id="tab3">
-            {{ package.latest_ebuild.license }}
+            {{ package.latest_ebuild.license|license_urlize }}
         </div>
     </div>
     </div>
