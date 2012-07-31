@@ -8,7 +8,7 @@ import re
 
 DATE_RE = r'\d\d? [A-Z][a-z]{2} \d{4}'
 EMAIL_RE = r'[\w\.\-\+]+@(?:[\w\-]+\.)+\w+'
-LINK_RE = r'https?:\/\/(?:[\w\-]+\.)+\w+(:?\/[\w\/\.\-\_\+\&\%]+)?'
+LINK_RE = r'https?:\/\/(?:[\w\-]+\.)+\w+(:?\/[\w\/\.\-\_\+\&\%\?#=]+)?'
 BUG_NUM_RE =  r'(\d+)'
 bugnum_re = re.compile(BUG_NUM_RE)
 
