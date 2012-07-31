@@ -54,6 +54,18 @@
                     </td>
                 </tr>
                 {% endif %}
+                {% if package.doc %}
+                <tr>
+                    <td>Doc</td>
+                    <td><a href="{{ package.doc }}">{{ package.doc }}</a></td>
+                </tr>
+                {% endif %}
+                {% if package.changelog_url %}
+                <tr>
+                    <td>Changelog url</td>
+                    <td><a href="{{ package.changelog_url }}">{{ package.changelog_url }}</a></td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>

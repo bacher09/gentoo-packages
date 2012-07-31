@@ -13,7 +13,7 @@
     <tbody>
         {% for use_flag in use_flags %}
         <tr>
-            <td><a href="{% url 'packages' use=use_flag.name %}">{{ use_flag.name }}</a></td>
+            <td class="nowrap"><a href="{% url 'packages' use=use_flag.name %}">{{ use_flag.name }}</a></td>
             <td>{{ use_flag.descr|urlize }}</td>
         </tr>
         {% endfor %}
