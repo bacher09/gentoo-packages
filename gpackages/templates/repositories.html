@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load url from future %}
+{% load cache %}
 
 {% block content %}
-
+{% cache 300 repositories_table %}
 <table class='table table-striped table-hover'>
     <colgroup>
         <col class="span1" >
@@ -20,11 +21,11 @@
         {% for repository in repositories %}
             <tr>
                 <td class="nowrap"><a href="{{ repository.get_absolute_url }}">{{ repository.name }}</a></td>
-                <td>{{ repository.description|default_if_none:"" }}</td>
+                <td>{{ repository.description|default_if_none:""|urlize }}</td>
                 <td>{{ repository.updated_datetime|date:"d m Y H:i:s" }}</td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
-
+{% endcache %}
 {% endblock content %}
