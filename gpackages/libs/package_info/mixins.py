@@ -2,7 +2,8 @@ from __future__ import absolute_import
 from .generic import ToStrMixin, file_sha1, file_mtime, cached_property, \
                     file_get_content, iter_over_gen, lofstr_to_ig, toint
 
-from .generic_metadata.use_info import get_uses_info, get_local_uses_info
+from .generic_metadata.use_info import get_uses_info, get_local_uses_info, \
+                                       get_use_special_info
 # Repo info
 from .generic_metadata.repo_info import TreeMetadata
 # Herds
@@ -74,12 +75,20 @@ class PortageBaseMixin(ToStrMixin):
         for tree in self.iter_trees():
             yield tree.use_desc
 
+    def iter_special_use_desc(self):
+        for tree in self.iter_trees():
+            yield tree.use_special_desc
+
     def iter_use_local_desc(self):
         for tree in self.iter_trees():
             yield tree.use_local_desc
 
     def get_all_use_desc(self):
         return _gen_all_use(lambda x,y: x.update(y), self.iter_use_desc())
+
+    def get_all_special_use_desc(self):
+        return _gen_all_use(lambda x,y: x.update(y),
+                            self.iter_special_use_desc())
 
     def get_all_use_local_desc(self):
         def action(all_dict, use_dict):
@@ -112,7 +121,7 @@ def _get_info_by_func(func, path1, path2):
         path = os.path.join(path1, path2)
         try:
             return func(path)
-        except IOError:
+        except (IOError, OSError):
             return None
 
 class PortTreeBaseMixin(ToStrMixin):
@@ -132,6 +141,12 @@ class PortTreeBaseMixin(ToStrMixin):
         return _get_info_by_func(get_local_uses_info,
                                  self.porttree_path,
                                  'profiles/use.local.desc')
+
+    @cached_property
+    def use_special_desc(self):
+        return _get_info_by_func(get_use_special_info,
+                                 self.porttree_path,
+                                 'profiles/desc/')
 
     def __unicode__(self):
         return self.name

@@ -657,6 +657,9 @@ class Scanner(object):
 
     def update_all_globals_uses_descriptions(self):
         self.update_globals_uses_descriptions(portage.get_all_use_desc())
+        # special use flags are like globals !!!
+        self.update_globals_uses_descriptions(portage. \
+            get_all_special_use_desc())
 
     def scan_all_uses_description(self):
         self.scan_uses_description(portage.get_all_use_local_desc())
@@ -672,7 +675,9 @@ class Scanner(object):
         # Cache existent Use Local Descr
         use_local_cache = defaultdict(dict)
         for use_obj in existent_use_local_descr:
-            use_local_cache[use_obj.use_flag.name][use_obj.package.cp] = use_obj
+            f_key = use_obj.use_flag.name.lower()
+            use_local_cache[f_key][use_obj.package.cp] = use_obj
+
 
         package_cache = dict()
         for use_flag, packages_dict in use_local_desc.iteritems():
@@ -684,7 +689,7 @@ class Scanner(object):
                 # Add to cache
                 cache_uses[use_flag.lower()] = use_flag_object
             else:
-                use_flag_object = cache_uses[use_flag]
+                use_flag_object = cache_uses[use_flag.lower()]
 
             to_create = []
             for package, description in packages_dict.iteritems():
@@ -700,7 +705,7 @@ class Scanner(object):
                     else:
                         package_cache[package] = package_object
 
-                if package not in use_local_cache[use_flag]:
+                if package not in use_local_cache[use_flag.lower()]:
                     to_create.append(
                     models.UseFlagDescriptionModel(package = package_object,
                                                    use_flag = use_flag_object,
