@@ -37,6 +37,8 @@ Bug = String
 Link = Keyword
 
 class ChangelogLexer(RegexLexer):
+    "Pygments changelog lexer"
+
     name = 'Changelog'
     aliases = ['changelog']
     filenames = ['Changelog']
@@ -96,6 +98,8 @@ class ChangelogLexer(RegexLexer):
     }
 
 class ChangelogHtmlFormater(HtmlFormatter):
+    "Pygments html changelog formater"
+
     def _format_lines(self, tokensource):
         """
         Copyed from pygments source litle modified.
@@ -167,6 +171,8 @@ class ChangelogHtmlFormater(HtmlFormatter):
         return value
 
 class ChangelogStyle(Style):
+    "Pygments style for gentoo changelog"
+
     default_style = ""
     styles = {
         Comment:                'italic #888',
@@ -182,18 +188,29 @@ class ChangelogStyle(Style):
     }
 
 def changelog_highlight(text):
+    "Shortcut for generating highlighted changelog html output"
     return highlight(text, ChangelogLexer(), 
                      ChangelogHtmlFormater(style = ChangelogStyle))
 
 def changelog_termial_highlight(text):
+    """Shortcut for generating highlighted terminal changelog  output
+    Used for debuging lexer """
     return highlight(text, ChangelogLexer(), 
                      Terminal256Formatter(style = ChangelogStyle))
 
 def changelog_style_css():
+    "Shortcut for generating css style for pygments `ChangelogStyle`"
     f = ChangelogHtmlFormater(style = ChangelogStyle)
     return f.get_style_defs()
 
 def group_tokens(text):
+    """Combine tokens to groups
+    Args:
+        text -- changelog text
+    Yields:
+        (group_type, group), where group_type are: `None`, `'version'` or \
+        `'message'`
+        group are array of tuples (toke, value)"""
     c = ChangelogLexer()
     queue = deque()
     group_type = None 
@@ -247,9 +264,11 @@ def tokens_to_text(lex):
     return mystr
 
 def latest_message(text):
+    "Return latest message text"
     return tokens_to_text(latest_message_group(text))
 
 def latest_group_messages(text):
+    "Returns latest messages like it done on packages.gentoo.org"
     groups = latest_group_messages_group(text)
     return tokens_to_text(tokensgroup_to_toknes(groups))
 
