@@ -5,7 +5,7 @@ import os
 
 __all__ = ('get_uses_info', 'get_local_uses_info', 'get_use_special_info')
 
-USES_RE = r'(?P<use>[a-zA-Z0-9\-]+) - (?P<description>.*)'
+USES_RE = r'(?P<use>[a-zA-Z0-9\-_]+) - (?P<description>.*)'
 USES_DESC_RE = r'^%s$' % USES_RE
 USES_LOCAL_DESC_RE = r'^(?P<package>[^#].*):%s$' % USES_RE
 DESC_USE_RE = r'^(?P<name>[^\.]+)\.desc$'
@@ -14,7 +14,9 @@ use_re = re.compile(USES_DESC_RE)
 use_local_re = re.compile(USES_LOCAL_DESC_RE)
 desc_re = re.compile(DESC_USE_RE)
 
-def _get_info(filename, re_string, modify_function, res_var = {}):
+def _get_info(filename, re_string, modify_function, res_var = None):
+    if res_var is None:
+        res_var = {}
     use_desc = open(filename, 'r').read()
     uses_desc = use_desc.split("\n")
     res_dict = res_var
