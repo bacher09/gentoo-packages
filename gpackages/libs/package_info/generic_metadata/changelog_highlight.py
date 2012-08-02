@@ -5,6 +5,7 @@ from pygments.style import Style
 from pygments.token import *
 from pygments import highlight
 import re
+from collections import deque
 
 DATE_RE = r'\d\d? [A-Z][a-z]{2} \d{4}'
 EMAIL_RE = r'[\w\.\-\+]+@(?:[\w\-]+\.)+\w+'
@@ -140,6 +141,7 @@ class ChangelogHtmlFormater(HtmlFormatter):
             last = self.token_decorate(ttype, parts[-1])
             if line and last:
                 if lspan != cspan:
+
                     line += (lspan and '</span>') + cspan + last
                     lspan = cspan
                 else:
@@ -190,3 +192,64 @@ def changelog_termial_highlight(text):
 def changelog_style_css():
     f = ChangelogHtmlFormater(style = ChangelogStyle)
     return f.get_style_defs()
+
+def group_tokens(text):
+    c = ChangelogLexer()
+    queue = deque()
+    group_type = None 
+    group = []
+    for token, value in c.get_tokens(text):
+        queue.append((token, value))
+
+        if len(queue)>6:
+            token_q, value_q = queue[0]
+            if token_q == Operator and value_q == '*':
+                yield (group_type, group)
+                group_type = 'version'
+                group = []
+            elif token_q == Whitespace:
+                token2_q, value2_q = queue[1]
+                if token2_q == Date:
+                    token3_q, value3_q = queue[2]
+                    if token3_q == Punctuation:
+                        yield (group_type, group)
+                        group_type = 'message'
+                        group = []
+
+            group.append(queue.popleft())
+
+    yield (group_type, group + list(queue))
+
+def latest_message_group(text):
+    for group_type, group in group_tokens(text):
+        if group_type == 'message':
+            return group
+
+def latest_group_messages_group(text):
+    groups = []
+    for group_type, group in group_tokens(text):
+        if group_type == 'version':
+            groups.append((group_type, group))
+        if group_type == 'message':
+            groups.append((group_type, group))
+            return groups
+
+def tokensgroup_to_toknes(groups):
+    tk = []
+    for group_type, group in groups:
+        tk += group
+    return tk
+
+def tokens_to_text(lex):
+    mystr = ''
+    for token, value in lex:
+        mystr += value
+    return mystr
+
+def latest_message(text):
+    return tokens_to_text(latest_message_group(text))
+
+def latest_group_messages(text):
+    groups = latest_group_messages_group(text)
+    return tokens_to_text(tokensgroup_to_toknes(groups))
+
