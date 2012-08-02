@@ -219,15 +219,24 @@ class ArchChoiceView(ContextView, ArchesViewMixin, FormView):
     extra_context = {'page_name': 'Select arches', 
                      'default_arches': arches}
 
+    def __init__(self, *args, **kwargs):
+        super(ArchChoiceView, self).__init__(*args, **kwargs)
+        self.next_url = None
+
     def get_initial(self):
         arches = self.get_arches()
         return {'arches': arches }
+
+    def get_success_url(self):
+        val = super(ArchChoiceView, self).get_success_url()
+        return  self.next_url or val
 
     def form_valid(self, form):
         arches = sorted(form.cleaned_data['arches'])
         # Maybe save it to cookies ?
         # arches_str = ','.join(arches)
         self.request.session['arches'] = arches
+        self.next_url = form.cleaned_data['next']
         return super(ArchChoiceView, self).form_valid(form)
 
 class FilteringView(FormView):

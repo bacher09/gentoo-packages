@@ -13,6 +13,7 @@ class ArchChoiceForm(forms.Form):
             widget = DivCheckboxSelectMultiple,
             #widget = forms.CheckboxSelectMultiple(attrs = {'class': 'inline checkbox'}),
             choices = arches)
+    next = forms.CharField(widget = forms.HiddenInput, initial = '/')
 
 def get_all_choices():
     repos = RepositoryModel.objects.all().order_by('name'). \

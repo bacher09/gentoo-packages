@@ -18,6 +18,7 @@
     </div>
     <form action="{% url 'archchoice' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    {{ form.next }}
     <div class="arches modal-body">
         <fieldset>
             {{ form.arches }}

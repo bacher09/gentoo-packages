@@ -66,8 +66,8 @@ def arch_choice_modal(context):
     request = context['request']
     arches_s = request.session.get('arches')
     arches_s = arches_s or arches
-    return {'form': ArchChoiceForm(initial = {'arches': arches_s}),
-            'arches': arches_s}
+    initial = {'arches': arches_s, 'next' : request.path}
+    return {'form': ArchChoiceForm(initial = initial), 'arches': arches_s}
 
 @register.inclusion_tag('filtering_modal.html', takes_context = True)
 def filtering_modal(context):
