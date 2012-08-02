@@ -84,17 +84,17 @@ def filtering_modal(context):
     form = FilteringForm(initial = initial)
     return {'form': form }
 
-def use_flag_table_key(package):
-    if package.latest_ebuild:
-        return 'use_flag_table_ebuild' + str(package.latest_ebuild.pk)
+def use_flag_table_key(ebuild):
+    if ebuild:
+        return 'use_flag_table_ebuild' + str(ebuild.pk)
     else:
-        return 'use_flag_table_package' + str(package.pk)
+        return 'use_flag_table_ebuild' + str(ebuild)
 
-@inclusion_cached_tag('packages_use_flag.html', register, use_flag_table_key,
+@inclusion_cached_tag('ebuild_use_flag.html', register, use_flag_table_key,
                                                         time_zone = False)
-def use_flag_table(package):
+def use_flag_table(ebuild):
     use_flags = []
-    if package.latest_ebuild:
-        use_flags = package.latest_ebuild.use_flags_with_descr()
+    if ebuild is not None:
+        use_flags = ebuild.use_flags_with_descr()
 
     return {'use_flags': use_flags}

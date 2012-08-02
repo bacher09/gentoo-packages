@@ -7,14 +7,16 @@
     <ul class="nav nav-tabs">
       <li class="active"><a href="#tab1" data-toggle="tab">Changelog</a></li>
       <li><a href="#tab2" data-toggle="tab">Use flags</a></li>
+      {% if package.latest_ebuild.license %}
       <li><a href="#tab3" data-toggle="tab">Licenses</a></li>
+      {% endif %}
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="tab1">
             {{ package.highlighted_changelog }}
         </div>
         <div class="tab-pane" id="tab2">
-            {% use_flag_table package %}
+            {% use_flag_table package.latest_ebuild %}
         </div>
         <div class="tab-pane" id="tab3">
             {{ package.latest_ebuild.license|license_urlize }}
