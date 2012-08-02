@@ -65,6 +65,14 @@ def _set_prefixes(prefix, dct):
     return newdct
 
 def get_use_special_info(dirname = '/usr/portage/profiles/desc'):
+    """Args:
+        dirname -- full path to descrs files, /usr/portage/profiles/desc \
+        by default
+    Returns:
+        dict with use flag as key, and description as value
+    Example:
+        {'kernel_linux': 'KERNEL setting for system using the Linux ...', ...}
+    """
     uses = {}
     for name in os.listdir(dirname):
         m = desc_re.match(name)
