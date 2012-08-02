@@ -61,7 +61,7 @@ def recent_ebuilds(num = 10):
                        prefetch_related('package__repository')[:num]
     return {'ebuilds': query}
 
-@register.inclusion_tag('arch_choice_modal.html', takes_context = True)
+@register.inclusion_tag('modals/arch_choice_modal.html', takes_context = True)
 def arch_choice_modal(context):
     request = context['request']
     arches_s = request.session.get('arches')
@@ -69,7 +69,7 @@ def arch_choice_modal(context):
     initial = {'arches': arches_s, 'next' : request.path}
     return {'form': ArchChoiceForm(initial = initial), 'arches': arches_s}
 
-@register.inclusion_tag('filtering_modal.html', takes_context = True)
+@register.inclusion_tag('modals/filtering_modal.html', takes_context = True)
 def filtering_modal(context):
     filters = context.get('filters_dict')
     initial = {}
