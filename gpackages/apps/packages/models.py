@@ -666,6 +666,10 @@ class EbuildModel(AbstractDateTimeModel):
         self.description = ebuild.description
         self.eapi = ebuild.eapi_as_int
         self.slot = ebuild.slot_for_q
+        # Depends
+        self.depend = ebuild.depends
+        self.rdepend = ebuild.rdepends
+        self.pdepend = ebuild.pdepends
 
     def check_or_need_update(self, ebuild):
         return self.ebuild_hash != ebuild.sha1
