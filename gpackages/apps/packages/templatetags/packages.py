@@ -14,8 +14,8 @@ from generic.utils import inclusion_cached_tag
 def last_updated_key():
     return 'last_updated_th'
 
-@inclusion_cached_tag('last_updated.html', register, last_updated_key, \
-                                                     time_zone = False)
+@inclusion_cached_tag('includes/last_updated.html', register,
+                      last_updated_key, time_zone = False)
 def last_updated():
     updated = cache.get('last_updated_t')
     if not updated:
@@ -30,7 +30,7 @@ def last_updated():
 
     return {'last_updated': updated}
 
-@register.inclusion_tag('keywords_table.html')
+@register.inclusion_tag('includes/keywords_table.html')
 def render_keywords_table(obj, arch_list):
     ebuilds = obj.get_ebuilds_and_keywords(arch_list)
     return {'arches': arch_list, 'ebuilds' : ebuilds}
@@ -51,7 +51,7 @@ register.filter('license_urlize', license_urlize)
 def recent_ebuilds_cache_key(num = 10):
     return 'recent_ebuilds_th_' + str(num)
 
-@inclusion_cached_tag('recent_ebuilds.html', register, \
+@inclusion_cached_tag('includes/recent_ebuilds.html', register, \
                       recent_ebuilds_cache_key, time_zone = False)
 def recent_ebuilds(num = 10):
     query = EbuildModel.objects.order_by('-updated_datetime').all().\
@@ -90,8 +90,8 @@ def use_flag_table_key(ebuild):
     else:
         return 'use_flag_table_ebuild' + str(ebuild)
 
-@inclusion_cached_tag('ebuild_use_flag.html', register, use_flag_table_key,
-                                                        time_zone = False)
+@inclusion_cached_tag('includes/ebuild_use_flag.html', register,
+                      use_flag_table_key, time_zone = False)
 def use_flag_table(ebuild):
     use_flags = []
     if ebuild is not None:

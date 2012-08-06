@@ -2,6 +2,6 @@
 {% load packages %}
 
 {% block content %}
-    {% include 'package_object.html' %}
-    {% include 'ebuild_table.html' with ebuild=package.latest_ebuild package=package only %}
+    {% include 'includes/package_object.html' %}
+    {% include 'includes/ebuild_table.html' with ebuild=package.latest_ebuild package=package only %}
 {% endblock content %}

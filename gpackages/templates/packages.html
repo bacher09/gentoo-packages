@@ -5,7 +5,7 @@
 
 {% block content %}
 {% for package in packages %}
-    {% include 'package_object.html' %}
+    {% include 'includes/package_object.html' %}
 {% endfor %}
 {% paginator page_obj 3 2 %}
 {% endblock content %}
