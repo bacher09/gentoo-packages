@@ -154,8 +154,8 @@ class Ebuild(EbuildMixin):
     __slots__ = ('package', 'ebuild', 'cpv_object', '_cache', '_env',
                  '_is_valid')
 
-    ENV_NEED = set(['KEYWORDS', 'HOMEPAGE', 'LICENSE',
-                    'DESCRIPTION', 'EAPI', 'SLOT'])
+    ENV_NEED = set(['KEYWORDS', 'HOMEPAGE', 'LICENSE', 'DESCRIPTION', 'EAPI', 
+                    'SLOT', 'DEPEND', 'RDEPEND', 'PDEPEND'])
 
     ENV_VARS = PORTDB._aux_cache_keys | ENV_NEED
 
@@ -190,6 +190,18 @@ class Ebuild(EbuildMixin):
     @property
     def keywords_env(self):
         return self._env.get("KEYWORDS")
+
+    @property
+    def depends(self):
+        return self._env.get("DEPEND")
+
+    @property
+    def rdepends(self):
+        return self._env.get("RDEPEND")
+
+    @property
+    def pdepends(self):
+        return self._env.get("PDEPEND")
 
     @property
     def is_valid(self):

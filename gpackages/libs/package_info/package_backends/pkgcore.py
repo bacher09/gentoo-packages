@@ -201,3 +201,15 @@ class Ebuild(EbuildMixin):
     def is_hard_masked(self):
         return self.package_obj.category_obj._repo_obj. \
             porttree.is_masked(self._ebuild)
+
+    @property
+    def depends(self):
+        return str(self._ebuild.depends)
+
+    @property
+    def rdepends(self):
+        return str(self._ebuild.rdepends)
+
+    @property
+    def pdepends(self):
+        return str(self._ebuild.post_rdepends)
