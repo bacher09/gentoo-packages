@@ -631,6 +631,11 @@ class EbuildModel(AbstractDateTimeModel):
     homepages = models.ManyToManyField(HomepageModel, blank = True)
     description = models.TextField(blank = True, null = True)
 
+    # Dependeces
+    depend = models.TextField(blank = True, null = True)
+    rdepend = models.TextField(blank = True, null = True)
+    pdepend = models.TextField(blank = True, null = True)
+
     eapi = models.PositiveSmallIntegerField(default = 0)
     slot = models.CharField(max_length = 32, null = True,
                             db_index = True, default = '0')
