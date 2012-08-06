@@ -1,0 +1,37 @@
+{% load packages %}
+<div class="tabbable">
+    <ul class="nav nav-tabs">
+    {% if package %}
+      <li class="active"><a href="#tab1" data-toggle="tab">Changelog</a></li>
+    {% endif %}
+      <li{% if not package %} class="active"{% endif %}><a href="#tab2" data-toggle="tab">Use flags</a></li>
+      {% if ebuild.license %}
+      <li><a href="#tab3" data-toggle="tab">Licenses</a></li>
+      {% endif %}
+      <li><a href="#tab4" data-toggle="tab">Dependences</a></li>
+    </ul>
+    <div class="tab-content">
+    {% if package %}
+        <div class="tab-pane active" id="tab1">
+            {{ package.highlighted_changelog }}
+        </div>
+    {% endif %}
+        <div class="tab-pane{% if not package %} active{% endif %}" id="tab2">
+            {% use_flag_table ebuild %}
+        </div>
+        <div class="tab-pane" id="tab3">
+            {{ ebuild.license|license_urlize }}
+        </div>
+        <div class="tab-pane" id="tab4">
+            <pre>
+            {{ ebuild.depend }}
+            </pre>
+            <pre>
+            {{ ebuild.rdepend }}
+            </pre>
+            <pre>
+            {{ ebuild.pdepend }}
+            </pre>
+        </div>
+    </div>
+</div>
