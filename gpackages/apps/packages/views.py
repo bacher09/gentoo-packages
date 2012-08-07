@@ -78,7 +78,18 @@ class EbuildsListView(ContextArchListView):
                        'package__virtual_package__category'). \
                        prefetch_related('package__repository')
 
-class EbuildDetailView(ArchesContexView, DetailView):
+class AtomDetailViewMixin(ArchesContexView, DetailView):
+    parsing_class = EbuildParseCPVR
+
+    def get_parsed(self):
+        parsed, atom = self.kwargs.get('parsed'), self.kwargs.get('atom')
+        if parsed is not None:
+            return parsed
+        else:
+            return self.parsing_class(atom)
+
+class EbuildDetailView(AtomDetailViewMixin):
+    parsing_class = EbuildParseCPVR
     template_name = 'ebuild.html'
     extra_context = {'page_name': 'Ebuild', 'arches': arches}
     context_object_name = 'ebuild'
@@ -87,6 +98,7 @@ class EbuildDetailView(ArchesContexView, DetailView):
                        'package__virtual_package',
                        'package__virtual_package__category')
 
+
     def get_object(self, queryset = None):
         pk = self.kwargs.get('pk')
         if pk is not None:
@@ -94,8 +106,7 @@ class EbuildDetailView(ArchesContexView, DetailView):
         if queryset is None:
             queryset = self.get_queryset()
 
-        cpvr = self.kwargs.get('cpvr')
-        eo = EbuildParseCPVR(cpvr)
+        eo = self.get_parsed()
         category, name = eo.category, eo.name
         version, revision = eo.version, eo.revision_for_q
         repository = eo.repository_for_q
@@ -142,7 +153,8 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
         prefetch_related('repository', 'herds', 
                          'maintainers', 'latest_ebuild__homepages')
 
-class PackageDetailView(ArchesContexView, DetailView):
+class PackageDetailView(AtomDetailViewMixin):
+    parsing_class = PackageParseCPR
     template_name = 'package.html'
     extra_context = {'page_name': 'Package', 'arches': arches}
     context_object_name = 'package'
@@ -158,8 +170,7 @@ class PackageDetailView(ArchesContexView, DetailView):
         if queryset is None:
             queryset = self.get_queryset()
 
-        cpr = self.kwargs.get('cpr')
-        po = PackageParseCPR(cpr)
+        po = self.get_parsed()
         if not po.is_valid:
             raise Http404
         category, name = po.category, po.name
@@ -301,3 +312,13 @@ class PackageSitemap(Sitemap):
 
     def lastmod(self, obj):
         return obj.updated_datetime
+
+def auto_package_or_ebuild(request, atom):
+    v_atom = EbuildParseCPVR(atom)
+    if v_atom.is_valid:
+        return EbuildDetailView.as_view()(request, parsed = v_atom)
+    p_atom = PackageParseCPR(atom)
+    if p_atom.is_valid:
+        return PackageDetailView.as_view()(request, parsed = p_atom)
+    else:
+        raise Http404

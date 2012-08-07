@@ -5,7 +5,7 @@ from views import CategoriesListView, HerdsListView, MaintainersListView, \
                   GlobalUseListView, NewsListView, NewsDetailView, \
                   LicenseDetailView, ArchChoiceView, LicensesListView, \
                   LocalUseListView, FilteringView, RepoDetailView, \
-                  MainPageFeed, MainPageFeedAtom
+                  MainPageFeed, MainPageFeedAtom, auto_package_or_ebuild
 
 urlpatterns = patterns('',
     url(r'^categories/$', CategoriesListView.as_view(), name = 'categories'),
@@ -17,13 +17,13 @@ urlpatterns = patterns('',
     url(r'^license-groups/$', LicenseGroupsView.as_view(), name = 'license_groups'),
     url(r'^$', EbuildsListView.as_view(), name = 'ebuilds'),
     url(r'^ebuild/(?P<pk>\d+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
-    url(r'^ebuild/(?P<cpvr>[^/]+/[^/]+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
+    url(r'^ebuild/(?P<atom>[^/]+/[^/]+)/$', EbuildDetailView.as_view(), name = 'ebuild'),
     url(r'^packages/{0}$'.format(PackagesListsView.get_url_part()), PackagesListsView.as_view(), name = 'packages'),
     url(r'^newpackages/$', PackagesListsView.as_view(), kwargs = {'order': 'create', 'rev': 'rev'},name = 'newpackages'),
 
     #url(r'^package/(?:(?P<pk>\d+)|(?P<category>[^/]+)/(?P<name>[^/]+))/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^package/(?P<pk>\d+)/$', PackageDetailView.as_view(), name = 'package'),
-    url(r'^package/(?P<cpr>[^/]+/[^/]+)/$', PackageDetailView.as_view(), name = 'package'),
+    url(r'^package/(?P<atom>[^/]+/[^/]+)/$', PackageDetailView.as_view(), name = 'package'),
     url(r'^news/$', NewsListView.as_view(), name = 'news'),
     url(r'^news/(?P<pk>\d+)/$', NewsDetailView.as_view(), name = 'news_item'),
     url(r'^news/(?P<slug>[^/]+)/$', NewsDetailView.as_view(), name = 'news_item'),
@@ -34,4 +34,6 @@ urlpatterns = patterns('',
     url(r'^repository/(?P<slug>[^/]+)/$', RepoDetailView.as_view(), name = 'repository'),
     url(r'^rss/$', MainPageFeed()),
     url(r'^atom/$', MainPageFeedAtom()),
+    url(r'^(?P<atom>[^/]+/[^/]+)/$', auto_package_or_ebuild, name = 'auto'),
+    url(r'^(?P<category>[^/]+)/$', PackagesListsView.as_view(), name = 'packages'),
 )

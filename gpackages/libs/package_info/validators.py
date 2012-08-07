@@ -7,7 +7,7 @@ validate_url = URLValidator()
 __all__ = ('validate_email', 'validate_url', 'ValidationError')
 
 REVISION_RE = r'r\d+'
-VERSION_RE = r'[\w.]+'
+VERSION_RE = r'\d[\w\.]*'
 NAME_RE = r'[\w+-]+?'
 
 validate_revision = RegexValidator('^%s$' % REVISION_RE)

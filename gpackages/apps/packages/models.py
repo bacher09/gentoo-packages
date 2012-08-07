@@ -526,8 +526,8 @@ class PackageModel(StatsModel, AbstractDateTimeModel):
     @models.permalink
     def get_absolute_url(self):
         # It coold been in many repositories
-        kwargs = { 'cpr': self.cp_or_cpr() }
-        return ('package',(), kwargs )
+        kwargs = { 'atom': self.cp_or_cpr() }
+        return ('auto',(), kwargs )
             
     class Meta:
         unique_together = ('virtual_package', 'repository')
@@ -797,8 +797,8 @@ class EbuildModel(AbstractDateTimeModel):
     @models.permalink
     def get_absolute_url(self):
         # It coold been in many repositories
-        kwargs = { 'cpvr': self.cpv_or_cpvr() }
-        return ('ebuild',(), kwargs )
+        kwargs = { 'atom': self.cpv_or_cpvr() }
+        return ('auto',(), kwargs )
 
     class Meta:
         unique_together = ('package', 'version', 'revision')
