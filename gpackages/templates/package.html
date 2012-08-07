@@ -3,5 +3,5 @@
 
 {% block content %}
     {% include 'includes/package_object.html' %}
-    {% include 'includes/ebuild_table.html' with ebuild=package.latest_ebuild package=package only %}
+    {% include 'includes/ebuild_table.html' with ebuild=package.latest_ebuild package=package %}
 {% endblock content %}

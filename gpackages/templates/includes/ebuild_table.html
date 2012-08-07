@@ -2,27 +2,25 @@
 <div class="tabbable">
     <ul class="nav nav-tabs">
     {% if package %}
-      <li class="active"><a href="#tab1" data-toggle="tab">Changelog</a></li>
+      <li{% if table_items.changelog %} class="active"{% endif %}><a href="changelog" tab-id="changelog">Changelog</a></li>
     {% endif %}
-      <li{% if not package %} class="active"{% endif %}><a href="#tab2" data-toggle="tab">Use flags</a></li>
-      {% if ebuild.license %}
-      <li><a href="#tab3" data-toggle="tab">Licenses</a></li>
-      {% endif %}
-      <li><a href="#tab4" data-toggle="tab">Dependences</a></li>
+      <li{% if table_items.use_flags %} class="active"{% endif %}><a href="use_flags" tab-id="use_flags">Use flags</a></li>
+      <li{% if table_items.licenses %} class="active"{% endif %}><a href="licenses" tab-id="licenses">Licenses</a></li>
+      <li{% if table_items.dependences %} class="active"{% endif %}><a href="dependences" tab-id="dependences">Dependences</a></li>
     </ul>
     <div class="tab-content">
     {% if package %}
-        <div class="tab-pane active" id="tab1">
+        <div class="tab-pane{% if table_items.changelog %} active{% endif %}" id="changelog">
             {{ package.highlighted_changelog }}
         </div>
     {% endif %}
-        <div class="tab-pane{% if not package %} active{% endif %}" id="tab2">
+        <div class="tab-pane{% if table_items.use_flags %} active{% endif %}" id="use_flags">
             {% use_flag_table ebuild %}
         </div>
-        <div class="tab-pane" id="tab3">
+        <div class="tab-pane{% if table_items.licenses %} active{% endif %}" id="licenses">
             {{ ebuild.license|license_urlize }}
         </div>
-        <div class="tab-pane" id="tab4">
+        <div class="tab-pane{% if table_items.dependences %} active{% endif %}" id="dependences">
             <pre>
             {{ ebuild.depend }}
             </pre>

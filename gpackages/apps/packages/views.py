@@ -81,6 +81,23 @@ class EbuildsListView(ContextArchListView):
 class AtomDetailViewMixin(ArchesContexView, DetailView):
     parsing_class = EbuildParseCPVR
 
+    table_items = ['changelog', 'use_flags', 'licenses', 'dependences']
+    default_table_item = 'use_flags'
+
+    def get_context_data(self, **kwargs):
+        ret = super(AtomDetailViewMixin, self).get_context_data(**kwargs)
+        table_t = self.kwargs.get('table_item')
+        if table_t is None:
+            table_t = self.default_table_item
+        else:
+            if table_t not in self.table_items:
+                raise Http404
+        dct = {}
+        for item in self.table_items:
+            dct[item] = (table_t == item)
+        ret['table_items'] = dct
+        return ret
+
     def get_parsed(self):
         parsed, atom = self.kwargs.get('parsed'), self.kwargs.get('atom')
         if parsed is not None:
@@ -89,6 +106,8 @@ class AtomDetailViewMixin(ArchesContexView, DetailView):
             return self.parsing_class(atom)
 
 class EbuildDetailView(AtomDetailViewMixin):
+    table_items = ['use_flags', 'licenses', 'dependences']
+    default_table_item = 'use_flags'
     parsing_class = EbuildParseCPVR
     template_name = 'ebuild.html'
     extra_context = {'page_name': 'Ebuild', 'arches': arches}
@@ -154,6 +173,8 @@ class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
                          'maintainers', 'latest_ebuild__homepages')
 
 class PackageDetailView(AtomDetailViewMixin):
+    table_items = ['changelog', 'use_flags', 'licenses', 'dependences']
+    default_table_item = 'changelog'
     parsing_class = PackageParseCPR
     template_name = 'package.html'
     extra_context = {'page_name': 'Package', 'arches': arches}
@@ -313,12 +334,12 @@ class PackageSitemap(Sitemap):
     def lastmod(self, obj):
         return obj.updated_datetime
 
-def auto_package_or_ebuild(request, atom):
+def auto_package_or_ebuild(request, atom, *args, **kwargs):
     v_atom = EbuildParseCPVR(atom)
     if v_atom.is_valid:
-        return EbuildDetailView.as_view()(request, parsed = v_atom)
+        return EbuildDetailView.as_view()(request, parsed = v_atom, *args, **kwargs)
     p_atom = PackageParseCPR(atom)
     if p_atom.is_valid:
-        return PackageDetailView.as_view()(request, parsed = p_atom)
+        return PackageDetailView.as_view()(request, parsed = p_atom, *args, **kwargs)
     else:
         raise Http404

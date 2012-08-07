@@ -34,6 +34,6 @@ urlpatterns = patterns('',
     url(r'^repository/(?P<slug>[^/]+)/$', RepoDetailView.as_view(), name = 'repository'),
     url(r'^rss/$', MainPageFeed()),
     url(r'^atom/$', MainPageFeedAtom()),
-    url(r'^(?P<atom>[^/]+/[^/]+)/$', auto_package_or_ebuild, name = 'auto'),
+    url(r'^(?P<atom>[^/]+/[^/]+)/(?P<table_item>[^/]+)?$', auto_package_or_ebuild, name = 'auto'),
     url(r'^(?P<category>[^/]+)/$', PackagesListsView.as_view(), name = 'packages'),
 )
