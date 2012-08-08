@@ -1,5 +1,9 @@
 django>=1.4
 portage
+layman>=2
+South
+prefetch
 
 Optional:
 lxml
+pkgcore
