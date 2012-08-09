@@ -7,3 +7,6 @@ prefetch
 Optional:
 lxml
 pkgcore
+
+Devel:
+debug_toolbar
