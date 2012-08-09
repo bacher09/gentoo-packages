@@ -20,7 +20,7 @@ var HistoryTabs = function(selected_tabs){
         obj.real_url = real_url;
         objs.tab("show");
         obj.href = real_url;
-
+        obj.focus();
     }
     function activate_tab_by_id(tab_id){
         activate_tab($('#' + tab_id));    

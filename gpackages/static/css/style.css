@@ -730,4 +730,4 @@ body{padding-top:60px;}
 .bool-no{color:#b94a48;}
 .auto-overflow{overflow-x:auto;}
 .defcolor{color:inherit;}
-.highlight{padding-top:10px;}
+.nav-tabs>.active>a,.nav-tabs>.active>a:hover{outline:none;}
