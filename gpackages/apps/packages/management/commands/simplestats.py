@@ -10,10 +10,10 @@ class Command(BaseCommand):
     help = 'Will show some stats for repos'
     def handle(self, *args, **options):
         query = models.RepositoryModel.objects.annotate(
-            packages_count = Count('packagemodel', distinct = True),
-            ebuilds_count = Count('packagemodel__ebuildmodel', distinct = True),
-            maintainers_count = Count('packagemodel__maintainers', distinct = True),
-            herds_count = Count('packagemodel__herds', distinct = True))
+            packages_countr = Count('packagemodel', distinct = True),
+            ebuilds_countr = Count('packagemodel__ebuildmodel', distinct = True),
+            maintainers_countr = Count('packagemodel__maintainers', distinct = True),
+            herds_countr = Count('packagemodel__herds', distinct = True))
 
         self.stdout.write('"%s"               "%s"  "%s" "%s" "%s"\n' %
             ('Repo name', 'Packages', 'Ebuilds' , 'Maintainers', 'Herds'))
@@ -21,7 +21,7 @@ class Command(BaseCommand):
         for repo_object in query:
             self.stdout.write("%-25s %+9s %+9s %+9s %+9s\n" % (
                                                 repo_object.name,
-                                                repo_object.packages_count,
-                                                repo_object.ebuilds_count,
-                                                repo_object.maintainers_count,
-                                                repo_object.herds_count))
+                                                repo_object.packages_countr,
+                                                repo_object.ebuilds_countr,
+                                                repo_object.maintainers_countr,
+                                                repo_object.herds_countr))
