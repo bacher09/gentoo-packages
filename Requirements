@@ -3,6 +3,7 @@ portage
 layman>=2
 South
 prefetch
+pygments
 
 Optional:
 lxml
