@@ -88,6 +88,8 @@ class PackageMixin(object):
                 args[1] = category
             else:
                 kwargs.update({'name': name})
+            if 'repository' not in kwargs:
+                kwargs['repository__name'] = package.category.porttree_name
         elif package is not None:
             # Bad code !!
             category, name = package.split('/')
@@ -147,8 +149,9 @@ class EbuildMixin(object):
         if ebuild is not None and isinstance(ebuild, AbstractEbuild):
             if package is None:
                 kwargs.update({
-                        'package__category__category': ebuild.package.category,
-                        'package__name': ebuild.package.name })
+                    'package__virtual_package__category__category': ebuild.package.category,
+                    'package__virtual_package__name': ebuild.package.name,
+                    'package__repository__name' : ebuild.package.category.porttree_name})
             else:
                 kwargs.update({'package': package})
             kwargs.update({ 'version': ebuild.version,
