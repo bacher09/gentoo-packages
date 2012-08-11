@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import os.path
-from pkgcore.config import load_config
+from pkgcore.config import load_config, errors
 from pkgcore.ebuild.repository import UnconfiguredTree, SlavedTree
 from pkgcore.util.repo_utils import get_raw_repos, get_virtual_repos
 from pkgcore.ebuild.atom import atom
@@ -26,7 +26,7 @@ class Portage(PortageMixin):
             domain = self._domains[domain_name]
         except KeyError:
             raise ValueError("Bad domain name - '%s'" % domain_name)
-        finally:
+        else:
             self._domain = domain
             self._mask = generate_unmasking_restrict(domain.profile.masks)
 
@@ -125,37 +125,37 @@ class Category(CategoryMixin):
 
 class Package(PackageMixin):
 
-    __slots__ = ('name', 'category_obj')
+    __slots__ = ('name', 'category')
     
-    def __init__(self, package_name, category_obj):
+    def __init__(self, package_name, category):
         self.name = package_name
-        self.category_obj = category_obj
+        self.category = category
 
     def iter_ebuilds(self):
-        for ebuild in self.category_obj._repo_obj._itermatch(atom(self.cp)):
+        for ebuild in self.category._repo_obj._itermatch(atom(self.cp)):
             yield Ebuild(ebuild, self)
 
     def _get_ebuilds_versions(self):
-        return self.category_obj._get_ebuilds_names_by_name(self.name)
+        return self.category._get_ebuilds_names_by_name(self.name)
 
     @property
     def cp(self):
-        return '%s/%s' % (self.category_obj.name, self.name)
+        return '%s/%s' % (self.category.name, self.name)
 
     @property
     def package_path(self):
-        return os.path.join(self.category_obj.category_path, self.name)
+        return os.path.join(self.category.category_path, self.name)
 
 
 ebuild_prop = lambda var: property(lambda self: getattr(self._ebuild, var))
 
 class Ebuild(EbuildMixin):
     
-    __slots__ = ('_ebuild', 'package_obj')
+    __slots__ = ('_ebuild', 'package')
 
-    def __init__(self, ebuild, package_obj):
+    def __init__(self, ebuild, package):
         self._ebuild = ebuild
-        self.package_obj = package_obj
+        self.package = package
 
     ebuild_path = ebuild_prop('path')
 
@@ -167,7 +167,7 @@ class Ebuild(EbuildMixin):
         if self._ebuild.revision is None:
             return ''
         else:
-            return self._ebuild.revision
+            return 'r' + str(self._ebuild.revision)
 
     fullversion = ebuild_prop('fullver')
 
@@ -199,7 +199,7 @@ class Ebuild(EbuildMixin):
 
     @property
     def is_hard_masked(self):
-        return self.package_obj.category_obj._repo_obj. \
+        return self.package.category._repo_obj. \
             porttree.is_masked(self._ebuild)
 
     @property
