@@ -21,15 +21,24 @@
             {{ ebuild.license|license_urlize }}
         </div>
         <div class="tab-pane{% if table_items.dependences %} active{% endif %}" id="dependences">
-            <pre>
-            {{ ebuild.depend }}
-            </pre>
-            <pre>
-            {{ ebuild.rdepend }}
-            </pre>
-            <pre>
-            {{ ebuild.pdepend }}
-            </pre>
+            {% if ebuild.depend %}
+                <h3>Depen</h3>
+                <pre>
+                {{ ebuild.depend }}
+                </pre>
+            {% endif %}
+            {% if ebuild.rdepend %}
+                <h3>Runtime Depen</h3>
+                <pre>
+                {{ ebuild.rdepend }}
+                </pre>
+            {% endif %}
+            {% if ebuild.pdepend %}
+                <h3>Post-Merge Depen</h3>
+                <pre>
+                {{ ebuild.pdepend }}
+                </pre>
+            {% endif %}
         </div>
     </div>
 </div>
