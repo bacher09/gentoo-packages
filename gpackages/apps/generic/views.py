@@ -5,6 +5,7 @@ from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Atom1Feed, rfc3339_date
 from django.utils import tzinfo
 from django.utils.timezone import is_naive
+from django.http import Http404
 
 class ContextView(object):
     extra_context = {}
@@ -71,6 +72,7 @@ def dynamic_order(args_list, allowed_list, reverse = None):
 class MultipleFilterListViewMixin(object):
     allowed_filter = {}
     allowed_order = {}
+    boolean_filters = ()
     # allowed_many = {'name': int_count}
     allowed_many = {}
     m2m_filter = set()
@@ -93,6 +95,8 @@ class MultipleFilterListViewMixin(object):
                 vm = v.split(',')
                 if len(vm)>1:
                     v = cut_to_len(vm, self.allowed_many[k])
+            elif k in self.boolean_filters:
+                v = True if v == 'yes' else False
             newqs[k] = v 
         self.queries_dict = newqs
         return newqs
@@ -134,9 +138,13 @@ class MultipleFilterListViewMixin(object):
     @classmethod
     def get_url_part(cls):
         t = "(?:{0}/(?P<{0}>[^/]+)/)?"
+        t_bool = "(?:{0}/(?P<{0}>yes|no)/)?"
         l =[]
         for key in cls.allowed_filter.iterkeys():
-            l.append(t.format(re.escape(key)))
+            if key in cls.boolean_filters:
+                l.append(t_bool.format(re.escape(key)))
+            else:
+                l.append(t.format(re.escape(key)))
 
         return ''.join(l) + "(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?"
 
