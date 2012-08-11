@@ -772,3 +772,32 @@ class Scanner(object):
                 # Hack for not update last modified datetime
                 models.PackageModel.objects.filter(pk = package_id). \
                     update(latest_ebuild = latest_ebuild)
+
+    def add_mising_ebuilds(self):
+        for ebuild in porttree.iter_ebuilds():
+            try:
+                ebuild_obj = models.EbuildModel.objects.get(ebuild = ebuild)
+            except models.EbuildModel.DoesNotExist:
+                self.output('%-44s [%s]\n', (ebuild, 
+                    ebuild.package.category.porttree_name))
+                try:
+                    package_obj = models.PackageModel.objects. \
+                        get(package = ebuild.package)
+
+                except models.PackageModel.DoesNotExist:
+                    pass
+                else:
+                    self.update_ebuilds(ebuild.package, package_obj)
+            
+    def update_ebuild_mask(self):
+        for ebuild in porttree.iter_ebuilds():
+            try:
+                ebuild_obj = models.EbuildModel.objects.get(ebuild = ebuild)
+            except models.EbuildModel.DoesNotExist:
+                continue
+            if ebuild_obj.is_hard_masked != ebuild.is_hard_masked:
+                self.output('%-44s [%s]\n', (ebuild,
+                    ebuild.package.category.porttree_name))
+
+                ebuild_obj.is_hard_masked = ebuild.is_hard_masked
+                ebuild_obj.save(force_update = True)
