@@ -38,8 +38,9 @@ class HerdsAdmin(admin.ModelAdmin):
     search_fields = ('name', 'email')
 
 class MaintainerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'packages_count', 'ebuilds_count',
-                    'herds_count')
+    list_display = ('name', 'email', 'is_dev', 'packages_count', 
+                    'ebuilds_count', 'herds_count')
+    list_filter = ('is_dev',)
     search_fields = ('name', 'email')
 
 class UseFlagAdmin(admin.ModelAdmin):
