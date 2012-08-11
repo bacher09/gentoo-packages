@@ -1,6 +1,7 @@
 {% load url from future %}
 {% load static %}
 {% get_static_prefix as STATIC_URL %}
+{% spaceless %}
 <div class="modal hide fade" id="FilterModal">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">×</button>
@@ -22,3 +23,4 @@
 <script type="text/javascript" charset="utf-8">
     $('select').chosen(); // :)
 </script>
+{% endspaceless %}

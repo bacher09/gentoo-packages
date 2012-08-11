@@ -1,12 +1,12 @@
+{% spaceless %}
 <div class="well">
     <ul class="nav nav-list recent-ebuilds">
         <li class="nav-header">Recent Ebuilds</li>
         {% for ebuild in ebuilds %}
             <li>
-            <a href="{{ ebuild.package.get_absolute_url }}">
-            {{ ebuild.cpv_or_cpvr }}
-            </a>
+                <a href="{{ ebuild.package.get_absolute_url }}">{{ ebuild.cpv_or_cpvr }}</a>
             </li>
         {% endfor %}
     </ul>
 </div>
+{% endspaceless %}
