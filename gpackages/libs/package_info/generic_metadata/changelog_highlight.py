@@ -6,6 +6,7 @@ from pygments.token import *
 from pygments import highlight
 import re
 from collections import deque
+from ..utils import ciavc_link
 
 DATE_RE = r'\d\d? [A-Z][a-z]{2} \d{4}'
 EMAIL_RE = r'[\w\.\-\+]+@(?:[\w\-]+\.)+\w+'
@@ -167,7 +168,12 @@ class ChangelogHtmlFormater(HtmlFormatter):
             if num_m is not None:
                 num = num_m.group()
                 link = bugs_url_template.format(num)
-                value = '<a href="{1}" class="defcolor">{0}</a>'.format(value, link)
+                value = '<a href="{1}" class="defcolor">{0}</a>'. \
+                    format(value, link)
+        elif token == Email:
+            name, domain = value.split('@')
+            value = '<a href="{1}" class="defcolor">{0}</a>'. \
+                format(name, ciavc_link(name))
         return value
 
 class ChangelogStyle(Style):
