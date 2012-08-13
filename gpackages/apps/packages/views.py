@@ -14,14 +14,75 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from package_info.parse_cp import EbuildParseCPVR, PackageParseCPR
 from django.contrib.sitemaps import Sitemap
+from django.core.cache import cache
+import hashlib
+import logging
+logger = logging.getLogger(__name__)
 
 arches = ['alpha', 'amd64', 'arm', 'hppa', 'ia64', 'ppc', 'ppc64', 'sparc', 'x86']
+
+class CacheViewMixin(object):
+    cache_time = 30
+
+    def get_cache_keys(self):
+        path = self.request.path
+        lang = self.request.LANGUAGE_CODE
+        tz = self.request.session.get('django_timezone')
+        # self.request.GET
+        return (path, frozenset(self.args), self.kwargs, lang, tz)
+
+    @staticmethod
+    def hash_keys(keys):
+        str_keys = str(keys) 
+        return hashlib.md5(str_keys).hexdigest()
+
+    def get_cache_key(self):
+        keys_hash = self.hash_keys(self.get_cache_keys())
+        class_name = type(self).__name__
+        return 'view_cache_%s:%s' % (class_name, keys_hash)
+    
+    def get(self, request, *args, **kwargs):
+        key = self.get_cache_key()
+        response = cache.get(key)
+        class_name = type(self).__name__
+        logger.info('CacheView: %s, get from cache %s' % (class_name, key))
+        if response is not None:
+            return response
+        response = super(CacheViewMixin, self).get(request, *args, **kwargs)
+        if hasattr(response, 'render') and callable(response.render):
+            response.render()
+        cache.set(key, response, self.cache_time)
+        logger.info('CacheView: %s, set to cache %s' % (class_name, key))
+        return response
 
 class ArchesViewMixin(object):
     def get_arches(self):
         arches_s = self.request.session.get('arches')
         return arches_s or arches
-        
+
+class ArchesCacheViewMixin(CacheViewMixin, ArchesViewMixin):
+    
+    def get_cache_keys(self):
+        keys = super(ArchesCacheViewMixin, self).get_cache_keys()
+        arches_s = frozenset(self.get_arches())
+        return keys + (arches_s,)
+
+class PagebleCacheViewMixin(ArchesCacheViewMixin):
+    
+    def get_cache_keys(self):
+        keys = super(PagebleCacheViewMixin, self).get_cache_keys()
+        page = self.request.GET.get('page')
+        return keys + (page, )
+
+class ArgsCacheViewMixin(ArchesCacheViewMixin):
+
+    def get_cache_keys(self):
+        keys = super(ArgsCacheViewMixin, self).get_cache_keys()
+        args = self.request.GET
+        return keys + (args,)
+
+class CacheFilterListView(ArgsCacheViewMixin, MultipleFilterListViewMixin):
+    pass
 
 class ArchesContexView(ArchesViewMixin, ContextView):
     def get_context_data(self, **kwargs):
@@ -36,38 +97,47 @@ class ArchesContexView(ArchesViewMixin, ContextView):
 class ContextArchListView(ArchesContexView, ListView):
     pass
 
-class CategoriesListView(ContextListView):
+class CategoriesListView(ArchesCacheViewMixin, ContextListView):
+    cache_time = 420
     extra_context = {'page_name': 'Categories',}
     template_name = 'categories.html'
     queryset = CategoryModel.objects.defer('metadata_hash').all()
     context_object_name = 'categories'
 
-class HerdsListView(ContextListView):
+class HerdsListView(ArchesCacheViewMixin, ContextListView):
+    cache_time = 420
     extra_context = {'page_name': 'Herds',}
     template_name = 'herds.html'
     queryset = HerdsModel.objects.only('name', 'email', 'description').all()
     context_object_name = 'herds'
 
-class MaintainersListView(ContextListView):
+class MaintainersListView(CacheFilterListView, ContextListView):
+    cache_time = 560
+    allowed_filter = { 'dev' : 'is_dev',
+                       'herd' : 'herdsmodel__name'}
+    allowed_order = {  None: 'name'}
+    boolean_filters = ('dev',)
     paginate_by = 40
     extra_context = {'page_name': 'Maintainers',}
     template_name = 'maintainers.html'
     queryset = MaintainerModel.objects.only('name', 'email' ).all()
     context_object_name = 'maintainers'
 
-class RepositoriesListView(ContextListView):
+class RepositoriesListView(ArchesCacheViewMixin, ContextListView):
     extra_context = {'page_name': 'Repsitories',}
     template_name = 'repositories.html'
     queryset = RepositoryModel.objects.only('name', 'description' ).all()
     context_object_name = 'repositories'
 
-class LicenseGroupsView(ContextListView):
+class LicenseGroupsView(ArchesCacheViewMixin, ContextListView):
+    cache_time = 820
     extra_context = {'page_name': 'License Groups',}
     queryset = LicenseGroupModel.objects.all().prefetch_related('licenses')
     template_name = 'license_groups.html'
     context_object_name = 'license_groups'
 
-class EbuildsListView(ContextArchListView):
+class EbuildsListView(PagebleCacheViewMixin, ContextArchListView):
+    cache_time = 420
     paginate_by = 40
     extra_context = {'page_name': 'Ebuilds', 'arches' : arches}
     template_name = 'ebuilds.html'
@@ -78,7 +148,7 @@ class EbuildsListView(ContextArchListView):
                        'package__virtual_package__category'). \
                        prefetch_related('package__repository')
 
-class AtomDetailViewMixin(ArchesContexView, DetailView):
+class AtomDetailViewMixin(ArchesCacheViewMixin, ArchesContexView, DetailView):
     parsing_class = EbuildParseCPVR
 
     table_items = ['changelog', 'use_flags', 'licenses', 'dependences']
@@ -136,7 +206,8 @@ class EbuildDetailView(AtomDetailViewMixin):
                                           revision = revision)
         return obj
 
-class PackagesListsView(MultipleFilterListViewMixin, ContextArchListView):
+class PackagesListsView(CacheFilterListView, ContextArchListView):
+    cache_time = 420
     allowed_filter = { 'category':'virtual_package__category__category',
                        'repo':'repository__name',
                        'herd':'herds__name',
@@ -201,7 +272,7 @@ class PackageDetailView(AtomDetailViewMixin):
                                           repository__name = repository)
         return obj
 
-class GlobalUseListView(ContextListView):
+class GlobalUseListView(ArchesCacheViewMixin, ContextListView):
     extra_context = {'page_name': 'Global Use', }
     template_name = 'global_use.html'
     context_object_name = 'uses'
@@ -214,7 +285,7 @@ class LocalUseListView(ContextListView):
     queryset = UseFlagDescriptionModel.objects.all().\
         select_related('use_flag', 'package', 'package__category')
 
-class NewsListView(ContextListView):
+class NewsListView(PagebleCacheViewMixin, ContextListView):
     extra_context = {'page_name': 'News'}
     template_name = 'portage_news.html'
     context_object_name = 'news'
@@ -222,7 +293,7 @@ class NewsListView(ContextListView):
     queryset = PortageNewsModel.objects.filter(lang = 'en'). \
         prefetch_related('authors', 'translators')
 
-class NewsDetailView(ContextView, DetailView):
+class NewsDetailView(ArchesCacheViewMixin, ContextView, DetailView):
     extra_context = {'page_name': 'News Item'}
     template_name = 'portage_news_item.html'
     context_object_name = 'news_item'
@@ -230,14 +301,16 @@ class NewsDetailView(ContextView, DetailView):
     queryset = PortageNewsModel.objects.filter(lang = 'en'). \
         prefetch_related('authors', 'translators')
 
-class LicensesListView(ContextListView):
+class LicensesListView(PagebleCacheViewMixin, ContextListView):
+    cache_time = 300
     extra_context = {'page_name': 'Licens'}
     template_name = 'licenses.html'
     context_object_name = 'licenses'
     paginate_by = 20
     queryset = LicenseModel.objects.all()
 
-class LicenseDetailView(ContextView, DetailView):
+class LicenseDetailView(ArchesCacheViewMixin, ContextView, DetailView):
+    cache_time = 300
     extra_context = {'page_name': 'Licens'}
     template_name = 'license.html'
     context_object_name = 'license'
@@ -294,7 +367,8 @@ class FilteringView(FormView):
                 dct[v] = ','.join(vv)
         return reverse('packages', kwargs = dct)
 
-class RepoDetailView(DetailView):
+class RepoDetailView(ArchesCacheViewMixin, DetailView):
+    cache_time = 900
     template_name = 'repository.html'
     context_object_name = 'repository'
     slug_field = 'name'
@@ -343,3 +417,4 @@ def auto_package_or_ebuild(request, atom, *args, **kwargs):
         return PackageDetailView.as_view()(request, parsed = p_atom, *args, **kwargs)
     else:
         raise Http404
+
