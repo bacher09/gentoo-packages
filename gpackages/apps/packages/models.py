@@ -16,7 +16,7 @@ from package_info.validators import validate_url, validate_email, \
 from package_info.parse_cp import VersionParse
 
 from django.utils.html import urlize, linebreaks
-from package_info.generic_metadata.changelog_highlight import changelog_highlight
+from .changelog_highlight import changelog_highlight
 from django.utils.safestring import mark_safe
 from django.core.cache import cache
 

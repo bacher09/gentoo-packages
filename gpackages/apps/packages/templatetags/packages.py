@@ -1,7 +1,6 @@
 from django.utils.safestring import mark_safe
 from django import template
 from django.core.cache import cache
-from package_info.generic_metadata.changelog_highlight import changelog_highlight
 
 register = template.Library()
 
@@ -9,6 +8,7 @@ from ..models import RepositoryModel, EbuildModel, UseFlagDescriptionModel
 from ..views import arches
 from ..forms import ArchChoiceForm, FilteringForm
 from ..utils import license_urlize
+from ..changelog_highlight import changelog_highlight
 from generic.utils import inclusion_cached_tag
 
 def last_updated_key():
