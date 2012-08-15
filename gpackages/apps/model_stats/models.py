@@ -5,6 +5,7 @@ from django.db.models.base import ModelBase
 from django.db.models.loading import get_models
 
 def get_predicate(obj):
+    "Predicate for searching `StatsMixin` objects"
     if inspect.isclass(obj) and issubclass(obj, StatsMixin):
         return obj != StatsMixin
 
@@ -38,22 +39,32 @@ class StatsMixin(object):
 
     #iterable of 2-tuples
     stats_params = ()
+    "Atributes for stats"
 
     @classmethod
     def calc_stats(cls):
+        "Update stats for this model"
         update_stats(cls, cls.stats_params)
 
 def get_stats_models(module):
     return inspect.getmembers(module, get_predicate)
 
 def update_stats_for_models(models_list):
+    """Update stats for special model's list
+    Args: 
+        models_list -- list of models     
+    """
     for model in models_list:
         model.calc_stats()
 
 def update_all_stats():
+    "Will update stats for all models"
     update_stats_for_models(filter_models(get_models()))
 
 class StatsModelBase(ModelBase):
+    """Metaclass for models with stats
+    Will automaticaly add model fields for stats by ``stats_params`` attribute
+    """
 
     def __init__(cls, name, bases, attrs):
         super(StatsModelBase, cls).__init__(name, bases, attrs)
@@ -75,6 +86,7 @@ class StatsModelBase(ModelBase):
                     PositiveIntegerField(default = 0, editable = False))
 
 class StatsModel(StatsMixin, models.Model):
+    "Base model for models with stats"
     __metaclass__ = StatsModelBase
 
     class Meta:
