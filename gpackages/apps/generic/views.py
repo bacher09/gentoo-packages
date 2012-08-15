@@ -8,6 +8,7 @@ from django.utils.timezone import is_naive
 from django.http import Http404
 
 class ContextView(object):
+    "Mixin to add additional data to context"
     extra_context = {}
     def get_context_data(self, **kwargs):
         ret = super(ContextView, self).get_context_data(**kwargs)
@@ -21,6 +22,7 @@ class ContextTemplateView(ContextView, TemplateView):
     pass
 
 class SetLang(ContextTemplateView):
+    "View for changing language js is unavailable"
     template_name = 'setlang.html'
     extra_context = {'page_name': 'Set Language', 'nav_name' : 'setlanguage'}
 
@@ -53,12 +55,10 @@ def filter_req(filter_set, allowed):
             result[k] = v
     return result
 
-def dynamic_order(args_list, allowed_list, reverse = None):
+def dynamic_order(order_attr, allowed_list, reverse = None):
     order = allowed_list.get(None)
-    if reverse is None:
-        reverse = args_list.get('reverse', False)
-    if args_list.get('order') in allowed_list:
-        order = allowed_list.get(args_list.get('order'))
+    if order_attr in allowed_list:
+        order = allowed_list.get(order_attr)
 
     if order == '?':
         return order
@@ -103,9 +103,9 @@ class MultipleFilterListViewMixin(object):
 
     def is_reverse(self):
         if self.kwargs.get('rev') is None:
-            reverse = bool(self.request.GET.get('rev',False))
+            reverse = bool(self.request.GET.get('rev', False))
         else:
-            reverse = bool(self.kwargs.get('rev',False))
+            reverse = bool(self.kwargs.get('rev', False))
 
         return reverse
 
@@ -113,11 +113,13 @@ class MultipleFilterListViewMixin(object):
         reverse = self.is_reverse()
         
         if 'order' in self.request.GET:
-            order = dynamic_order(self.request.GET, self.allowed_order,reverse)
+            order_attr =  self.request.GET.get('order')
         else:
-            order = dynamic_order(self.kwargs, self.allowed_order, reverse)
-            if self.kwargs.get('order') not in self.allowed_order:
-                raise Http404('no such order')
+            order_attr = self.kwargs.get('order')
+
+        if order_attr not in self.allowed_order:
+            raise Http404('no such order')
+        order = dynamic_order(order_attr, self.allowed_order, reverse)
         return order
 
     def get_queryset(self):
@@ -146,6 +148,7 @@ class MultipleFilterListViewMixin(object):
             else:
                 l.append(t.format(re.escape(key)))
 
+        # Maybe add num chars to order attribute ?
         return ''.join(l) + "(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?"
 
 class FeedWithUpdated(Feed):
@@ -164,10 +167,13 @@ class FeedWithUpdated(Feed):
 class RightAtom1Feed(Atom1Feed):
     def add_item_elements(self, handler, item):
         if item['pubdate'] is not None:
-            handler.addQuickElement(u"published", rfc3339_date(item['pubdate']).decode('utf-8'))
+            handler.addQuickElement(u"published", 
+                rfc3339_date(item['pubdate']).decode('utf-8'))
+
             item['pubdate'] = None
 
         if item['updated'] is not None:
-            handler.addQuickElement(u"updated", rfc3339_date(item['updated']).decode('utf-8'))
+            handler.addQuickElement(u"updated", 
+                rfc3339_date(item['updated']).decode('utf-8'))
 
         return super(RightAtom1Feed, self).add_item_elements(handler, item)
