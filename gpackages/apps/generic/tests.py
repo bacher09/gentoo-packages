@@ -10,9 +10,9 @@ from django.db import models
 from django.test.client import RequestFactory
 from django.http import Http404
 from operator import attrgetter
-from time import sleep
 from . import views
 import re
+import datetime
 
 class Tag(models.Model):
     name = models.CharField(unique = True, max_length = 40)
@@ -118,9 +118,9 @@ class SimpleTest(TestCase):
         m_obj.tags.add(tags[5])
 
         # For changed updated_datetime
-        sleep(3)
-        mu_obj.text = 'Updated'
-        mu_obj.save()
+        nd = datetime.datetime.now() + datetime.timedelta(0, 5)
+        Messages.objects.filter(pk = mu_obj.pk). \
+            update(text = 'Updated', updated_datetime = nd)
 
     def test_basic_addition(self):
         self.assertEqual(1 + 1, 2)
