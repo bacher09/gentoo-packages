@@ -15,7 +15,7 @@ def active_str(context, url):
 def active_link(context, url_name, text, id = None, *args, **kwargs):
     request = context['request']
     try:
-        url = reverse(url_name, *args, **kwargs)
+        url = reverse(url_name, args = args, kwargs = kwargs)
     except NoReverseMatch:
         url = '#'
 
