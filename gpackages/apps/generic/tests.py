@@ -9,10 +9,22 @@ from django.test import TestCase
 from django.db import models
 from django.test.client import RequestFactory
 from django.http import Http404
+from django.conf.urls import url, patterns
+from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 from operator import attrgetter
 from . import views
+from .templatetags import active_link, paginator
 import re
 import datetime
+
+def test_view(request, *args, **kwargs):
+    return HttpResponse('')
+
+urlpatterns = patterns('',
+    url(r'^test/$', test_view, name = 'test'),
+    url(r'^test2/(?P<extra>extra)(?P<args>args)$', test_view, name = 'test2'),
+)
 
 class Tag(models.Model):
     name = models.CharField(unique = True, max_length = 40)
@@ -282,3 +294,69 @@ class SimpleTest(TestCase):
 
         test_complex('/published/yes/tags/seven/title/message/', ["message"])
         test_complex('/?published=yes&tags=seven&title=message', ["message"])
+
+class TemplateTagsTest(TestCase):
+    urls = "generic.tests"
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_basic_addition(self):
+        self.assertEqual(1 + 1, 2)
+
+    def test_settings(self):
+        url = reverse('test')
+        self.assertEqual(url, '/test/')
+
+    def test_templatetag_fun1(self):
+        request = self.factory.get('/test/')
+        self.assertEqual(
+            active_link.active_str({'request': request}, '/test/'),
+            "active"
+        )
+        request = self.factory.get('/test/?query=val')
+        self.assertEqual(
+            active_link.active_str({'request': request}, '/test/'),
+            "active"
+        )
+        request = self.factory.get('/test2/')
+        self.assertEqual(
+            active_link.active_str({'request': request}, '/test/'),
+            ""
+        )
+        request = self.factory.get('/test/')
+        self.assertEqual(
+            active_link.active_str({'request': request}, '/test'),
+            ""
+        )
+
+    def test_templatetag_fun2(self):
+        fun2 = active_link.active_link
+        request = self.factory.get('/test/')
+        self.assertEqual(
+            fun2({'request': request}, 'test', 'text'),
+            '<li class="active"><a href="/test/">text</a><li>'
+        )
+        request = self.factory.get('/another_test/')
+        self.assertEqual(
+            fun2({'request': request}, 'test', 'text'),
+            '<li><a href="/test/">text</a><li>'
+        )
+        
+        request = self.factory.get('/another_test/')
+        self.assertEqual(
+            fun2({'request': request}, 'bad_test', 'text'),
+            '<li><a href="#">text</a><li>'
+        )
+
+        request = self.factory.get('/test/')
+        self.assertEqual(
+            fun2({'request': request}, 'test', 'text', id = 'test_id'),
+            '<li class="active"><a href="/test/" id="test_id">text</a><li>'
+        )
+        request = self.factory.get('/test2/extraargs')
+        self.assertEqual(
+            fun2({'request': request}, 'test2', 'text', 
+                 id = 'test_id', extra = 'extra', args = 'args'),
+            '<li class="active"><a href="/test2/extraargs" '\
+            'id="test_id">text</a><li>'
+        )
