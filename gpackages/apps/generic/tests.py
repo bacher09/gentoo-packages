@@ -8,6 +8,7 @@ Replace this with more appropriate tests for your application.
 from django.test import TestCase
 from django.db import models
 from django.test.client import RequestFactory
+from django.template import Template, Context, TemplateSyntaxError
 from django.http import Http404
 from django.conf.urls import url, patterns
 from django.http import HttpResponse
@@ -360,3 +361,28 @@ class TemplateTagsTest(TestCase):
             '<li class="active"><a href="/test2/extraargs" '\
             'id="test_id">text</a><li>'
         )
+
+    def test_templatetag_active_str(self):
+        request = self.factory.get('/test/')
+        out = Template(
+                "{% load active_link %}"
+                "{% active_str '/test/' %}"
+            ).render(Context({'request': request}))
+
+        self.assertEqual(out, "active")
+
+        request = self.factory.get('/test/?query=val')
+        out = Template(
+                "{% load active_link %}"
+                "{% active_str '/test/' %}"
+            ).render(Context({'request': request}))
+
+        self.assertEqual(out, "active")
+
+        request = self.factory.get('/test2/')
+        out = Template(
+                "{% load active_link %}"
+                "{% active_str '/test/' %}"
+            ).render(Context({'request': request}))
+
+        self.assertEqual(out, "")
