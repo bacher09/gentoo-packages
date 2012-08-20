@@ -6,8 +6,11 @@ from .my_etree import etree
 __all__ = ('CategoryMetadata', )
 
 class CategoryMetadata(ToStrMixin):
+    "Represent category metadata.xml as object"
 
     def __init__(self, metadata_path):
+        """Args: 
+            metadata_path - full path to category metadata.xml file"""
         self._metadata_path = metadata_path
         self._descrs = {}
         try:
@@ -24,10 +27,12 @@ class CategoryMetadata(ToStrMixin):
 
     @property
     def descrs(self):
+        "Dict with language code as key and text as value"
         return self._descrs
 
     @property
     def default_descr(self):
+        "Return text of English description"
         return self._descrs.get('en')
 
     def __unicode__(self):

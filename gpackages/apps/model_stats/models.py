@@ -36,6 +36,7 @@ def update_stats(model, params):
         model.objects.filter(pk = item['pk']).update(**kwargs)
 
 class StatsMixin(object):
+    "Basic mixin for calc stats"
 
     #iterable of 2-tuples
     stats_params = ()
@@ -47,6 +48,7 @@ class StatsMixin(object):
         update_stats(cls, cls.stats_params)
 
 def get_stats_models(module):
+    "Search stats models in module"
     return inspect.getmembers(module, get_predicate)
 
 def update_stats_for_models(models_list):
@@ -86,8 +88,27 @@ class StatsModelBase(ModelBase):
                     PositiveIntegerField(default = 0, editable = False))
 
 class StatsModel(StatsMixin, models.Model):
-    "Base model for models with stats"
+    """Base model for models with stats, should be used instead of 
+    default django model class.
+    
+    This class will automaticaly add model fields for stats, but you could 
+    override this by defining own definition in model class.
+    """
     __metaclass__ = StatsModelBase
+
+    stats_params = ()
+    """This param used for automaticaly add model fields for stats and for 
+    stats calculation
+
+    It should contains iterable of 2-tuples
+
+    First value in tuple should be new field name, second Count agreggation value.
+
+    Example:
+        stats_params = [('books_count', 'booksmodel')]
+
+    For more examples see tests.
+    """
 
     class Meta:
         abstract = True

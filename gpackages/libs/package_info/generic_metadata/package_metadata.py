@@ -16,8 +16,12 @@ REMOTE_IDS_TYPE = Enum(REMOTE_ID_TYPE)
 #TODO: Add support of restrict attribute !!!
 
 class PackageMetaData(ToStrMixin):
+    "Represend package metadata.xml as object"
 
     def __init__(self, metadata_path):
+        """Args:
+            metadata_path -- full path to metadata.xml
+        """
         self._metadata_path = metadata_path
         self.descr = {'en': None}
         self._herds = ()
@@ -48,6 +52,7 @@ class PackageMetaData(ToStrMixin):
             self.descr[lang] = descr.text
 
     def iter_mainteiner(self):
+        "Yields `Maintainer` object"
         for maintainer_tree in self._metadata_xml.iterfind('maintainer'):
             yield Maintainer(maintainer_tree)
 
@@ -64,31 +69,47 @@ class PackageMetaData(ToStrMixin):
 
     @property
     def description(self):
+        "Return description text in English"
         return self.descr['en']
 
     def descriptions(self):
         return self.descr.values()
 
     def descriptions_dict(self):
+        "Return dict where language code is key and description text is value"
         return self.descr
 
     def herds(self):
+        "Return tuple of package herds"
         return self._herds
 
     def maintainers(self):
+        "Return tuple of `Maintainers` objects"
         return self._maintainers
     
     def __unicode__(self):
         return self._metadata_path
 
 class Upstream(ToStrMixin):
+    """Represent upstream node on metadata.xml
+    """
     
     simple_attrs = (('changelog', 'changelog'),
                     ('bugs-to', 'bugs_to'),)
 
     def __init__(self, upstream_t, metadata_path):
         self.metadata_path = metadata_path
+        "Full path to metadata.xml"
         self.remote_id = {}
+        "Dict with remote ids"
+        self.changelog = None
+        "Link to upstream changelog"
+        self.bugs_to = None
+        "Where send bugs"
+        self.doc = {}
+        """Dict of doc links.
+        Language code is key, doc link is value.
+        """
         for name in ('doc',):
             res = {}
             for item in upstream_t.iterfind(name):
@@ -113,19 +134,24 @@ class Upstream(ToStrMixin):
             maintainers.append(m)
 
         self.maintainers = maintainers
+        "List of :class:`.UpstreamMaintainer` objects"
 
     @property
     def main_doc(self):
+        "English doc link"
         return self.doc.get('en')
 
     def __unicode__(self):
         return self.metadata_path
 
 class UpstreamMaintainer(Maintainer):
+    "Represent maintainer node in upstream node"
     status_dict = {'inactive' : 0, 'active': 1}
+    "Dict of status mapping"
 
     def __init__(self, xml_object):
         super(UpstreamMaintainer, self).__init__(xml_object)
         st = xml_object.attrib.get('status','inactive')
         self.status = self.status_dict.get(st, 0)
+        "Maintainer status"
 

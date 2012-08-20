@@ -29,6 +29,9 @@ Contents:
     install
     commands
     package_info
+    generic
+    model_stats
+    packages
 
 
 

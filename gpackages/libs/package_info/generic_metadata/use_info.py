@@ -28,14 +28,19 @@ def _get_info(filename, re_string, modify_function, res_var = None):
     return res_dict
 
 def get_uses_info(filename = '/usr/portage/profiles/use.desc'):
-    """Args:
+    """
+    Args:
         filename -- full path to use.desc file
+
     Returns:
         dict with use flag as key, and description as value
+
     Example:
         {'doc': 'Doc description', ...}
-    Notice:
-        In portage public api `get_use_flag_dict`
+
+    .. note::
+        In portage public api exists ``get_use_flag_dict`` method.
+
     """
     def action(res_dict, match):
         res_dict[match['use'].lower()] = match['description']
@@ -43,15 +48,20 @@ def get_uses_info(filename = '/usr/portage/profiles/use.desc'):
     return _get_info(filename, use_re, action)
 
 def get_local_uses_info(filename = '/usr/portage/profiles/use.local.desc'):
-    """Args:
+    """
+    Args:
         filename -- full path to use.local.desc file
+        
     Returns:
-        defaultdict(dict) with use flag as first key, package name as second
-        key, and description as value
+        :class:`defaultdict(dict) <collections.defaultdict>` with use flag as \
+    first key, package name as second key, and description as value.
+
     Example:
         {'api': {'app-emulation/xen-tools': 'Use descr', ...} , ...}
-    Notice:
+
+    .. note::
         In portage public api `get_use_flag_dict`
+
     """
     def action(res_dict, match):
         res_dict[match['use'].lower()][match['package']] = match['description']
@@ -65,11 +75,14 @@ def _set_prefixes(prefix, dct):
     return newdct
 
 def get_use_special_info(dirname = '/usr/portage/profiles/desc'):
-    """Args:
+    """
+    Args:
         dirname -- full path to descrs files, /usr/portage/profiles/desc \
-        by default
+    by default
+
     Returns:
         dict with use flag as key, and description as value
+
     Example:
         {'kernel_linux': 'KERNEL setting for system using the Linux ...', ...}
     """

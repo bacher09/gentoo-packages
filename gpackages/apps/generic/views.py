@@ -10,6 +10,8 @@ from django.http import Http404
 class ContextView(object):
     "Mixin to add additional data to context"
     extra_context = {}
+    """Attribute that wold be added to  context data.
+    Should contains :py:class:`.dict`"""
     def get_context_data(self, **kwargs):
         ret = super(ContextView, self).get_context_data(**kwargs)
         ret.update(self.extra_context)
@@ -70,14 +72,34 @@ def dynamic_order(order_attr, allowed_list, reverse = None):
     return order
 
 class MultipleFilterListViewMixin(object):
+    """Mixin for dynamical objects filtering
+    """
     allowed_filter = {}
+    """Dict of allowed filters, filter name is key, filter field is value
+    """
     allowed_order = {}
+    """Dict of allowed orders, order name is key, order field is value
+    """
     boolean_filters = ()
+    """Set or tuple of boolean filters, indicates that filtering by that 
+    attribute should done as boolean.
+    """
     # allowed_many = {'name': int_count}
     allowed_many = {}
+    """Dict where key is filter name, value is integer.
+    Indicates that this filter could search by many values using ``__in`` query.
+    Value is used as limit of max allowed filtering values, if it is 0 then 
+    unlimited.
+    """
     m2m_filter = set()
+    """Indicates that this attribute is m2m fields and filtering by it should done
+    with ``distinct`` attribute.
+    """
 
     def get_context_data(self, **kwargs):
+        """In addition to default context value will return all filters as 
+        :py:class:`.dict`.
+        """
         cd = super(MultipleFilterListViewMixin, self).get_context_data(**kwargs)
         cd['filters_dict'] = self.queries_dict
         return cd
@@ -88,6 +110,8 @@ class MultipleFilterListViewMixin(object):
         return qs
 
     def get_filters(self):
+        """Return filters dict
+        """
         qs = self.get_base_filters()
         newqs = {}
         for k, v in qs.iteritems():
@@ -102,6 +126,9 @@ class MultipleFilterListViewMixin(object):
         return newqs
 
     def is_reverse(self):
+        """Return boolean value that which indicates that objects should sorted
+        in reverse order
+        """
         if self.kwargs.get('rev') is None:
             reverse = bool(self.request.GET.get('rev', False))
         else:
@@ -110,6 +137,10 @@ class MultipleFilterListViewMixin(object):
         return reverse
 
     def get_order(self):
+        """Will return order value for using in 
+        :py:meth:`order_by <django:django.db.models.query.QuerySet.order_by>`
+        method or raise :py:class:`Http404 <django:django.http.Http404>` exception.
+        """
         reverse = self.is_reverse()
         
         if 'order' in self.request.GET:
@@ -123,6 +154,9 @@ class MultipleFilterListViewMixin(object):
         return order
 
     def get_queryset(self):
+        """Will return 
+        :py:class:`QuerySet <django:django.db.models.query.QuerySet>` of 
+        filtered objects."""
         query = super(MultipleFilterListViewMixin, self).get_queryset()
         qs = self.get_filters()
         order = self.get_order()
@@ -139,6 +173,7 @@ class MultipleFilterListViewMixin(object):
 
     @classmethod
     def get_url_part(cls):
+        "Return url sufix for transfering filter params in url."
         t = "(?:{0}/(?P<{0}>[^/]+)/)?"
         t_bool = "(?:{0}/(?P<{0}>yes|no)/)?"
         l =[]
@@ -152,6 +187,9 @@ class MultipleFilterListViewMixin(object):
         return ''.join(l) + "(?:order/(?P<order>[a-z]*)/)?(?P<rev>rev/)?"
 
 class FeedWithUpdated(Feed):
+    """Extend Feed class that have ``item_update`` method for object updated
+    date
+    """
     def item_extra_kwargs(self, item):
         # for future
         kwargs = super(FeedWithUpdated, self).item_extra_kwargs(item)
@@ -165,6 +203,8 @@ class FeedWithUpdated(Feed):
             
 # see bug https://code.djangoproject.com/ticket/14656
 class RightAtom1Feed(Atom1Feed):
+    """Extended Atom Feed wich have updated attribute
+    """
     def add_item_elements(self, handler, item):
         if item['pubdate'] is not None:
             handler.addQuickElement(u"published", 

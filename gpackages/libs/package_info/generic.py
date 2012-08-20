@@ -1,3 +1,5 @@
+"""Some generic things used in this module"""
+
 import os.path
 import hashlib
 import types
@@ -31,6 +33,7 @@ def iter_over_gen(iterat, name):
     for obj in iterat:
         for item in getattr(obj, name)():
             yield item
+
 def del_from_dict(what_list, dict_todel):
     for item in what_list:
         if item in dict_todel:
@@ -60,6 +63,7 @@ def toint(val, defval = None):
         return defval
 
 class StrThatIgnoreCase(unicode):
+    "Case insensetive string, that remembers case"
     __slots__ = ('_forcmp',)
 
     def __init__(self, value):
@@ -90,6 +94,11 @@ class ToStrMixin(object):
 
 
 def file_get_content(file_path):
+    """Args:
+        file_path -- full path to file
+
+    Returns: return file content or `None`
+    """
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             content = f.read()
@@ -98,6 +107,10 @@ def file_get_content(file_path):
         return None
 
 def file_sha1(file_path):
+    """Args:
+        file_path -- full path to file
+    Returns: return file sha1 hexdigest or `None`
+    """
     sha1 = None
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
@@ -105,6 +118,10 @@ def file_sha1(file_path):
     return sha1
 
 def file_mtime(file_path):
+    """Args:
+        file_path -- full path to file
+    Returns: return file modification time as python datetime or `None`
+    """
     if os.path.exists(file_path):
         return datetime.fromtimestamp(os.path.getmtime(file_path))
     else:

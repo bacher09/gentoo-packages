@@ -101,10 +101,12 @@ class Herds(ToStrMixin):
 
     def get_maintainers_with_herds(self):
         """Returns:
-            defaultdict(list) with maintainer object as key, and list of herds
-            as value.
+            :py:class:`defaultdict(list) <collections.defaultdict>` with
+        maintainer object as key, and list of herds as value.
+
         Example:
             {'<Maintainer example@gentoo.org>': ['mozilla','base'], ...}
+
         """
         if self._maintainers_dict is not None:
             return self._maintainers_dict

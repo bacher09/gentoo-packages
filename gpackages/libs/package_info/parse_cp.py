@@ -95,10 +95,14 @@ class EbuildRevMixin(object):
 
 @total_ordering
 class VersionParse(ToStrMixin):
+    """Parse ebuild version
+    Could be used for sorting by ebuild version or for validation
+    """
 
     __slots__ = ('version', 'maj', 'min', 'cmp_attr')
     
     def __init__(self, version):
+        "Args: version -- string version"
         self.version = version
         m = version_parse_re.match(version)
         if m is None:
@@ -106,7 +110,9 @@ class VersionParse(ToStrMixin):
 
         dct = m.groupdict()
         self.maj = maj_parse(dct['num'], dct['alpha'])
+        "represent major version part as tuple"
         self.min = min_parse(dct['prefixes'])
+        "represent minor version part (prefixes) as tuple"
         self.cmp_attr = (self.maj, self.min)
 
     def __eq__(self, other):
@@ -157,6 +163,7 @@ class PackageParse(ToStrMixin):
 
     @property
     def re_str(self):
+        "String of parsing Regexp"
         return PACKAGE_RE_P
 
     @property

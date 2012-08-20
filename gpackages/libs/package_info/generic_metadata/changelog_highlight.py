@@ -210,13 +210,17 @@ def changelog_style_css():
     return f.get_style_defs()
 
 def group_tokens(text):
-    """Combine tokens to groups
+    """Combine tokens to groups.
+
     Args:
         text -- changelog text
+
     Yields:
         (group_type, group), where group_type are: `None`, `'version'` or \
         `'message'`
-        group are array of tuples (toke, value)"""
+        group are array of tuples (toke, value)
+
+    """
     c = ChangelogLexer()
     queue = deque()
     group_type = None 
@@ -244,6 +248,9 @@ def group_tokens(text):
     yield (group_type, group + list(queue))
 
 def latest_message_group(text):
+    """Args:
+        text - changelog text
+    Returns: return latest message group"""
     for group_type, group in group_tokens(text):
         if group_type == 'message':
             return group
@@ -264,6 +271,7 @@ def tokensgroup_to_toknes(groups):
     return tk
 
 def tokens_to_text(lex):
+    "Convert tokenized input to text"
     mystr = ''
     for token, value in lex:
         mystr += value

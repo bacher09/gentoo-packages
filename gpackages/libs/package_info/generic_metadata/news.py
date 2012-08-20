@@ -12,8 +12,12 @@ NEWS_STR_RE = r'^(?P<date>\d{4,4}-\d{2}-\d{2})-(?P<title>.*)$'
 news_re = re.compile(NEWS_STR_RE)
 
 class News(ToStrMixin):
+    "Represent all news in special repositority"
     
     def __init__(self, repo_path = '/usr/portage'):
+        """Args:
+            repo_path -- full path to repository 
+        """
         self.news_path = os.path.join(repo_path, 'metadata', 'news')
         if not os.path.isdir(self.news_path):
             raise ValueError
@@ -21,6 +25,7 @@ class News(ToStrMixin):
         self.repo_path = repo_path 
 
     def iter_news(self):
+        "Yields `NewsItem` object"
         for name in os.listdir(self.news_path):
             try:
                 i = NewsItem(self.news_path, name)
@@ -36,6 +41,7 @@ class News(ToStrMixin):
         return unicode(self.repo_path)
 
 class NewsItem(ToStrMixin):
+    "Represent news item"
 
     N_ITEM_P = r'^%(name)s\.(?P<lang>[a-z]{2})\.txt$'
 

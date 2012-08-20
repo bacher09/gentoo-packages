@@ -39,12 +39,17 @@ class Keyword(ToStrMixin, AbstractKeywords):
     
     def __init__(self, name, status = 0):
         """Args:
-            name -- name of keyword, it may start with ~ or -, if so than 
+
+            name -- name of keyword, it may start with ~ or -, if so than \
                     status will be auto seting.
-            status -- status of keyword: 0 - stable, 
-                                         1 - utested '~',
-                                         2 - unstable '-'
-                    Also may get by name parameter.
+
+            status -- status of keyword:
+            
+              *  0 -- stable,
+              *  1 -- utested '~'
+              *  2 -- unstable '-'
+
+            Also ``status`` may automaticaly set by name parameter.
         """
         if name.startswith('~'):
             name = name[1:]
@@ -53,7 +58,16 @@ class Keyword(ToStrMixin, AbstractKeywords):
             name = name[1:]
             status = 2
         self.name = name
+        "Arch name of keyword"
+
         self.status = status
+        """Status of keyword
+        
+        * 0 -- stable
+        * 1 -- untested
+        * 2 -- unstable
+
+        """
 
     def __unicode__(self):
         return self.status_repr[self.status] + self.name
@@ -86,6 +100,7 @@ class Keyword(ToStrMixin, AbstractKeywords):
         return self.name
 
 class KeywordsSet(set):
+    "Set of :class:`Keywords <.Keyword>` objects"
     def __init__(self, init_list):
         start = defaultdict(list)
         for item in init_list:

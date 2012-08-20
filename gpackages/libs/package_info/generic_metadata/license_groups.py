@@ -41,13 +41,16 @@ def parse_groups(groups_str):
 
 def load_groups(file_path = DEFAULT_FILE_PATH):
     """Load file profiles/license_groups and represend it as dict
+
     Args:
-        file_path -- full path to license_groups file, by default it 
-                     /usr/portage/profiles/license_groups
+        file_path -- full path to license_groups file.
+
     Returns:
-        dict with license group as key and set of licenses as value
+        dict with license group as key and set of licenses as value.
+
     Example:
         {u'EULA': set([u'cadsoft', ...]), u'GPL-COMPATIBLE': set([...]), ...}
+
     """
     fc = file_get_content(file_path)
 
@@ -102,6 +105,7 @@ class LicenseGroups(ToStrMixin):
         return self.reverse_group_dict[license_name]
 
     def sha1(self):
+        "Return sha1 hash hexdigest of license groups file"
         return file_sha1(self.groups_path)
 
     def __unicode__(self):
