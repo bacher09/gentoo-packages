@@ -773,27 +773,35 @@ class Scanner(object):
                 models.PackageModel.objects.filter(pk = package_id). \
                     update(latest_ebuild = latest_ebuild)
 
+    def missing_ebuild(self, ebuild):
+        try:
+            package_obj = models.PackageModel.objects. \
+                get(package = ebuild.package)
+
+        except models.PackageModel.DoesNotExist:
+            pass
+        else:
+            # Don't run this for updated packages
+            if package_obj.manifest_hash == ebuild.package.manifest_sha1:
+                self.output('%-44s [%s]M\n', (ebuild, 
+                    ebuild.package.category.porttree_name))
+                self.update_ebuilds(ebuild.package, package_obj)
+
     def add_mising_ebuilds(self):
         for ebuild in porttree.iter_ebuilds():
             try:
                 ebuild_obj = models.EbuildModel.objects.get(ebuild = ebuild)
             except models.EbuildModel.DoesNotExist:
-                self.output('%-44s [%s]\n', (ebuild, 
-                    ebuild.package.category.porttree_name))
-                try:
-                    package_obj = models.PackageModel.objects. \
-                        get(package = ebuild.package)
-
-                except models.PackageModel.DoesNotExist:
-                    pass
-                else:
-                    self.update_ebuilds(ebuild.package, package_obj)
+                self.missing_ebuild(ebuild)
             
-    def update_ebuild_mask(self):
+    def update_ebuild_mask(self, missing = False):
         for ebuild in porttree.iter_ebuilds():
             try:
                 ebuild_obj = models.EbuildModel.objects.get(ebuild = ebuild)
             except models.EbuildModel.DoesNotExist:
+                if missing:
+                    self.missing_ebuild(ebuild)
+
                 continue
             if ebuild_obj.is_hard_masked != ebuild.is_hard_masked:
                 self.output('%-44s [%s]\n', (ebuild,
@@ -801,3 +809,4 @@ class Scanner(object):
 
                 ebuild_obj.is_hard_masked = ebuild.is_hard_masked
                 ebuild_obj.save(force_update = True)
+

@@ -10,8 +10,14 @@ class Command(BaseCommand):
             dest='show_time',
             default=True,
             help='Show time of scanning'),
+        make_option('-m', '--update-missing',
+            action='store_true',
+            dest='missing',
+            default=False,
+            help='Add missing ebuilds'),
         )
     args = ''
-    help = 'Will add missing ebuilds'
+    help = 'Will update ebuild mask status'
     def handle(self, *args, **options):
-        Scanner(**options).update_ebuild_mask()
+        missing = options.get('missing', False) # maybe move it to function ?
+        Scanner(**options).update_ebuild_mask(missing = missing)
