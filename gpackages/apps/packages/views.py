@@ -303,7 +303,7 @@ class NewsDetailView(ArchesCacheViewMixin, ContextView, DetailView):
 
 class LicensesListView(PagebleCacheViewMixin, ContextListView):
     cache_time = 300
-    extra_context = {'page_name': 'Licens'}
+    extra_context = {'page_name': 'Licenses'}
     template_name = 'licenses.html'
     context_object_name = 'licenses'
     paginate_by = 20
@@ -311,7 +311,7 @@ class LicensesListView(PagebleCacheViewMixin, ContextListView):
 
 class LicenseDetailView(ArchesCacheViewMixin, ContextView, DetailView):
     cache_time = 300
-    extra_context = {'page_name': 'Licens'}
+    extra_context = {'page_name': 'License'}
     template_name = 'license.html'
     context_object_name = 'license'
     slug_field = 'name'
