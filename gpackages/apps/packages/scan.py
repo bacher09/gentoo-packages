@@ -120,6 +120,7 @@ class Scanner(object):
         self.verbosity = toint(kwargs.get('verbosity',1),1)
         self.traceback = bool_get('traceback',False)
         self.s_all = bool_get('scan_all', False)
+        self.s_overlyas = bool_get('scan_overlays', False)
         self.s_packages = bool_get('packages', False)
         self.s_only_repo_info = bool_get('only_repo_info', False)
         self.is_show_time = bool_get('show_time', True)
@@ -148,17 +149,23 @@ class Scanner(object):
         if self.is_scan_herds:
             self.scan_herds()
 
+        scan_kwargs = {'force_update' : self.force_update,
+                       'delete' : self.delete,
+                       'update_repo' : self.update_repo
+                      }
+
         if self.s_all and self.s_packages:
-            self.scan_all_repos(force_update = self.force_update,
-                                delete = self.delete,
-                                update_repo = self.update_repo)
+            self.scan_all_repos(**scan_kwargs)
+
+        elif self.s_overlyas and self.s_packages:
+            self.scan_all_repos(exclude = ['gentoo'], **scan_kwargs)
+
         elif len(self.scan_repos_name) > 0 and self.s_packages:
-            self.scan_repos_by_name(self.scan_repos_name,
-                                    force_update = self.force_update,
-                                    delete = self.delete,
-                                    update_repo = self.update_repo)
+            self.scan_repos_by_name(self.scan_repos_name, **scan_kwargs)
+
         elif self.s_only_repo_info and self.s_all:
             self.scan_all_repo_info(delete = self.delete)
+
         elif self.s_only_repo_info and len(self.scan_repos_name) > 0:
             self.scan_repo_info_by_names(self.scan_repos_name)
 
@@ -345,11 +352,15 @@ class Scanner(object):
             self.load_maintainers_to_cache()
         return self.maintainers_cache
 
-    def scan_all_repos(self, **kwargs):
+    def scan_all_repos(self, exclude = None, **kwargs):
         "Scan packages in all available trees"
         #cache_dict = anydbm.open('cache.db','c')
+        if exclude is not None:
+            exclude = frozenset(exclude)
 
         for repo in portage.iter_trees():
+            if exclude is not None and repo.name in exclude:
+                continue
             self.scan_repo(repo, **kwargs)
         #cache_dict.close()
 
@@ -395,13 +406,19 @@ class Scanner(object):
 
         return repo_obj
 
-    def scan_all_repo_info(self, delete = False):
+    def scan_all_repo_info(self, exclude = None, delete = False):
         """Scan all info (metada) of all available repositories
         Args:
             delete -- if this true that repository will delete
-                      if portage would be not available"""
+                      if portage would be not available
+            exclude -- exlude this overlays
+        """
+        if exclude is not None:
+            exclude = frozenset(exclude)
         ex_pk = []
         for repo in portage.iter_trees():
+            if exclude is not None and repo.name in exclude:
+                continue
             repo_obj = self.get_repo_obj(repo, update_repo = True)
             self.output("Scaned [%s]\n", repo.name)
             ex_pk.append(repo_obj.pk)
