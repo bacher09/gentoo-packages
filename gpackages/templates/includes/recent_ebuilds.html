@@ -1,7 +1,8 @@
 {% spaceless %}
+{% load i18n %}
 <div class="well">
     <ul class="nav nav-list recent-ebuilds">
-        <li class="nav-header">Recent Ebuilds</li>
+        <li class="nav-header">{% trans 'Recent Ebuilds' %}</li>
         {% for ebuild in ebuilds %}
             <li>
                 <a href="{{ ebuild.package.get_absolute_url }}">{{ ebuild.cpv_or_cpvr }}</a>

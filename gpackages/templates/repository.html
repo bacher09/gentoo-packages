@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load url from future %}
+{% load i18n %}
 {% load packages %}
 
 {% block content %}
@@ -14,44 +15,44 @@
                 <col class="span1" />
                 <col class="span1" />
             </colgroup>
-            <caption><h3>Options</h3></caption>
+            <caption><h3>{% trans 'Options' %}</h3></caption>
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Value</th>
+                    <th>{% trans 'Name' %}</th>
+                    <th>{% trans 'Value' %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% if repository.owner_name %}
                 <tr>
-                    <td class="nowrap">Owner name</td>
+                    <td class="nowrap">{% trans 'Owner name' %}</td>
                     <td>{{ repository.owner_name }}</td>
                 </tr>
                 {% endif %}
                 {% if repository.owner_email %}
                 <tr>
-                    <td class="nowrap">Owner email</td>
+                    <td class="nowrap">{% trans 'Owner email' %}</td>
                     <td><a href="{{ 'mailto:'|add:repository.owner_email|obfuscate }}">{{ repository.owner_email|obfuscate }}</a></td>
                 </tr>
                 {% endif %}
                 <tr>
-                    <td>Homepage</td>
+                    <td>{% trans 'Homepage' %}</td>
                     <td><a href="{{ repository.homepage }}">{{ repository.homepage }}</a></td>
                 </tr>
                 <tr>
-                    <td>Quality</td>
+                    <td>{% trans 'Quality' %}</td>
                     <td>{{ repository.get_quality_display }}</td>
                 </tr>
                 <tr>
-                    <td>Official</td>
+                    <td>{% trans 'Official' %}</td>
                     <td>{% if repository.official %}<span class="bool-ok">&#10004; Yes</span>{% else %}<span class="bool-no">&#10005; No</span>{% endif %}</td>
                 </tr>
                 <tr>
-                    <td>Last Updated</td>
+                    <td>{% trans 'Last Updated' %}</td>
                     <td>{{ repository.updated_datetime }}</td>
                 </tr>
                 <tr>
-                    <td>Created in database</td>
+                    <td>{% trans 'Created in database' %}</td>
                     <td>{{ repository.created_datetime }}</td>
                 </tr>
             </tbody>
@@ -63,32 +64,32 @@
                 <col class="span1" />
                 <col class="span1" />
             </colgroup>
-            <caption><h3>Stats</h3></caption>
+            <caption><h3>{% trans 'Stats' %}</h3></caption>
             <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Value</th>
+                        <th>{% trans 'Name' %}</th>
+                        <th>{% trans 'Value' %}</th>
                     </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td class="nowrap">Categories Count</td>
+                    <td class="nowrap">{% trans 'Categories Count' %}</td>
                     <td>{{ repository.categories_count }}</td>
                 </tr>
                 <tr>
-                    <td class="nowrap">Maintainers Count</td>
+                    <td class="nowrap">{% trans 'Maintainers Count' %}</td>
                     <td>{{ repository.maintainers_count }}</td>
                 </tr>
                 <tr>
-                    <td class="nowrap">Herds Count</td>
+                    <td class="nowrap">{% trans 'Herds Count' %}</td>
                     <td>{{ repository.herds_count }}</td>
                 </tr>
                 <tr>
-                    <td class="nowrap">Packages Count</td>
+                    <td class="nowrap">{% trans 'Packages Count' %}</td>
                     <td>{{ repository.packages_count }}</td>
                 </tr>
                 <tr>
-                    <td class="nowrap">Ebuilds Count</td>
+                    <td class="nowrap">{% trans 'Ebuilds Count' %}</td>
                     <td>{{ repository.ebuilds_count }}</td>
                 </tr>
             </tbody>
@@ -103,11 +104,11 @@
                 <col class="span1" />
                 <col class="span7" />
             </colgroup>
-            <caption><h3>Sources</h3></caption>
+            <caption><h3>{% trans 'Sources' %}</h3></caption>
             <thead>
                     <tr>
-                        <th class="nowrap">Repository type</th>
-                        <th>URL</th>
+                        <th class="nowrap">{% trans 'Repository type' %}</th>
+                        <th>{% trans 'URL' %}</th>
                     </tr>
             </thead>
             <tbody>
@@ -124,7 +125,7 @@
 {% with feeds=repository.repositoryfeedmodel_set.all %}
     {% if feeds %}
         <div>
-        <h4>Feeds:</h4>
+        <h4>{% trans 'Feeds:' %}</h4>
         <ul>
         {% for feed in feeds %}
             <li><a href="{{ feed.feed }}">{{ feed.feed }}</a></li>

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load url from future %}
 {% load cache %}
+{% load i18n %}
 
 {% block content %}
 {% cache 3600 license_groups %}
@@ -11,8 +12,8 @@
     </colgroup>
     <thead>
             <tr>
-                <th>License group</th>
-                <th>Licenses</th>
+                <th>{% trans 'License group' %}</th>
+                <th>{% trans 'Licenses' %}</th>
             </tr>
     </thead>
     <tbody>

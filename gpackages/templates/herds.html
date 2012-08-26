@@ -2,9 +2,9 @@
 {% load packages %}
 {% load url from future %}
 {% load cache %}
+{% load i18n %}
 
 {% block content %}
-
 {% cache 1800 herds_table %}
 <table class='table table-striped table-hover'>
     <colgroup>
@@ -14,9 +14,9 @@
     </colgroup>
     <thead>
             <tr>
-                <th>Herd</th>
-                <th>Email</th>
-                <th>Description</th>
+                <th>{% trans 'Herd' %}</th>
+                <th>{% trans 'Email' %}</th>
+                <th>{% trans 'Description' %}</th>
             </tr>
     </thead>
     <tbody>

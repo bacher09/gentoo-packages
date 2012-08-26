@@ -1,4 +1,5 @@
 {% load url from future %}
+{% load i18n %}
 <table class='table table-striped table-hover'>
     <colgroup>
         <col class="span1" >
@@ -6,8 +7,8 @@
     </colgroup>
     <thead>
             <tr>
-                <th class="nowrap">Use flag</th>
-                <th>Description</th>
+                <th class="nowrap">{% trans 'Use flag' %}</th>
+                <th>{% trans 'Description' %}</th>
             </tr>
     </thead>
     <tbody>

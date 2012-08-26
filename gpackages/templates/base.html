@@ -38,7 +38,7 @@
           <div class="nav-collapse">
             <ul class="nav">
               {% get_flatpages '/about/' as about_pages %}
-              <li class="{% active_str '/' %}"><a href="/">Home</a></li>
+              <li class="{% active_str '/' %}"><a href="/">{% trans 'Home' %}</a></li>
               {% active_link 'news' 'Portage News' %}
               {% for about in about_pages %}<li class="{% active_str about.url %}"><a href="{{ about.url }}">{{ about.title }}</a></li>{% endfor %}
               <li><a href="#contact">Contact</a></li>
@@ -89,15 +89,15 @@
                     <div class="well">
                                                         <div id="rightcontent">
                                                         <div>
-                                                            <span class="label label-info label-legend"> Last update</span> 
+                                                            <span class="label label-info label-legend">{% trans 'Last update' %}</span> 
                                                             {% last_updated %}
                                                         </div><br/>
                                                       <div>
-                                                          <span class="label label-info label-legend">Legend</span>
+                                                          <span class="label label-info label-legend">{% trans 'Legend' %}</span>
                                                           <ul class="legend left-bar-list">
-                                                              <li><span class="stable">+</span> - stable</li>
-                                                              <li><span class="unstable">~</span> - unstable</li>
-                                                              <li><span class="hardmask">M</span> - hardmask</li>
+                                                              <li><span class="stable">+</span> - {% trans 'stable' %}</li>
+                                                              <li><span class="unstable">~</span> - {% trans 'unstable' %}</li>
+                                                              <li><span class="hardmask">M</span> - {% trans 'hardmask' %}</li>
                                                           </ul>
                                                       </div>
                                             </div>

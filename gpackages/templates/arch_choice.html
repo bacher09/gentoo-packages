@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load i18n %}
 {% block content %}
 <script>
     // set default arches
@@ -26,7 +26,7 @@
         {{ form.arches }} 
     </div>
 </fieldset>
-    <input type="submit" class="btn btn-primary" value="Submit" />
+    <input type="submit" class="btn btn-primary" value="{% trans 'Submit' %}" />
 </form>
 </div>
 {% endblock content %}

@@ -1,16 +1,17 @@
 {% load url from future %}
+{% load i18n %}
 <div class="news_item">
     <h2><a href="{% url 'news_item' slug=news_item.name %}">{{ news_item.title }}</a></h2>
     <p>{{ news_item.message_as_html|safe }}</p>
     <div class="metadata" >
-        <span>Date: {{ news_item.date }}</span>
-        <span>Revision: {{ news_item.revision }}</span>
+        <span>{% trans 'Date' %}: {{ news_item.date }}</span>
+        <span>{% trans 'Revision' %}: {{ news_item.revision }}</span>
         {% with authors=news_item.authors.all %}
             <span>
                 {% if authors|length_is:"1" %}
-                    Author:
+                    {% trans 'Author' %}:
                 {% else %}
-                    Authors:
+                    {% trans 'Authors' %}:
                 {% endif %}
             {% for author in authors %}
                 <a href="{% url 'packages' maintainer=author.pk %}">{{ author.name }}</a>

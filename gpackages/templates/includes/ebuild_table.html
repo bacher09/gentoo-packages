@@ -1,12 +1,13 @@
 {% load packages %}
+{% load i18n %}
 <div class="tabbable">
     <ul class="nav nav-tabs">
     {% if package %}
-      <li{% if table_items.changelog %} class="active"{% endif %}><a href="changelog" tab-id="changelog">Changelog</a></li>
+      <li{% if table_items.changelog %} class="active"{% endif %}><a href="changelog" tab-id="changelog">{% trans 'Changelog' %}</a></li>
     {% endif %}
-      <li{% if table_items.use_flags %} class="active"{% endif %}><a href="use_flags" tab-id="use_flags">Use flags</a></li>
-      <li{% if table_items.licenses %} class="active"{% endif %}><a href="licenses" tab-id="licenses">Licenses</a></li>
-      <li{% if table_items.dependences %} class="active"{% endif %}><a href="dependences" tab-id="dependences">Dependences</a></li>
+      <li{% if table_items.use_flags %} class="active"{% endif %}><a href="use_flags" tab-id="use_flags">{% trans 'Use flags' %}</a></li>
+      <li{% if table_items.licenses %} class="active"{% endif %}><a href="licenses" tab-id="licenses">{% trans 'Licenses' %}</a></li>
+      <li{% if table_items.dependences %} class="active"{% endif %}><a href="dependences" tab-id="dependences">{% trans 'Dependences' %}</a></li>
     </ul>
     <div class="tab-content">
     {% if package %}
@@ -22,19 +23,19 @@
         </div>
         <div class="tab-pane{% if table_items.dependences %} active{% endif %}" id="dependences">
             {% if ebuild.depend %}
-                <h3>Depen</h3>
+                <h3>{% trans 'Depen' %}</h3>
                 <pre>
                 {{ ebuild.depend }}
                 </pre>
             {% endif %}
             {% if ebuild.rdepend %}
-                <h3>Runtime Depen</h3>
+                <h3>{% trans 'Runtime Depen' %}</h3>
                 <pre>
                 {{ ebuild.rdepend }}
                 </pre>
             {% endif %}
             {% if ebuild.pdepend %}
-                <h3>Post-Merge Depen</h3>
+                <h3>{% trans 'Post-Merge Depen' %}</h3>
                 <pre>
                 {{ ebuild.pdepend }}
                 </pre>
