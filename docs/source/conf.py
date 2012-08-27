@@ -15,10 +15,10 @@ import sys, os
 DIR = os.path.dirname(__file__)
 PROJECT_PATH =  os.path.abspath(os.path.join(DIR, '../..'))
 PROJECT_ROOT = os.path.join(PROJECT_PATH, 'gpackages')
-sys.path.insert(0, os.path.join(PROJECT_ROOT, 'libs'))
-sys.path.insert(0, os.path.join(PROJECT_ROOT, 'apps'))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, 'main'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+# for execute local_settings
+import settings
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
