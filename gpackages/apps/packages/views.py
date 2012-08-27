@@ -115,7 +115,7 @@ class MaintainersListView(CacheFilterListView, ContextListView):
     cache_time = 560
     allowed_filter = { 'dev' : 'is_dev',
                        'herd' : 'herdsmodel__name'}
-    allowed_order = {  None: 'name'}
+    allowed_order = {  None: 'name', 'dev' : 'is_dev'}
     boolean_filters = ('dev',)
     paginate_by = 40
     extra_context = {'page_name': 'Maintainers',}
@@ -213,14 +213,16 @@ class PackagesListsView(CacheFilterListView, ContextArchListView):
                        'herd':'herds__name',
                        'maintainer': 'maintainers__pk',
                        'license': 'ebuildmodel__licenses__name',
-                       'use': 'ebuildmodel__use_flags__name'
+                       'use': 'ebuildmodel__use_flags__name',
+                       # it's too slow
+                       #'arch' : 'ebuildmodel__keyword__arch__name'
                     }
 
     m2m_filter = set(['herd', 'maintainer', 'license', 'use'])
 
     allowed_order = { 'create': 'created_datetime',
                       'update': 'updated_datetime',
-                      'rand':'?', # it slow
+                      #'rand':'?', # it is slow
                       None: '-updated_datetime'
                     }
     allowed_many = {'repo': 5, 'use' : 3, 'herd': 4, 'category': 4, 'license': 3}
@@ -361,11 +363,11 @@ class FilteringView(FormView):
 
     def get_success_url(self):
         dct = {}
-        for k, v in self.params_dict.iteritems():
-            vv = self.form_data[k]
-            if vv:
-                dct[v] = ','.join(vv)
-        return reverse('packages', kwargs = dct)
+        for k,v  in self.params_dict.iteritems():
+            dct[v] = self.form_data[k]
+
+        kwargs = PackagesListsView.get_url_kwargs(dct)
+        return reverse('packages', kwargs = kwargs)
 
 class RepoDetailView(ArchesCacheViewMixin, DetailView):
     cache_time = 900

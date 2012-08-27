@@ -96,6 +96,32 @@ class MultipleFilterListViewMixin(object):
     with ``distinct`` attribute.
     """
 
+    @classmethod
+    def get_url_kwargs(cls, filters, order = None, rev = False):
+        kwargs = {}
+        for name, value in filters.iteritems():
+            if not value or name not in cls.allowed_filter:
+                continue
+
+            if name in cls.boolean_filters:
+                value = 'yes' if value else 'no'
+            elif name in cls.allowed_many:
+                if not isinstance(value, (str, unicode)):
+                    count = cls.allowed_many[name]
+                    if count > 0:
+                        value = value[:count]
+                    value = ','.join(value)
+
+            kwargs[name] = value
+
+        if order is not None and order in self.allowed_order:
+            kwargs['order'] = order
+
+        if rev:
+            kwargs['rev'] = 'rev'
+
+        return kwargs
+
     def get_context_data(self, **kwargs):
         """In addition to default context value will return all filters as 
         :py:class:`.dict`.
