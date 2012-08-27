@@ -180,7 +180,7 @@ PACKAGE_INFO_BACKEND = 'portage'
 try:
     from local_settings import *
 except ImportError:
-    print("Pleasy provide local_settings")
+    sys.stderr.write("Pleasy provide local_settings\n")
 
 if DEBUG:
     INSTALLED_APPS += ('django.contrib.databrowse', 'debug_toolbar') 
