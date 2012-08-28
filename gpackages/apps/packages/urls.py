@@ -35,5 +35,5 @@ urlpatterns = patterns('',
     url(r'^rss/$', MainPageFeed()),
     url(r'^atom/$', MainPageFeedAtom()),
     url(r'^(?P<atom>[^/]+/[^/]+)/(?P<table_item>[^/]+)?$', auto_package_or_ebuild, name = 'auto'),
-    url(r'^(?P<category>[^/]+)/$', PackagesListsView.as_view(), name = 'packages'),
+    url(r'^(?P<category>[\w-]+)/$', PackagesListsView.as_view(), name = 'packages'),
 )
