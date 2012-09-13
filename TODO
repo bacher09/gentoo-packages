@@ -1,0 +1,6 @@
+* Maintainers filter
+* Search by keyword (arch)
+* Full text search (using solr)
+* Hide emails
+* Package screens
+* Scanning with celery
