@@ -114,7 +114,7 @@ class HerdsListView(ArchesCacheViewMixin, ContextListView):
 class MaintainersListView(CacheFilterListView, ContextListView):
     cache_time = 560
     allowed_filter = { 'dev' : 'is_dev',
-                       'herd' : 'herdsmodel__name'}
+                       'herd' : 'herdsmodel__name' }
     allowed_order = {  None: 'name', 'dev' : 'is_dev'}
     boolean_filters = ('dev',)
     paginate_by = 40
@@ -122,6 +122,7 @@ class MaintainersListView(CacheFilterListView, ContextListView):
     template_name = 'maintainers.html'
     queryset = MaintainerModel.objects.only('name', 'email' ).all()
     context_object_name = 'maintainers'
+    view_name = 'maintainers'
 
 class RepositoriesListView(ArchesCacheViewMixin, ContextListView):
     extra_context = {'page_name': 'Repsitories',}

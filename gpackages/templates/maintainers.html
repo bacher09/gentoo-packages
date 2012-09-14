@@ -14,9 +14,9 @@
     </colgroup>
     <thead>
             <tr>
-                <th>{% trans 'Name' %}</th>
+                <th><a href="{{ orders.default.link }}">{% trans 'Name' %} {{ orders.default.arr }}</a></th>
                 <th>{% trans 'Email' %}</th>
-                <th>{% trans 'Gentoo dev' %}</th>
+                <th><a href="{{ orders.dev.link }}">{% trans 'Gentoo dev' %} {{ orders.dev.arr }}</a></th>
             </tr>
     </thead>
     <tbody>

@@ -1,11 +1,14 @@
 from django.views.generic import TemplateView, ListView
-from string import Template
-import re
 from django.contrib.syndication.views import Feed
 from django.utils.feedgenerator import Atom1Feed, rfc3339_date
 from django.utils import tzinfo
 from django.utils.timezone import is_naive
 from django.http import Http404
+from django.core.urlresolvers import reverse, NoReverseMatch
+from django.utils.html import mark_safe
+from string import Template
+from collections import namedtuple
+import re
 
 class ContextView(object):
     "Mixin to add additional data to context"
@@ -71,6 +74,23 @@ def dynamic_order(order_attr, allowed_list, reverse = None):
         order =  order[1:]
     return order
 
+OrderClass = namedtuple('OrderClass', ['active', 'link', 'reverse'])
+
+class OrderClass(object):
+
+    __slots__ = ('active', 'link', 'reverse')
+    
+    def __init__(self, active, link, reverse = False):
+        self.active = active
+        self.link = link
+        self.reverse = reverse
+
+    def arr(self):
+        if self.reverse:
+            return mark_safe('&darr;')
+        else:
+            return mark_safe('&uarr;')
+
 class MultipleFilterListViewMixin(object):
     """Mixin for dynamical objects filtering
     """
@@ -95,9 +115,17 @@ class MultipleFilterListViewMixin(object):
     """Indicates that this attribute is m2m fields and filtering by it should done
     with ``distinct`` attribute.
     """
+    view_name = str()
+    """Name of url view"""
 
     @classmethod
     def get_url_kwargs(cls, filters, order = None, rev = False):
+        """Args:
+            filters -- dict, search filters.
+            order -- order name.
+            rev -- bolean, reverse order
+        Return: dict used in reverse
+        """
         kwargs = {}
         for name, value in filters.iteritems():
             if not value or name not in cls.allowed_filter:
@@ -114,13 +142,22 @@ class MultipleFilterListViewMixin(object):
 
             kwargs[name] = value
 
-        if order is not None and order in self.allowed_order:
+        if order is not None and order in cls.allowed_order:
             kwargs['order'] = order
 
         if rev:
-            kwargs['rev'] = 'rev'
+            kwargs['rev'] = 'rev/'
 
         return kwargs
+
+    @classmethod
+    def get_url(cls, kwargs):
+        try:
+            url = reverse(cls.view_name, kwargs = kwargs)
+        except NoReverseMatch:
+            url = '#'
+
+        return url
 
     def get_context_data(self, **kwargs):
         """In addition to default context value will return all filters as 
@@ -128,7 +165,27 @@ class MultipleFilterListViewMixin(object):
         """
         cd = super(MultipleFilterListViewMixin, self).get_context_data(**kwargs)
         cd['filters_dict'] = self.queries_dict
+        cd['orders'] = self.get_orders_context()
         return cd
+
+    def get_orders_context(self):
+        dct = {}
+        for name in self.allowed_order:
+            if name == self.order:
+                active = True
+            else:
+                active = False
+
+            is_reverse = not self.reverse
+
+            link = self.get_url_kwargs(self.queries_dict, name, is_reverse)
+            link = self.get_url(link)
+            obj = OrderClass(active = active, link = link, reverse = is_reverse)
+            if name is None:
+                dct['default'] = obj
+            else:
+                dct[name] = obj
+        return dct
 
     def get_base_filters(self):
         qs = filter_req(self.request.GET, self.allowed_filter)
@@ -176,6 +233,10 @@ class MultipleFilterListViewMixin(object):
 
         if order_attr not in self.allowed_order:
             raise Http404('no such order')
+
+        self.order = order_attr
+        self.reverse = reverse
+
         order = dynamic_order(order_attr, self.allowed_order, reverse)
         return order
 
