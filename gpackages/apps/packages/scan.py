@@ -215,6 +215,17 @@ class Scanner(object):
         if verbosity <= self.verbosity:
             sys.stdout.write(format_str % whats)
 
+    def print_aligment_text(self, left, right, verbosity = 1):
+        left, right = unicode(left), unicode(right)
+        # This constant should be changed
+        spaces = ' ' * (80 - (len(left) + len(right)))
+        self.output('%s%s%s\n', (left, spaces, right))
+
+    def print_package(self, left, right, end = '', verbosity = 1):
+        self.print_aligment_text('%s ' % left,
+                                 '[%s]%s ' % (right, end),
+                                 verbosity)
+
     def get_existent_maintainers(self):
         return models.MaintainerModel.objects.all()
 
@@ -607,7 +618,8 @@ class Scanner(object):
                 #val = cache_dict[key]
             #if val is not None and val == package.manifest_sha1:
                 #continue
-        self.output('%-44s [%s]\n', (package, porttree))
+        #self.output('%-44s [%s]\n', (package, porttree))
+        self.print_package(package, porttree)
         package_object, package_created = models.PackageModel.objects \
             .only('changelog_hash', 'manifest_hash', 'metadata_hash') \
             .get_or_create(package = package,
@@ -800,8 +812,9 @@ class Scanner(object):
         else:
             # Don't run this for updated packages
             if package_obj.manifest_hash == ebuild.package.manifest_sha1:
-                self.output('%-44s [%s]M\n', (ebuild, 
-                    ebuild.package.category.porttree_name))
+                self.print_package(ebuild, 
+                    ebuild.package.category.porttree_name, 'M')
+
                 self.update_ebuilds(ebuild.package, package_obj)
 
     def add_mising_ebuilds(self):
@@ -821,8 +834,8 @@ class Scanner(object):
 
                 continue
             if ebuild_obj.is_hard_masked != ebuild.is_hard_masked:
-                self.output('%-44s [%s]\n', (ebuild,
-                    ebuild.package.category.porttree_name))
+                self.print_package(ebuild,
+                    ebuild.package.category.porttree_name)
 
                 ebuild_obj.is_hard_masked = ebuild.is_hard_masked
                 ebuild_obj.save(force_update = True)
