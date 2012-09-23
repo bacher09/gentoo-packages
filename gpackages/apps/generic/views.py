@@ -7,7 +7,6 @@ from django.http import Http404
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.utils.html import mark_safe
 from string import Template
-from collections import namedtuple
 import re
 
 class ContextView(object):
@@ -73,8 +72,6 @@ def dynamic_order(order_attr, allowed_list, reverse = None):
     elif reverse:
         order =  order[1:]
     return order
-
-OrderClass = namedtuple('OrderClass', ['active', 'link', 'reverse'])
 
 class OrderClass(object):
 
